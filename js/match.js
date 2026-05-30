@@ -120,10 +120,22 @@ export class Match {
   // ---- Fokus-Modus: welchen Spieler steuert der Mensch? ----
   _selectUserPlayer() {
     if (this.mode === "single") { this.userPlayer = this.userFixed; return; }
-    // Nach manuellem Wechsel kurz die Auswahl beibehalten.
+
+    // Team-Modus: führt ein eigener Feldspieler den Ball, steuerst IMMER du ihn
+    // (nie die KI) – unabhängig von Hysterese oder manuellem Wechsel.
+    const owner = this.ball.owner;
+    if (owner && owner.team === this.home && !owner.isKeeper) {
+      this.userPlayer = owner;
+      this.manualTimer = 0;
+      return;
+    }
+
+    // Nach manuellem Wechsel kurz die Auswahl beibehalten (nur ohne eigenen Ballbesitz).
     if (this.manualTimer > 0) return;
+
+    // Sonst: nächster Feldspieler zum Ball (leichte Hysterese gegen Flackern).
     let best = this.userPlayer && this.userPlayer.team === this.home ? this.userPlayer : null;
-    let bestDist = best ? Math.hypot(best.x - this.ball.x, best.y - this.ball.y) - 22 : Infinity;
+    let bestDist = best ? Math.hypot(best.x - this.ball.x, best.y - this.ball.y) - 18 : Infinity;
     for (const p of this.home.outfield) {
       const d = Math.hypot(p.x - this.ball.x, p.y - this.ball.y);
       if (d < bestDist) { bestDist = d; best = p; }
