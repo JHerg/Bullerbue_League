@@ -5,7 +5,7 @@
 // 1 = gegnerisches Tor / y: 0 = oben, 1 = unten) und werden im Spiel auf
 // Welt-Koordinaten und Angriffsrichtung umgerechnet.
 
-import { MARGIN, FIELD } from "./config.js?v=o";
+import { MARGIN, FIELD } from "./config.js?v=p";
 
 // ---------------------------------------------------------------------------
 // Formations-Vorlagen

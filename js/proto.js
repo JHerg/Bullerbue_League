@@ -2,11 +2,11 @@
 // Hauptspiel (Match, Input), nur mit dem neuen perspektivischen Renderer.
 // Das Hauptspiel (index.html / game.js) bleibt davon unberührt.
 
-import { DIFFICULTY, WORLD } from "./config.js?v=o";
-import { teamById } from "./teams.js?v=o";
-import { Match } from "./match.js?v=o";
-import { Input } from "./input.js?v=o";
-import { render } from "./render2d5.js?v=o";
+import { DIFFICULTY, WORLD } from "./config.js?v=p";
+import { teamById } from "./teams.js?v=p";
+import { Match } from "./match.js?v=p";
+import { Input } from "./input.js?v=p";
+import { render } from "./render2d5.js?v=p";
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");

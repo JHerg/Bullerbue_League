@@ -2,7 +2,7 @@
 // Mittelkreis, Strafräume, Torräume, Elfmeterpunkte und Tore.
 // Alles in Welt-Koordinaten; die Kamera-Translation passiert im Game-Loop.
 
-import { FIELD, MARGIN, WORLD, COLORS, PX_PER_M } from "./config.js?v=o";
+import { FIELD, MARGIN, WORLD, COLORS, PX_PER_M } from "./config.js?v=p";
 
 export function drawPitch(ctx) {
   // Hintergrund (Auslaufzone)

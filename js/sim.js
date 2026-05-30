@@ -1,7 +1,7 @@
 // Schnell-Simulation eines Spielergebnisses aus den Team-Stärken.
 // Wird für nicht selbst gespielte Partien (Liga & Pokal) verwendet.
 
-import { ratingOf } from "./teams.js?v=o";
+import { ratingOf } from "./teams.js?v=p";
 
 // Poisson-Zufallswert (Knuth) für die Toranzahl.
 function poisson(lambda) {
