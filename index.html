@@ -7,17 +7,66 @@
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <div id="hud">
-    <div id="hud-title">Bullerbue League</div>
-    <div id="hud-hint">PC: WASD / Pfeiltasten zum Laufen &nbsp;·&nbsp; Tablet: Joystick unten links</div>
+  <!-- Anzeigetafel -->
+  <div id="scoreboard" class="hidden">
+    <span id="sb-home"></span>
+    <span id="sb-score">0 : 0</span>
+    <span id="sb-away"></span>
   </div>
+
+  <!-- Tor-/Status-Meldung -->
+  <div id="message"></div>
 
   <canvas id="game"></canvas>
 
-  <!-- Virtueller Joystick (nur Touch-Geräte) -->
+  <!-- Virtueller Joystick (nur Touch) -->
   <div id="joystick" class="hidden">
     <div id="joystick-base"></div>
     <div id="joystick-knob"></div>
+  </div>
+
+  <!-- Aktions-Buttons (nur Touch) -->
+  <div id="actions" class="hidden">
+    <button id="btn-pass" class="action-btn">PASS</button>
+    <button id="btn-shoot" class="action-btn">SCHUSS</button>
+  </div>
+
+  <!-- Startmenü -->
+  <div id="menu">
+    <div id="menu-card">
+      <h1>Bullerbue League ⚽</h1>
+      <p class="sub">Anstoß – freies Spiel</p>
+
+      <label>Heimteam
+        <select id="sel-home"></select>
+      </label>
+      <label>Auswärtsteam
+        <select id="sel-away"></select>
+      </label>
+
+      <label>Fokus-Modus
+        <select id="sel-mode">
+          <option value="team">Team-Modus (Spieler am Ball)</option>
+          <option value="single">Einzelspieler-Modus (fester Spieler)</option>
+        </select>
+      </label>
+
+      <label id="lbl-player" class="hidden">Dein Spieler
+        <select id="sel-player"></select>
+      </label>
+
+      <label>Schwierigkeit
+        <select id="sel-diff">
+          <option>Einfach</option>
+          <option selected>Mittel</option>
+          <option>Schwer</option>
+          <option>Ultimativ</option>
+        </select>
+      </label>
+
+      <button id="btn-start">Anpfiff!</button>
+      <p class="hint">PC: WASD/Pfeile laufen · Leertaste = Schuss · E = Pass</p>
+    </div>
   </div>
 
   <script type="module" src="js/game.js"></script>

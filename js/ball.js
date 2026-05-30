@@ -1,5 +1,5 @@
-// Der Ball. Rollt mit Reibung aus und kann vom Spieler "angeschubst" werden
-// (einfache Dribbel-Mechanik als Vorgeschmack — Schuss/Flanke kommen später).
+// Der Ball: rollt mit Reibung, prallt an den Banden ab, wird vom ballführenden
+// Spieler "geführt" (Dribbling) und kann geschossen/gepasst werden.
 
 import { BALL, WORLD } from "./config.js";
 
@@ -10,52 +10,81 @@ export class Ball {
     this.vx = 0;
     this.vy = 0;
     this.radius = BALL.radius;
+
+    this.owner = null;          // Spieler, der den Ball aktuell führt
+    this.lastTouchTeam = null;  // Team des letzten Ballkontakts (Ballbesitz)
+    this.kickTimer = 0;         // > 0: Ball ist frei (kein Führen möglich)
   }
 
+  reset(x, y) {
+    this.x = x;
+    this.y = y;
+    this.vx = 0;
+    this.vy = 0;
+    this.owner = null;
+    this.kickTimer = 0;
+  }
+
+  // Bestimmt anhand aller Spieler, wer den Ball führt, und lässt ihn ggf. mitlaufen.
+  updatePossession(dt, players) {
+    if (this.kickTimer > 0) {
+      this.kickTimer -= dt;
+      this.owner = null;
+    } else {
+      // Nächsten Spieler innerhalb des Kontrollradius suchen.
+      let best = null;
+      let bestDist = BALL.controlRadius;
+      for (const p of players) {
+        const d = Math.hypot(p.x - this.x, p.y - this.y);
+        if (d < bestDist) { bestDist = d; best = p; }
+      }
+      this.owner = best;
+      if (best) this.lastTouchTeam = best.team;
+    }
+
+    if (this.owner) {
+      // Ball klebt leicht vor dem Spieler in Laufrichtung (Dribbling).
+      const f = this.owner.facing;
+      this.x = this.owner.x + f.x * BALL.dribbleOffset;
+      this.y = this.owner.y + f.y * BALL.dribbleOffset;
+      this.vx = this.owner.vx;
+      this.vy = this.owner.vy;
+    }
+  }
+
+  // Bewegung + Reibung + Bandenabpraller (nur wenn frei rollend).
   update(dt) {
+    if (this.owner) return;
+
     this.x += this.vx * dt;
     this.y += this.vy * dt;
 
-    // Reibung
     const f = Math.max(0, 1 - BALL.friction * dt);
     this.vx *= f;
     this.vy *= f;
 
-    // An den Banden abprallen
-    if (this.x < this.radius) { this.x = this.radius; this.vx *= -0.6; }
-    if (this.x > WORLD.width - this.radius) { this.x = WORLD.width - this.radius; this.vx *= -0.6; }
-    if (this.y < this.radius) { this.y = this.radius; this.vy *= -0.6; }
-    if (this.y > WORLD.height - this.radius) { this.y = WORLD.height - this.radius; this.vy *= -0.6; }
+    if (this.x < this.radius) { this.x = this.radius; this.vx *= -0.55; }
+    if (this.x > WORLD.width - this.radius) { this.x = WORLD.width - this.radius; this.vx *= -0.55; }
+    if (this.y < this.radius) { this.y = this.radius; this.vy *= -0.55; }
+    if (this.y > WORLD.height - this.radius) { this.y = WORLD.height - this.radius; this.vy *= -0.55; }
   }
 
-  // Kollision mit dem Spieler: Ball wird sanft weggeschoben (Dribbeln).
-  interactWith(player) {
-    const dx = this.x - player.x;
-    const dy = this.y - player.y;
-    const dist = Math.hypot(dx, dy);
-    const minDist = this.radius + player.radius;
-
-    if (dist < minDist && dist > 0) {
-      const nx = dx / dist;
-      const ny = dy / dist;
-      // Ball vor den Spieler setzen
-      this.x = player.x + nx * minDist;
-      this.y = player.y + ny * minDist;
-      // Impuls aus Spielergeschwindigkeit übernehmen
-      const push = Math.hypot(player.vx, player.vy) * 1.15 + 40;
-      this.vx = nx * push;
-      this.vy = ny * push;
-    }
+  // Ball in eine Richtung treten (Schuss/Pass).
+  kick(dirX, dirY, power, byTeam) {
+    const len = Math.hypot(dirX, dirY) || 1;
+    this.vx = (dirX / len) * power;
+    this.vy = (dirY / len) * power;
+    this.owner = null;
+    this.kickTimer = BALL.kickCooldown;
+    if (byTeam) this.lastTouchTeam = byTeam;
   }
 
   draw(ctx) {
-    // Schatten
     ctx.beginPath();
     ctx.fillStyle = "rgba(0,0,0,0.25)";
     ctx.ellipse(this.x, this.y + this.radius * 0.7, this.radius, this.radius * 0.5, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Ball
     ctx.beginPath();
     ctx.fillStyle = "#fff";
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);

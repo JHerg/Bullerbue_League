@@ -1,26 +1,26 @@
-// Haupt-Spielschleife: bindet Eingabe, Kamera, Spielfeld, Spieler und Ball
-// zusammen. Erster Prototyp-Meilenstein: Scrolling-Kamera + Laufen.
+// Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
+// das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { WORLD } from "./config.js";
+import { DIFFICULTY } from "./config.js";
+import { TEAMS, buildSquad } from "./teams.js";
 import { Input } from "./input.js";
 import { Camera } from "./camera.js";
 import { drawPitch } from "./pitch.js";
-import { Player } from "./player.js";
-import { Ball } from "./ball.js";
+import { Match } from "./match.js";
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
 const input = new Input();
 const camera = new Camera();
-const player = new Player(WORLD.width / 2 - 60, WORLD.height / 2);
-const ball = new Ball(WORLD.width / 2, WORLD.height / 2);
+let match = null;
 
-// Canvas an Bildschirmgröße anpassen (inkl. Retina/HiDPI).
+// --------------------------------------------------------------------------
+// Canvas-Größe (inkl. HiDPI)
+// --------------------------------------------------------------------------
 function resize() {
   const dpr = window.devicePixelRatio || 1;
-  const w = window.innerWidth;
-  const h = window.innerHeight;
+  const w = window.innerWidth, h = window.innerHeight;
   canvas.width = Math.floor(w * dpr);
   canvas.height = Math.floor(h * dpr);
   canvas.style.width = w + "px";
@@ -31,32 +31,104 @@ function resize() {
 window.addEventListener("resize", resize);
 resize();
 
+// --------------------------------------------------------------------------
+// Startmenü
+// --------------------------------------------------------------------------
+const selHome = document.getElementById("sel-home");
+const selAway = document.getElementById("sel-away");
+const selMode = document.getElementById("sel-mode");
+const selDiff = document.getElementById("sel-diff");
+const selPlayer = document.getElementById("sel-player");
+const lblPlayer = document.getElementById("lbl-player");
+
+for (const t of TEAMS) {
+  selHome.add(new Option(t.name, t.id));
+  selAway.add(new Option(t.name, t.id));
+}
+selHome.value = "bav";
+selAway.value = "dor";
+
+// Spielerliste fürs Einzelspieler-Menü passend zum Heimteam füllen.
+function refreshPlayerList() {
+  const def = TEAMS.find((t) => t.id === selHome.value);
+  selPlayer.innerHTML = "";
+  buildSquad(def, true).forEach((p, i) => {
+    selPlayer.add(new Option(`#${p.number} ${p.name} (${p.role})`, String(i)));
+  });
+  selPlayer.value = "9"; // standardmäßig ein Stürmer
+}
+refreshPlayerList();
+selHome.addEventListener("change", refreshPlayerList);
+
+selMode.addEventListener("change", () => {
+  lblPlayer.classList.toggle("hidden", selMode.value !== "single");
+});
+
+document.getElementById("btn-start").addEventListener("click", () => {
+  if (selHome.value === selAway.value) {
+    // Gleiche Teams vermeiden: Auswärts auf ein anderes setzen.
+    const other = TEAMS.find((t) => t.id !== selHome.value);
+    selAway.value = other.id;
+  }
+  const homeDef = TEAMS.find((t) => t.id === selHome.value);
+  const awayDef = TEAMS.find((t) => t.id === selAway.value);
+
+  match = new Match(homeDef, awayDef, {
+    mode: selMode.value,
+    difficulty: DIFFICULTY[selDiff.value],
+    userPlayerIndex: parseInt(selPlayer.value, 10) || 9,
+  });
+
+  document.getElementById("menu").classList.add("hidden");
+  document.getElementById("scoreboard").classList.remove("hidden");
+  document.getElementById("sb-home").textContent = homeDef.short;
+  document.getElementById("sb-away").textContent = awayDef.short;
+});
+
+// --------------------------------------------------------------------------
+// HUD
+// --------------------------------------------------------------------------
+const sbScore = document.getElementById("sb-score");
+const msgEl = document.getElementById("message");
+
+function updateHUD() {
+  sbScore.textContent = `${match.score.home} : ${match.score.away}`;
+  if (match.message) {
+    msgEl.textContent = match.message;
+    msgEl.classList.add("show");
+  } else {
+    msgEl.classList.remove("show");
+  }
+}
+
+// --------------------------------------------------------------------------
+// Spielschleife
+// --------------------------------------------------------------------------
 let last = performance.now();
 
 function loop(now) {
-  // dt begrenzen, damit es nach Tab-Wechseln keine Sprünge gibt.
   const dt = Math.min(0.033, (now - last) / 1000);
   last = now;
 
-  // --- Update ---
-  const dir = input.getDirection();
-  player.update(dt, dir);
-  ball.interactWith(player);
-  ball.update(dt);
-  camera.follow(player.x, player.y);
+  if (match) {
+    match.update(dt, input);
+    const target = match.cameraTarget;
+    camera.follow(target.x, target.y);
+    updateHUD();
 
-  // --- Render ---
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.save();
-  ctx.translate(-camera.x, -camera.y);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.translate(-camera.x, -camera.y);
 
-  drawPitch(ctx);
-  ball.draw(ctx);
-  player.draw(ctx);
+    drawPitch(ctx);
+    match.ball.draw(ctx);
+    for (const p of match.allPlayers) {
+      p.draw(ctx, p === match.userPlayer);
+    }
 
-  ctx.restore();
+    ctx.restore();
+  }
 
   requestAnimationFrame(loop);
 }
-
 requestAnimationFrame(loop);

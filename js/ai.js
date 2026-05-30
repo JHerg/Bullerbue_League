@@ -1,0 +1,149 @@
+// Gegner- & Mitspieler-KI. Liefert pro Frame eine Zielrichtung für einen
+// Spieler und entscheidet über Schuss/Pass. Das Verhalten wird über das
+// Schwierigkeitsprofil (Tempo, Reaktion, Präzision, Entschlossenheit, Pressing)
+// skaliert.
+//
+// computeAI(player, ctx) -> { dir:{x,y}, kick: null | {dirX,dirY,power} }
+//
+// ctx = { ball, difficulty, isChaser, isPossessor, teammates, opponents, dt }
+
+import { MARGIN, FIELD, GOAL, KICK } from "./config.js";
+
+const FIELD_CX = MARGIN + FIELD.width / 2;
+const FIELD_CY = MARGIN + FIELD.height / 2;
+
+function goalsFor(team) {
+  return {
+    oppGoalX: team.attackRight ? GOAL.lineRight : GOAL.lineLeft,
+    ownGoalX: team.attackRight ? GOAL.lineLeft : GOAL.lineRight,
+    goalY: GOAL.centerY,
+  };
+}
+
+function steer(player, tx, ty, deadzone = 6) {
+  const dx = tx - player.x;
+  const dy = ty - player.y;
+  const d = Math.hypot(dx, dy);
+  if (d < deadzone) return { x: 0, y: 0 };
+  return { x: dx / d, y: dy / d };
+}
+
+function nearestDist(x, y, list) {
+  let best = Infinity;
+  for (const p of list) {
+    const d = Math.hypot(p.x - x, p.y - y);
+    if (d < best) best = d;
+  }
+  return best;
+}
+
+// Richtung mit Zielfehler versehen (geringere Präzision = größerer Fehler).
+function aimWithNoise(dx, dy, accuracy) {
+  const len = Math.hypot(dx, dy) || 1;
+  let a = Math.atan2(dy, dx);
+  a += (Math.random() - 0.5) * (1 - accuracy) * 0.9;
+  return { x: Math.cos(a), y: Math.sin(a) };
+}
+
+export function computeAI(player, ctx) {
+  const { ball, difficulty } = ctx;
+  const team = player.team;
+  const { oppGoalX, ownGoalX, goalY } = goalsFor(team);
+
+  // -------- Torwart --------
+  if (player.isKeeper) {
+    if (ctx.isPossessor) {
+      // Ball klären: lang nach vorn schlagen.
+      const aim = aimWithNoise(oppGoalX - player.x, goalY - player.y, difficulty.passAccuracy);
+      return { dir: { x: 0, y: 0 }, kick: { dirX: aim.x, dirY: aim.y, power: KICK.shootPower } };
+    }
+    const lineX = ownGoalX + (team.attackRight ? 28 : -28);
+    const distBall = Math.hypot(ball.x - player.x, ball.y - player.y);
+    // Bei nahem Ball herauslaufen, sonst auf der Linie mitgehen.
+    if (distBall < 95) {
+      return { dir: steer(player, ball.x, ball.y), kick: null };
+    }
+    const ty = Math.max(goalY - 70, Math.min(goalY + 70, ball.y));
+    return { dir: steer(player, lineX, ty), kick: null };
+  }
+
+  // -------- Spieler hat den Ball --------
+  if (ctx.isPossessor) {
+    const distGoal = Math.hypot(oppGoalX - player.x, goalY - player.y);
+    const pressure = nearestDist(player.x, player.y, ctx.opponents);
+
+    // In Schussreichweite -> abschließen.
+    if (distGoal < difficulty.shootRange) {
+      const aim = aimWithNoise(oppGoalX - player.x, goalY - player.y, difficulty.passAccuracy);
+      return { dir: { x: 0, y: 0 }, kick: { dirX: aim.x, dirY: aim.y, power: KICK.shootPower } };
+    }
+
+    // Unter Druck: nach vorn passen, wenn ein Mitspieler frei steht.
+    const mate = bestPassOption(player, ctx);
+    if (mate && (pressure < 36 || Math.random() < difficulty.decisiveness * difficulty.decisiveness)) {
+      const dx = mate.x - player.x;
+      const dy = mate.y - player.y;
+      const aim = aimWithNoise(dx, dy, difficulty.passAccuracy);
+      const power = Math.min(KICK.passPowerMax, KICK.passPower + Math.hypot(dx, dy) * KICK.passPerPx);
+      return { dir: { x: 0, y: 0 }, kick: { dirX: aim.x, dirY: aim.y, power } };
+    }
+
+    // Sonst Richtung Tor dribbeln (leicht zur Tormitte ziehen).
+    return { dir: steer(player, oppGoalX, goalY * 0.5 + player.y * 0.5), kick: null };
+  }
+
+  // -------- Ohne Ball: Ball erobern (designierter Jäger) --------
+  if (ctx.isChaser) {
+    // Auf den vorausberechneten Ballpunkt zulaufen.
+    const lead = 0.16 * (1 - difficulty.reaction);
+    return { dir: steer(player, ball.x + ball.vx * lead, ball.y + ball.vy * lead), kick: null };
+  }
+
+  // -------- Ohne Ball: Formation halten, zum Ball verschieben --------
+  const teamHasBall = ball.lastTouchTeam === team;
+  const press = difficulty.press;
+
+  let shiftX = clamp((ball.x - FIELD_CX) * 0.18 * press, -130, 130);
+  let shiftY = clamp((ball.y - FIELD_CY) * 0.18 * press, -95, 95);
+
+  // In Ballbesitz schieben Offensivkräfte stärker nach vorn.
+  if (teamHasBall && isAttacker(player.role)) {
+    shiftX += team.attackRight ? 40 : -40;
+  }
+
+  const tx = clamp(player.homeX + shiftX, MARGIN + 10, MARGIN + FIELD.width - 10);
+  const ty = clamp(player.homeY + shiftY, MARGIN + 10, MARGIN + FIELD.height - 10);
+  return { dir: steer(player, tx, ty), kick: null };
+}
+
+function isAttacker(role) {
+  return ["ST", "LA", "RA", "OM", "LM", "RM"].includes(role);
+}
+
+// Bester Anspielpartner: möglichst weit vorn und nicht eng gedeckt.
+function bestPassOption(player, ctx) {
+  const team = player.team;
+  const forward = team.attackRight ? 1 : -1;
+  let best = null;
+  let bestScore = -Infinity;
+
+  for (const mate of ctx.teammates) {
+    if (mate === player || mate.isKeeper) continue;
+    const dx = mate.x - player.x;
+    const dy = mate.y - player.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist < 40 || dist > 380) continue;
+
+    const progress = (mate.x - player.x) * forward; // wie viel weiter vorn
+    if (progress < -20) continue;
+
+    const open = nearestDist(mate.x, mate.y, ctx.opponents); // freier Raum
+    const score = progress + open * 1.5;
+    if (score > bestScore) { bestScore = score; best = mate; }
+  }
+  return best;
+}
+
+function clamp(v, lo, hi) {
+  return Math.max(lo, Math.min(hi, v));
+}
