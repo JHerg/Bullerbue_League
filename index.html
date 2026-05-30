@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Bullerbue League ⚽</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="hud">
+    <div id="hud-title">Bullerbue League</div>
+    <div id="hud-hint">PC: WASD / Pfeiltasten zum Laufen &nbsp;·&nbsp; Tablet: Joystick unten links</div>
+  </div>
+
+  <canvas id="game"></canvas>
+
+  <!-- Virtueller Joystick (nur Touch-Geräte) -->
+  <div id="joystick" class="hidden">
+    <div id="joystick-base"></div>
+    <div id="joystick-knob"></div>
+  </div>
+
+  <script type="module" src="js/game.js"></script>
+</body>
+</html>
