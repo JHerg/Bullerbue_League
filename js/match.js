@@ -2,7 +2,7 @@
 // kontextabhängige Nutzer-Aktion (Leertaste), Aus-Erkennung
 // (Einwurf/Ecke/Abstoß), Tore, Spieluhr und Halbzeit mit Seitenwechsel.
 
-import { WORLD, FIELD, MARGIN, GOAL, BALL, KICK, PLAYER, USER } from "./config.js";
+import { WORLD, FIELD, MARGIN, GOAL, BALL, KICK, PLAYER, USER, DIFFICULTY_TEAMMATE } from "./config.js";
 import { Team } from "./team.js";
 import { Ball } from "./ball.js";
 import { computeAI } from "./ai.js";
@@ -11,13 +11,14 @@ const EDGE = 8; // wie weit innerhalb der Linie der Ball bei Standards liegt
 
 export class Match {
   constructor(homeDef, awayDef, { mode, difficulty, userPlayerIndex = 9, minutesPerHalf = 2 }) {
-    this.home = new Team(homeDef, true, difficulty);
+    // Eigene Mitspieler: festes Profil. Gegner: gewählte Schwierigkeit.
+    this.home = new Team(homeDef, true, DIFFICULTY_TEAMMATE);
     this.away = new Team(awayDef, false, difficulty);
     this.mode = mode;
-    this.difficulty = difficulty;
+    this.teamDifficulty = DIFFICULTY_TEAMMATE; // KI der eigenen Mitspieler
+    this.oppDifficulty = difficulty;           // KI des Gegners
 
     this.ball = new Ball(WORLD.width / 2, WORLD.height / 2);
-    this.ball.lastTouchTeam = this.home;
 
     this.allPlayers = [...this.home.players, ...this.away.players];
 
@@ -34,6 +35,34 @@ export class Match {
     this.half = 1;
     this.clock = 0;
     this.finished = false;
+
+    // Anstoß für das Heimteam.
+    this._kickoff(this.home);
+  }
+
+  // Profil der KI je nach Team (eigene Mitspieler vs. Gegner).
+  _profileFor(team) {
+    return team === this.home ? this.teamDifficulty : this.oppDifficulty;
+  }
+
+  // Anstoß: Ball auf den Mittelpunkt, ein zentraler Spieler des berechtigten
+  // Teams stellt sich direkt an den Ball.
+  _kickoff(team) {
+    const cx = WORLD.width / 2, cy = WORLD.height / 2;
+    this.ball.reset(cx, cy);
+    this.ball.lastTouchTeam = team;
+
+    let taker = null, best = Infinity;
+    for (const p of team.outfield) {
+      const d = Math.hypot(p.x - cx, p.y - cy);
+      if (d < best) { best = d; taker = p; }
+    }
+    if (taker) {
+      taker.x = cx - (team.attackRight ? 14 : -14);
+      taker.y = cy;
+      taker.vx = 0; taker.vy = 0;
+      taker.facing = { x: team.attackRight ? 1 : -1, y: 0 };
+    }
   }
 
   update(dt, input) {
@@ -158,9 +187,10 @@ export class Match {
     const teammates = p.team.players;
     const opponents = p.team === this.home ? this.away.players : this.home.players;
     const teamHasBall = this.ball.owner && this.ball.owner.team === p.team;
+    const profile = this._profileFor(p.team);
     const ctx = {
       ball: this.ball,
-      difficulty: this.difficulty,
+      difficulty: profile,
       isPossessor: this.ball.owner === p,
       isChaser: p === p.team.chaser && !teamHasBall,
       teammates,
@@ -168,7 +198,7 @@ export class Match {
       dt,
     };
     const out = computeAI(p, ctx);
-    p.update(dt, out.dir, this.difficulty.speed);
+    p.update(dt, out.dir, profile.speed);
     if (out.kick) this.ball.kick(out.kick.dirX, out.kick.dirY, out.kick.power, p.team);
   }
 
@@ -236,8 +266,7 @@ export class Match {
     this.message = `TOR für ${scorer.name}!   ${this.home.short} ${this.score.home} : ${this.score.away} ${this.away.short}`;
     this.home.reset();
     this.away.reset();
-    this.ball.reset(WORLD.width / 2, WORLD.height / 2);
-    this.ball.lastTouchTeam = conceder;
+    this._kickoff(conceder); // Anstoß für die Mannschaft, die das Tor kassiert hat
     this.pauseTimer = 2.2;
     return true;
   }
@@ -299,8 +328,7 @@ export class Match {
       this.clock = 0;
       this.home.switchSides();
       this.away.switchSides();
-      this.ball.reset(WORLD.width / 2, WORLD.height / 2);
-      this.ball.lastTouchTeam = this.away; // Anstoß 2. Halbzeit
+      this._kickoff(this.away); // Anstoß 2. Halbzeit für das Auswärtsteam
       this.message = "Halbzeit – Seitenwechsel";
       this.pauseTimer = 2.4;
     } else {

@@ -63,13 +63,20 @@ export const CAMERA = {
   lerp: 0.12,
 };
 
-// Schwierigkeitsgrade der KI. Werte skalieren Tempo, Reaktion und Präzision.
+// Schwierigkeitsgrade der GEGNER-KI. Werte skalieren Tempo, Reaktion (höher =
+// träger), Pass-/Schusspräzision, Schussreichweite, Entschlossenheit, Pressing.
+// Bewusst eher mild eingestellt, damit "Einfach" wirklich einfach ist.
 export const DIFFICULTY = {
-  Einfach:    { speed: 0.84, reaction: 0.45, passAccuracy: 0.55, shootRange: 190, decisiveness: 0.35, press: 0.55 },
-  Mittel:     { speed: 0.93, reaction: 0.30, passAccuracy: 0.72, shootRange: 230, decisiveness: 0.55, press: 0.70 },
-  Schwer:     { speed: 1.00, reaction: 0.18, passAccuracy: 0.85, shootRange: 270, decisiveness: 0.72, press: 0.85 },
-  Ultimativ:  { speed: 1.08, reaction: 0.08, passAccuracy: 0.95, shootRange: 320, decisiveness: 0.88, press: 1.00 },
+  Einfach:    { speed: 0.70, reaction: 0.65, passAccuracy: 0.38, shootRange: 150, decisiveness: 0.22, press: 0.40 },
+  Mittel:     { speed: 0.82, reaction: 0.45, passAccuracy: 0.58, shootRange: 190, decisiveness: 0.42, press: 0.60 },
+  Schwer:     { speed: 0.92, reaction: 0.28, passAccuracy: 0.75, shootRange: 235, decisiveness: 0.62, press: 0.80 },
+  Ultimativ:  { speed: 1.02, reaction: 0.14, passAccuracy: 0.90, shootRange: 285, decisiveness: 0.82, press: 0.95 },
 };
+
+// Festes Profil der eigenen Mitspieler (unabhängig von der Gegner-Schwierigkeit),
+// damit das eigene Team verlässlich mitspielt und "Einfach" gewinnbar ist.
+export const DIFFICULTY_TEAMMATE =
+  { speed: 0.90, reaction: 0.35, passAccuracy: 0.70, shootRange: 220, decisiveness: 0.55, press: 0.70 };
 
 // Farben
 export const COLORS = {
