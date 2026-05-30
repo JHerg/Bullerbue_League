@@ -74,10 +74,11 @@ document.getElementById("btn-start").addEventListener("click", () => {
   const homeDef = TEAMS.find((t) => t.id === selHome.value);
   const awayDef = TEAMS.find((t) => t.id === selAway.value);
 
+  const playerIdx = parseInt(selPlayer.value, 10);
   match = new Match(homeDef, awayDef, {
     mode: selMode.value,
     difficulty: DIFFICULTY[selDiff.value],
-    userPlayerIndex: parseInt(selPlayer.value, 10) || 9,
+    userPlayerIndex: Number.isInteger(playerIdx) ? playerIdx : 9,
     minutesPerHalf: parseInt(selHalf.value, 10) || 2,
   });
 
