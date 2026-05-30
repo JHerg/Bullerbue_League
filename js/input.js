@@ -1,23 +1,26 @@
 // Plattformübergreifende Eingabe:
-//  - PC: Tastatur (WASD/Pfeile = laufen, Leertaste = Kontext-Aktion,
-//        Shift/Q = Spieler wechseln im Team-Modus)
-//  - Tablet/Touch: virtueller Joystick + Aktions-Button + Wechsel-Button
+//  - PC: WASD/Pfeile = laufen · Leertaste = Schuss (halten = härter) ·
+//        F = Sekundäraktion (Pass / Grätsche / Spielerwechsel) · Shift/Q = Wechsel
+//  - Tablet/Touch: virtueller Joystick + Buttons "SCHUSS" und "PASS"
 //
-// Bewegung -> normierter Richtungsvektor getDirection().
-// Aktion   -> auf Loslassen ausgelöst via consumeAction() -> { charge } | null.
-//             Die Haltedauer (charge 0..1) bestimmt die Schusshärte.
-// Wechsel  -> consumeSwitch().
+// Bewegung -> getDirection() (normierter Vektor)
+// Schuss   -> consumeShoot() -> { charge: 0..1 } | null  (Haltedauer = Härte)
+// Sekundär -> consumeSecondary() -> bool  (Pass/Grätsche/Wechsel je nach Lage)
+// Wechsel  -> consumeSwitch() -> bool
 
-const MAX_CHARGE_MS = 600; // volle Schusspower bei dieser Haltedauer
+const MAX_CHARGE_MS = 600;
 
 export class Input {
   constructor() {
     this.keys = new Set();
     this.joystick = { x: 0, y: 0, active: false };
-    this.pendingAction = false;
-    this.actionCharge = 0;
-    this.actionDown = false;
-    this.actionStart = 0;
+
+    this.pendingShoot = false;
+    this.shootCharge = 0;
+    this.shootDown = false;
+    this.shootStart = 0;
+
+    this.pendingSecondary = false;
     this.pendingSwitch = false;
 
     this._initKeyboard();
@@ -25,21 +28,22 @@ export class Input {
     this._initButtons();
   }
 
-  _pressAction() {
-    if (!this.actionDown) { this.actionDown = true; this.actionStart = performance.now(); }
+  _pressShoot() {
+    if (!this.shootDown) { this.shootDown = true; this.shootStart = performance.now(); }
   }
-  _releaseAction() {
-    if (!this.actionDown) return;
-    this.actionCharge = Math.min(1, (performance.now() - this.actionStart) / MAX_CHARGE_MS);
-    this.actionDown = false;
-    this.pendingAction = true;
+  _releaseShoot() {
+    if (!this.shootDown) return;
+    this.shootCharge = Math.min(1, (performance.now() - this.shootStart) / MAX_CHARGE_MS);
+    this.shootDown = false;
+    this.pendingShoot = true;
   }
 
   _initKeyboard() {
     window.addEventListener("keydown", (e) => {
       const k = e.key.toLowerCase();
       if (!e.repeat) {
-        if (k === " ") this._pressAction();
+        if (k === " ") this._pressShoot();
+        if (k === "f") this.pendingSecondary = true;
         if (k === "shift" || k === "q") this.pendingSwitch = true;
       }
       this.keys.add(k);
@@ -47,7 +51,7 @@ export class Input {
     });
     window.addEventListener("keyup", (e) => {
       const k = e.key.toLowerCase();
-      if (k === " ") this._releaseAction();
+      if (k === " ") this._releaseShoot();
       this.keys.delete(k);
     });
   }
@@ -103,19 +107,19 @@ export class Input {
 
   _initButtons() {
     const isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-    const action = document.getElementById("btn-action");
-    const sw = document.getElementById("btn-switch");
-    if (!isTouch || !action) return;
+    const shoot = document.getElementById("btn-shoot");
+    const pass = document.getElementById("btn-pass");
+    if (!isTouch || !shoot || !pass) return;
 
     document.getElementById("actions")?.classList.remove("hidden");
-    action.addEventListener("touchstart", (e) => { e.preventDefault(); this._pressAction(); }, { passive: false });
-    action.addEventListener("touchend", (e) => { e.preventDefault(); this._releaseAction(); }, { passive: false });
-    sw?.addEventListener("touchstart", (e) => { e.preventDefault(); this.pendingSwitch = true; }, { passive: false });
+    shoot.addEventListener("touchstart", (e) => { e.preventDefault(); this._pressShoot(); }, { passive: false });
+    shoot.addEventListener("touchend", (e) => { e.preventDefault(); this._releaseShoot(); }, { passive: false });
+    pass.addEventListener("touchstart", (e) => { e.preventDefault(); this.pendingSecondary = true; }, { passive: false });
   }
 
-  // Aktuelle Ladung (0..1), während die Aktionstaste gehalten wird.
+  // Aktuelle Schuss-Ladung (0..1), während die Schusstaste gehalten wird.
   getCharge() {
-    return this.actionDown ? Math.min(1, (performance.now() - this.actionStart) / MAX_CHARGE_MS) : 0;
+    return this.shootDown ? Math.min(1, (performance.now() - this.shootStart) / MAX_CHARGE_MS) : 0;
   }
 
   getDirection() {
@@ -125,18 +129,16 @@ export class Input {
     if (this.keys.has("arrowup") || this.keys.has("w")) y -= 1;
     if (this.keys.has("arrowdown") || this.keys.has("s")) y += 1;
     if (this.joystick.active) { x += this.joystick.x; y += this.joystick.y; }
-
     const len = Math.hypot(x, y);
     if (len > 1) { x /= len; y /= len; }
     return { x, y };
   }
 
-  // Liefert beim Loslassen { charge: 0..1 }, sonst null.
-  consumeAction() {
-    if (!this.pendingAction) return null;
-    this.pendingAction = false;
-    return { charge: this.actionCharge };
+  consumeShoot() {
+    if (!this.pendingShoot) return null;
+    this.pendingShoot = false;
+    return { charge: this.shootCharge };
   }
-
+  consumeSecondary() { const v = this.pendingSecondary; this.pendingSecondary = false; return v; }
   consumeSwitch() { const v = this.pendingSwitch; this.pendingSwitch = false; return v; }
 }

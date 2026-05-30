@@ -59,6 +59,17 @@ unserer Feature-Master-Liste entwickelt wird. Läuft ohne Installation auf
   über **„Saison fortsetzen"** weitergeführt werden.
 - **Build-Kennung** im Startmenü, um die live ausgelieferte Version zu erkennen.
 
+### Meilenstein 6 — Feinschliff Steuerung & Regeln
+- **Anstoß-Aufstellung:** beim Anpfiff, nach jedem Tor und nach der Halbzeit
+  stehen **alle Spieler in ihrer eigenen Hälfte**; ein zentraler Spieler des
+  anstoßberechtigten Teams steht direkt am Mittelpunkt.
+- **Eindeutige Trikotfarben:** bei Farbkollision bekommt das Auswärtsteam
+  automatisch ein klar kontrastierendes Ausweichtrikot.
+- **Zwei getrennte Tasten:** `Leertaste` = **Schuss** (halten = härter),
+  `F` = **Pass / Grätsche / Spielerwechsel** (kontextabhängig).
+  Tablet: zwei Buttons „SCHUSS" und „PASS".
+- **Leichtere Gegner-KI** (eigene Mitspieler mit festem, hilfreichem Profil).
+
 ## 🚀 Starten
 
 Da das Spiel ES-Module nutzt, muss es über einen kleinen Webserver laufen

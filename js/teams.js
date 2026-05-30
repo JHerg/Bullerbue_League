@@ -93,6 +93,34 @@ export function teamById(id) {
   return TEAMS.find((t) => t.id === id);
 }
 
+// Trikot-Kollision vermeiden: Liefert für das Auswärtsteam ggf. ein
+// Ausweichtrikot [Trikot, Kontur], das sich klar vom Heimtrikot abhebt.
+const ALT_KITS = [
+  ["#ffffff", "#1b1b1b"], ["#1565c0", "#ffffff"], ["#ffd600", "#1b1b1b"],
+  ["#212121", "#ffffff"], ["#00bcd4", "#06303a"], ["#e91e63", "#ffffff"],
+];
+
+function _hexRgb(h) {
+  h = h.replace("#", "");
+  if (h.length === 3) h = h.split("").map((c) => c + c).join("");
+  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+}
+function colorDist(a, b) {
+  const x = _hexRgb(a), y = _hexRgb(b);
+  return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]);
+}
+
+export function ensureContrast(homeColors, awayColors) {
+  if (colorDist(homeColors[0], awayColors[0]) >= 115) return awayColors;
+  // Ausweichtrikot wählen, das am weitesten von Heim-Trikot UND -Kontur entfernt ist.
+  let best = ALT_KITS[0], bestD = -1;
+  for (const alt of ALT_KITS) {
+    const d = Math.min(colorDist(alt[0], homeColors[0]), colorDist(alt[0], homeColors[1]));
+    if (d > bestD) { bestD = d; best = alt; }
+  }
+  return best;
+}
+
 // ---------------------------------------------------------------------------
 // Fake-Spielernamen: deterministische Generierung aus Namens-Pools, damit
 // jedes Team eine stabile, "echte" Startelf hat (z. B. "Harry Cohen").

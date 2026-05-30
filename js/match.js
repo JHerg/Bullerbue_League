@@ -6,6 +6,7 @@ import { WORLD, FIELD, MARGIN, GOAL, BALL, KICK, PLAYER, USER, DIFFICULTY_TEAMMA
 import { Team } from "./team.js";
 import { Ball } from "./ball.js";
 import { computeAI } from "./ai.js";
+import { ensureContrast } from "./teams.js";
 
 const EDGE = 8; // wie weit innerhalb der Linie der Ball bei Standards liegt
 
@@ -14,6 +15,8 @@ export class Match {
     // Eigene Mitspieler: festes Profil. Gegner: gewählte Schwierigkeit.
     this.home = new Team(homeDef, true, DIFFICULTY_TEAMMATE);
     this.away = new Team(awayDef, false, difficulty);
+    // Trikot-Kollision vermeiden: Auswärtsteam ggf. auf Ausweichtrikot setzen.
+    this.away.colors = ensureContrast(this.home.colors, this.away.colors);
     this.mode = mode;
     this.teamDifficulty = DIFFICULTY_TEAMMATE; // KI der eigenen Mitspieler
     this.oppDifficulty = difficulty;           // KI des Gegners
@@ -45,10 +48,12 @@ export class Match {
     return team === this.home ? this.teamDifficulty : this.oppDifficulty;
   }
 
-  // Anstoß: Ball auf den Mittelpunkt, ein zentraler Spieler des berechtigten
-  // Teams stellt sich direkt an den Ball.
+  // Anstoß: beide Teams in ihre eigene Hälfte, Ball auf den Mittelpunkt,
+  // ein zentraler Spieler des berechtigten Teams stellt sich an den Ball.
   _kickoff(team) {
     const cx = WORLD.width / 2, cy = WORLD.height / 2;
+    this._placeOwnHalf(this.home);
+    this._placeOwnHalf(this.away);
     this.ball.reset(cx, cy);
     this.ball.lastTouchTeam = team;
 
@@ -65,6 +70,19 @@ export class Match {
     }
   }
 
+  // Stellt alle Spieler eines Teams in die EIGENE Hälfte (Formation gestaucht).
+  _placeOwnHalf(team) {
+    const left = MARGIN, fw = FIELD.width;
+    for (const p of team.players) {
+      const fracOwn = team.attackRight ? (p.homeX - left) / fw : (left + fw - p.homeX) / fw;
+      const k = Math.min(0.46, fracOwn * 0.46); // bis knapp vor die Mittellinie
+      p.x = team.attackRight ? left + k * fw : left + fw - k * fw;
+      p.y = p.homeY;
+      p.vx = 0; p.vy = 0;
+      p.facing = { x: team.attackRight ? 1 : -1, y: 0 };
+    }
+  }
+
   update(dt, input) {
     if (this.finished) return;
 
@@ -78,9 +96,7 @@ export class Match {
     this.clock += dt;
     if (this.clock >= this.halfLength) { this._endHalf(); return; }
 
-    // Manuellen Spielerwechsel (Team-Modus) verarbeiten.
     this.manualTimer = Math.max(0, this.manualTimer - dt);
-    if (this.mode === "team" && input.consumeSwitch()) this._switchPlayer();
 
     // Ball-Jäger pro Team
     this.home.chaser = this._closestOutfield(this.home);
@@ -132,19 +148,28 @@ export class Match {
     const dir = input.getDirection();
     p.update(dt, dir, 1);
 
-    const action = input.consumeAction();
-    if (!action) return;
-    const charge = action.charge; // 0..1 (Haltedauer der Leertaste)
-
     const ball = this.ball;
     const distBall = Math.hypot(ball.x - p.x, ball.y - p.y);
     const atBall = ball.owner === p || distBall < BALL.controlRadius * 1.7;
     const teammateHasBall = ball.owner && ball.owner.team === p.team && ball.owner !== p;
 
-    if (atBall) {
+    // --- Schuss (Leertaste, Haltedauer = Härte) ---
+    const shoot = input.consumeShoot();
+    if (shoot && atBall) {
       const g = goalsForTeam(p.team);
-      if (charge < 0.35) {
-        // Kurzer Druck -> Pass nach vorn.
+      const power = KICK.shootPower * (0.6 + 0.4 * shoot.charge);
+      const distGoal = Math.hypot(g.oppGoalX - p.x, g.goalY - p.y);
+      if (distGoal < USER.shootRange * 1.8) {
+        ball.kick(g.oppGoalX - p.x, g.goalY - p.y, power, p.team);
+      } else {
+        ball.kick(p.facing.x, p.facing.y, power, p.team);
+      }
+    }
+
+    // --- Sekundäraktion (F / Touch "PASS"): Pass / Grätsche / Wechsel ---
+    if (input.consumeSecondary()) {
+      if (atBall) {
+        // Pass nach vorn.
         const mate = this._bestPass(p);
         if (mate) {
           const dx = mate.x - p.x, dy = mate.y - p.y;
@@ -153,34 +178,32 @@ export class Match {
         } else {
           ball.kick(p.facing.x, p.facing.y, KICK.passPower, p.team);
         }
+      } else if (teammateHasBall) {
+        // Eigenes Team am Ball, du aber nicht: Spieler wechseln (Team) bzw. Ball anfordern (Einzel).
+        if (this.mode === "team") this._switchPlayer();
+        else {
+          const o = ball.owner;
+          const dx = p.x - o.x, dy = p.y - o.y;
+          const power = Math.min(KICK.passPowerMax, KICK.passPower + Math.hypot(dx, dy) * KICK.passPerPx);
+          ball.kick(dx, dy, power, p.team);
+        }
       } else {
-        // Gehaltener Druck -> Schuss, Härte nach Ladung.
-        const power = KICK.passPower + (KICK.shootPower - KICK.passPower) * charge;
-        const distGoal = Math.hypot(g.oppGoalX - p.x, g.goalY - p.y);
-        if (distGoal < USER.shootRange * 1.8) {
-          ball.kick(g.oppGoalX - p.x, g.goalY - p.y, power, p.team);
+        // Gegner/loser Ball: nah dran grätschen, sonst wechseln (Team) bzw. hechten (Einzel).
+        if (distBall < USER.tackleRange) {
+          const g = goalsForTeam(p.team);
+          ball.kick(g.oppGoalX - p.x, g.goalY - p.y, KICK.passPower * 0.8, p.team);
+        } else if (this.mode === "team") {
+          this._switchPlayer();
         } else {
-          ball.kick(p.facing.x, p.facing.y, power, p.team);
+          const a = Math.atan2(ball.y - p.y, ball.x - p.x);
+          p.vx = Math.cos(a) * USER.lunge;
+          p.vy = Math.sin(a) * USER.lunge;
         }
       }
-    } else if (teammateHasBall) {
-      // Eigenes Team hat den Ball -> Ball anfordern: Ballführer spielt mich an.
-      const o = ball.owner;
-      const dx = p.x - o.x, dy = p.y - o.y;
-      const power = Math.min(KICK.passPowerMax, KICK.passPower + Math.hypot(dx, dy) * KICK.passPerPx);
-      ball.kick(dx, dy, power, p.team);
-    } else {
-      // Gegner hat den Ball (oder loser Ball) -> Grätsche.
-      if (distBall < USER.tackleRange) {
-        const g = goalsForTeam(p.team);
-        ball.kick(g.oppGoalX - p.x, g.goalY - p.y, KICK.passPower * 0.8, p.team);
-      } else {
-        // Hechten Richtung Ball, um ihn zu erreichen.
-        const a = Math.atan2(ball.y - p.y, ball.x - p.x);
-        p.vx = Math.cos(a) * USER.lunge;
-        p.vy = Math.sin(a) * USER.lunge;
-      }
     }
+
+    // --- Reiner Spielerwechsel (Shift/Q) ---
+    if (input.consumeSwitch() && this.mode === "team") this._switchPlayer();
   }
 
   _updateAI(dt, p) {
@@ -264,9 +287,7 @@ export class Match {
     if (scorer === this.home) this.score.home++; else this.score.away++;
 
     this.message = `TOR für ${scorer.name}!   ${this.home.short} ${this.score.home} : ${this.score.away} ${this.away.short}`;
-    this.home.reset();
-    this.away.reset();
-    this._kickoff(conceder); // Anstoß für die Mannschaft, die das Tor kassiert hat
+    this._kickoff(conceder); // Anstoß für die Mannschaft, die das Tor kassiert hat (stellt beide Teams)
     this.pauseTimer = 2.2;
     return true;
   }
