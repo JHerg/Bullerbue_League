@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Bullerbue League — 2.5D-Prototyp ⚽</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- Zurück zum Hauptspiel -->
+  <a id="back-link" href="index.html">← zurück zum Spiel</a>
+
+  <!-- Anzeigetafel -->
+  <div id="scoreboard">
+    <span id="sb-home"></span>
+    <span id="sb-score">0 : 0</span>
+    <span id="sb-away"></span>
+    <span id="sb-clock">2.5D-Prototyp</span>
+  </div>
+
+  <!-- Tor-/Status-Meldung -->
+  <div id="message"></div>
+
+  <canvas id="game"></canvas>
+
+  <!-- Virtueller Joystick (nur Touch) -->
+  <div id="joystick" class="hidden">
+    <div id="joystick-base"></div>
+    <div id="joystick-knob"></div>
+  </div>
+
+  <!-- Aktions-Buttons (nur Touch) -->
+  <div id="actions" class="hidden">
+    <button id="btn-pass" class="action-btn small">PASS</button>
+    <button id="btn-shoot" class="action-btn">SCHUSS</button>
+  </div>
+
+  <script type="module" src="js/proto.js?v=m"></script>
+</body>
+</html>
