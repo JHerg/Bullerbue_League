@@ -52,7 +52,8 @@ export class Ball {
     }
   }
 
-  // Bewegung + Reibung + Bandenabpraller (nur wenn frei rollend).
+  // Bewegung + Reibung. Aus-Erkennung (Einwurf/Ecke/Abstoß) übernimmt das Match.
+  // Hier nur eine harte Sicherheitsgrenze an den Welträndern.
   update(dt) {
     if (this.owner) return;
 
@@ -63,10 +64,8 @@ export class Ball {
     this.vx *= f;
     this.vy *= f;
 
-    if (this.x < this.radius) { this.x = this.radius; this.vx *= -0.55; }
-    if (this.x > WORLD.width - this.radius) { this.x = WORLD.width - this.radius; this.vx *= -0.55; }
-    if (this.y < this.radius) { this.y = this.radius; this.vy *= -0.55; }
-    if (this.y > WORLD.height - this.radius) { this.y = WORLD.height - this.radius; this.vy *= -0.55; }
+    this.x = Math.min(Math.max(this.x, this.radius), WORLD.width - this.radius);
+    this.y = Math.min(Math.max(this.y, this.radius), WORLD.height - this.radius);
   }
 
   // Ball in eine Richtung treten (Schuss/Pass).

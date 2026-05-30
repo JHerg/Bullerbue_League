@@ -51,6 +51,13 @@ export const KICK = {
   passPowerMax: 620,
 };
 
+// Nutzer-Aktionen (kontextabhängige Leertaste)
+export const USER = {
+  shootRange: 270,   // ab hier zielt die Aktion am Ball aufs Tor statt zu passen
+  tackleRange: 38,   // Abstand zum Ball, ab dem die Grätsche den Ball erobert
+  lunge: 540,        // Tempo des Hechtens/Grätschens Richtung Ball
+};
+
 // Kamera: wie schnell sie dem Spieler folgt (0..1, höher = direkter)
 export const CAMERA = {
   lerp: 0.12,

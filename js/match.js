@@ -1,15 +1,16 @@
-// Match-Orchestrator: führt zwei Teams, Ball, KI, Ballbesitz, die beiden
-// Spieler-Fokus-Modi, Schuss/Pass des Nutzers und die Tor-Erkennung zusammen.
+// Match-Orchestrator: zwei Teams, Ball, KI, Ballbesitz, Fokus-Modi,
+// kontextabhängige Nutzer-Aktion (Leertaste), Aus-Erkennung
+// (Einwurf/Ecke/Abstoß), Tore, Spieluhr und Halbzeit mit Seitenwechsel.
 
-import { WORLD, GOAL, BALL, KICK, PLAYER } from "./config.js";
+import { WORLD, FIELD, MARGIN, GOAL, BALL, KICK, PLAYER, USER } from "./config.js";
 import { Team } from "./team.js";
 import { Ball } from "./ball.js";
 import { computeAI } from "./ai.js";
 
+const EDGE = 8; // wie weit innerhalb der Linie der Ball bei Standards liegt
+
 export class Match {
-  // homeDef/awayDef: Team-Definitionen; mode: "team" | "single";
-  // difficulty: KI-Profil; userPlayerIndex: bei "single" der feste Spieler.
-  constructor(homeDef, awayDef, { mode, difficulty, userPlayerIndex = 9 }) {
+  constructor(homeDef, awayDef, { mode, difficulty, userPlayerIndex = 9, minutesPerHalf = 2 }) {
     this.home = new Team(homeDef, true, difficulty);
     this.away = new Team(awayDef, false, difficulty);
     this.mode = mode;
@@ -20,55 +21,55 @@ export class Match {
 
     this.allPlayers = [...this.home.players, ...this.away.players];
 
-    // Im Einzelspieler-Modus steuert man dauerhaft diesen Spieler.
     this.userFixed = this.home.players[userPlayerIndex] || this.home.outfield[0];
     this.userPlayer = this.userFixed;
 
     this.score = { home: 0, away: 0 };
     this.message = "";
-    this.resetTimer = 0;
+    this.pauseTimer = 0;
+
+    // Spieluhr / Halbzeit
+    this.halfLength = minutesPerHalf * 60; // Sekunden pro Halbzeit
+    this.half = 1;
+    this.clock = 0;
+    this.finished = false;
   }
 
   update(dt, input) {
-    if (this.resetTimer > 0) {
-      this.resetTimer -= dt;
-      if (this.resetTimer <= 0) this.message = "";
-      // Während der Anstoßpause Kamera-Ziel beibehalten, sonst nichts bewegen.
+    if (this.finished) return;
+
+    if (this.pauseTimer > 0) {
+      this.pauseTimer -= dt;
+      if (this.pauseTimer <= 0) this.message = "";
       return;
     }
 
-    // Pro Team den Ball-Jäger (nächster Feldspieler zum Ball) bestimmen.
+    // Spieluhr
+    this.clock += dt;
+    if (this.clock >= this.halfLength) { this._endHalf(); return; }
+
+    // Ball-Jäger pro Team
     this.home.chaser = this._closestOutfield(this.home);
     this.away.chaser = this._closestOutfield(this.away);
 
-    // Gesteuerten Spieler bestimmen (Fokus-Modus).
     this._selectUserPlayer();
 
-    // Alle Spieler aktualisieren.
     for (const p of this.allPlayers) {
-      if (p === this.userPlayer) {
-        this._updateUser(dt, p, input);
-      } else {
-        this._updateAI(dt, p);
-      }
+      if (p === this.userPlayer) this._updateUser(dt, p, input);
+      else this._updateAI(dt, p);
     }
 
     this._separate();
-
     this.ball.updatePossession(dt, this.allPlayers);
     this.ball.update(dt);
 
-    this._checkGoal();
+    if (this._checkGoal()) return;
+    this._checkBounds();
   }
 
-  // --- Steuerung: welchen Spieler steuert der Mensch? ---
+  // ---- Fokus-Modus: welchen Spieler steuert der Mensch? ----
   _selectUserPlayer() {
-    if (this.mode === "single") {
-      this.userPlayer = this.userFixed;
-      return;
-    }
-    // Team-Modus: Feldspieler, der dem Ball am nächsten ist (mit Hysterese,
-    // damit nicht ständig gewechselt wird).
+    if (this.mode === "single") { this.userPlayer = this.userFixed; return; }
     let best = this.userPlayer && this.userPlayer.team === this.home ? this.userPlayer : null;
     let bestDist = best ? Math.hypot(best.x - this.ball.x, best.y - this.ball.y) - 22 : Infinity;
     for (const p of this.home.outfield) {
@@ -78,23 +79,50 @@ export class Match {
     this.userPlayer = best || this.home.outfield[0];
   }
 
+  // ---- Nutzer-Steuerung inkl. kontextabhängiger Leertaste ----
   _updateUser(dt, p, input) {
     const dir = input.getDirection();
-    p.update(dt, dir, 1); // Nutzer läuft immer mit vollem Tempo
+    p.update(dt, dir, 1);
 
-    const canKick = this.ball.owner === p ||
-      Math.hypot(this.ball.x - p.x, this.ball.y - p.y) < BALL.controlRadius * 1.7;
+    if (!input.consumeAction()) return;
 
-    if (input.consumeShoot() && canKick) {
-      this.ball.kick(p.facing.x, p.facing.y, KICK.shootPower, p.team);
-    } else if (input.consumePass() && canKick) {
-      const mate = this._bestPass(p);
-      if (mate) {
-        const dx = mate.x - p.x, dy = mate.y - p.y;
-        const power = Math.min(KICK.passPowerMax, KICK.passPower + Math.hypot(dx, dy) * KICK.passPerPx);
-        this.ball.kick(dx, dy, power, p.team);
+    const ball = this.ball;
+    const distBall = Math.hypot(ball.x - p.x, ball.y - p.y);
+    const atBall = ball.owner === p || distBall < BALL.controlRadius * 1.7;
+    const teammateHasBall = ball.owner && ball.owner.team === p.team && ball.owner !== p;
+
+    if (atBall) {
+      // Am Ball -> Schuss aufs Tor (in Reichweite) oder Pass nach vorn.
+      const g = goalsForTeam(p.team);
+      const distGoal = Math.hypot(g.oppGoalX - p.x, g.goalY - p.y);
+      if (distGoal < USER.shootRange) {
+        ball.kick(g.oppGoalX - p.x, g.goalY - p.y, KICK.shootPower, p.team);
       } else {
-        this.ball.kick(p.facing.x, p.facing.y, KICK.passPower, p.team);
+        const mate = this._bestPass(p);
+        if (mate) {
+          const dx = mate.x - p.x, dy = mate.y - p.y;
+          const power = Math.min(KICK.passPowerMax, KICK.passPower + Math.hypot(dx, dy) * KICK.passPerPx);
+          ball.kick(dx, dy, power, p.team);
+        } else {
+          ball.kick(p.facing.x, p.facing.y, KICK.passPower, p.team);
+        }
+      }
+    } else if (teammateHasBall) {
+      // Eigenes Team hat den Ball -> Ball anfordern: Ballführer spielt mich an.
+      const o = ball.owner;
+      const dx = p.x - o.x, dy = p.y - o.y;
+      const power = Math.min(KICK.passPowerMax, KICK.passPower + Math.hypot(dx, dy) * KICK.passPerPx);
+      ball.kick(dx, dy, power, p.team);
+    } else {
+      // Gegner hat den Ball (oder loser Ball) -> Grätsche.
+      if (distBall < USER.tackleRange) {
+        const g = goalsForTeam(p.team);
+        ball.kick(g.oppGoalX - p.x, g.goalY - p.y, KICK.passPower * 0.8, p.team);
+      } else {
+        // Hechten Richtung Ball, um ihn zu erreichen.
+        const a = Math.atan2(ball.y - p.y, ball.x - p.x);
+        p.vx = Math.cos(a) * USER.lunge;
+        p.vy = Math.sin(a) * USER.lunge;
       }
     }
   }
@@ -103,7 +131,6 @@ export class Match {
     const teammates = p.team.players;
     const opponents = p.team === this.home ? this.away.players : this.home.players;
     const teamHasBall = this.ball.owner && this.ball.owner.team === p.team;
-
     const ctx = {
       ball: this.ball,
       difficulty: this.difficulty,
@@ -113,12 +140,9 @@ export class Match {
       opponents,
       dt,
     };
-
     const out = computeAI(p, ctx);
     p.update(dt, out.dir, this.difficulty.speed);
-    if (out.kick) {
-      this.ball.kick(out.kick.dirX, out.kick.dirY, out.kick.power, p.team);
-    }
+    if (out.kick) this.ball.kick(out.kick.dirX, out.kick.dirY, out.kick.power, p.team);
   }
 
   _bestPass(p) {
@@ -129,9 +153,8 @@ export class Match {
       const dx = mate.x - p.x, dy = mate.y - p.y;
       const dist = Math.hypot(dx, dy);
       if (dist < 35 || dist > 420) continue;
-      // bevorzugt nach vorn und in Laufrichtung des Nutzers
       const progress = (mate.x - p.x) * forward;
-      const facingBias = (dx * p.facing.x + dy * p.facing.y) / dist; // -1..1
+      const facingBias = (dx * p.facing.x + dy * p.facing.y) / dist;
       const score = progress + facingBias * 120;
       if (score > bestScore) { bestScore = score; best = mate; }
     }
@@ -147,7 +170,6 @@ export class Match {
     return best;
   }
 
-  // Leichte Abstoßung, damit Spieler nicht aufeinander kleben.
   _separate() {
     const min = PLAYER.radius * 2;
     for (let i = 0; i < this.allPlayers.length; i++) {
@@ -165,33 +187,112 @@ export class Match {
     }
   }
 
+  // Team, das in Richtung der angegebenen Torlinie angreift.
+  _attackingLine(side) {
+    const rightAttacker = this.home.attackRight ? this.home : this.away;
+    if (side === "right") return rightAttacker;
+    return rightAttacker === this.home ? this.away : this.home;
+  }
+
   _checkGoal() {
     const b = this.ball;
-    const inMouth = Math.abs(b.y - GOAL.centerY) < GOAL.height / 2;
-    if (!inMouth) return;
+    if (Math.abs(b.y - GOAL.centerY) >= GOAL.height / 2) return false;
 
-    if (b.x <= GOAL.lineLeft) {
-      // Linkes Tor (von Heim verteidigt) -> Auswärts trifft.
-      this.score.away++;
-      this._goal(this.away, this.home);
-    } else if (b.x >= GOAL.lineRight) {
-      this.score.home++;
-      this._goal(this.home, this.away);
+    let scorer = null;
+    if (b.x <= GOAL.lineLeft) scorer = this._attackingLine("left");
+    else if (b.x >= GOAL.lineRight) scorer = this._attackingLine("right");
+    if (!scorer) return false;
+
+    const conceder = scorer === this.home ? this.away : this.home;
+    if (scorer === this.home) this.score.home++; else this.score.away++;
+
+    this.message = `TOR für ${scorer.name}!   ${this.home.short} ${this.score.home} : ${this.score.away} ${this.away.short}`;
+    this.home.reset();
+    this.away.reset();
+    this.ball.reset(WORLD.width / 2, WORLD.height / 2);
+    this.ball.lastTouchTeam = conceder;
+    this.pauseTimer = 2.2;
+    return true;
+  }
+
+  _checkBounds() {
+    const b = this.ball;
+    const left = MARGIN, right = MARGIN + FIELD.width;
+    const top = MARGIN, bottom = MARGIN + FIELD.height;
+
+    // Seitenaus -> Einwurf für das Team ohne letzten Ballkontakt.
+    if (b.y < top || b.y > bottom) {
+      const awarded = b.lastTouchTeam === this.home ? this.away : this.home;
+      const px = clamp(b.x, left + EDGE, right - EDGE);
+      const py = b.y < top ? top + EDGE : bottom - EDGE;
+      this._restart("Einwurf", awarded, px, py);
+      return;
+    }
+
+    // Toraus (außerhalb des Tores) -> Ecke oder Abstoß.
+    if (b.x < left || b.x > right) {
+      const side = b.x < left ? "left" : "right";
+      const attacker = this._attackingLine(side);
+      const defender = attacker === this.home ? this.away : this.home;
+      if (b.lastTouchTeam === defender) {
+        // Verteidiger zuletzt am Ball -> Eckball für Angreifer.
+        const cx = side === "left" ? left + EDGE : right - EDGE;
+        const cy = b.y < GOAL.centerY ? top + EDGE : bottom - EDGE;
+        this._restart("Eckball", attacker, cx, cy);
+      } else {
+        // Angreifer zuletzt am Ball -> Abstoß für Verteidiger.
+        const gx = side === "left" ? left + 70 : right - 70;
+        this._restart("Abstoß", defender, gx, GOAL.centerY);
+      }
     }
   }
 
-  _goal(scorer, conceder) {
-    this.message = `TOR für ${scorer.name}!  ${this.home.short} ${this.score.home} : ${this.score.away} ${this.away.short}`;
-    this.resetTimer = 2.2;
-    this.home.reset();
-    this.away.reset();
-    // Anstoß für die Mannschaft, die das Tor kassiert hat.
-    this.ball.reset(WORLD.width / 2, WORLD.height / 2);
-    this.ball.lastTouchTeam = conceder;
+  // Standardsituation: Ball platzieren und dem berechtigten Team zuschanzen.
+  _restart(type, team, x, y) {
+    this.ball.reset(x, y);
+    this.ball.lastTouchTeam = team;
+    // Nächsten Feldspieler des berechtigten Teams als Ausführenden heranholen.
+    let taker = null, bestDist = Infinity;
+    for (const p of team.outfield) {
+      const d = Math.hypot(p.x - x, p.y - y);
+      if (d < bestDist) { bestDist = d; taker = p; }
+    }
+    if (taker) {
+      taker.x = x; taker.y = y;
+      taker.vx = 0; taker.vy = 0;
+      taker.facing = { x: team.attackRight ? 1 : -1, y: 0 };
+    }
+    this.message = type;
+    this.pauseTimer = 0.9;
   }
 
-  // Ziel, dem die Kamera folgt: der gesteuerte Spieler.
-  get cameraTarget() {
-    return this.userPlayer;
+  _endHalf() {
+    if (this.half === 1) {
+      this.half = 2;
+      this.clock = 0;
+      this.home.switchSides();
+      this.away.switchSides();
+      this.ball.reset(WORLD.width / 2, WORLD.height / 2);
+      this.ball.lastTouchTeam = this.away; // Anstoß 2. Halbzeit
+      this.message = "Halbzeit – Seitenwechsel";
+      this.pauseTimer = 2.4;
+    } else {
+      this.finished = true;
+      const s = this.score;
+      const result = s.home === s.away ? "Unentschieden" :
+        (s.home > s.away ? `${this.home.name} gewinnt` : `${this.away.name} gewinnt`);
+      this.message = `Schlusspfiff!   ${this.home.short} ${s.home} : ${s.away} ${this.away.short}\n${result}`;
+    }
   }
+
+  get cameraTarget() { return this.userPlayer; }
 }
+
+function goalsForTeam(team) {
+  return {
+    oppGoalX: team.attackRight ? GOAL.lineRight : GOAL.lineLeft,
+    goalY: GOAL.centerY,
+  };
+}
+
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }

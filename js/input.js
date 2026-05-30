@@ -1,16 +1,17 @@
 // Plattformübergreifende Eingabe:
-//  - PC: Tastatur (WASD/Pfeile = laufen, Leertaste = Schuss, E = Pass)
-//  - Tablet/Touch: virtueller Joystick + Touch-Buttons (Schuss/Pass)
+//  - PC: Tastatur (WASD/Pfeile = laufen, Leertaste = Kontext-Aktion)
+//  - Tablet/Touch: virtueller Joystick + ein Aktions-Button
 //
 // Bewegung -> normierter Richtungsvektor getDirection().
-// Aktionen  -> einmalig auslösbar via consumeShoot()/consumePass().
+// Aktion   -> einmalig auslösbar via consumeAction().
+// Die Bedeutung der Aktion (Schuss/Pass/Anfordern/Grätsche) entscheidet das
+// Match je nach Spielsituation.
 
 export class Input {
   constructor() {
     this.keys = new Set();
     this.joystick = { x: 0, y: 0, active: false };
-    this.pendingShoot = false;
-    this.pendingPass = false;
+    this.pendingAction = false;
 
     this._initKeyboard();
     this._initJoystick();
@@ -20,10 +21,7 @@ export class Input {
   _initKeyboard() {
     window.addEventListener("keydown", (e) => {
       const k = e.key.toLowerCase();
-      if (!e.repeat) {
-        if (k === " ") this.pendingShoot = true;
-        if (k === "e") this.pendingPass = true;
-      }
+      if (!e.repeat && k === " ") this.pendingAction = true;
       this.keys.add(k);
       if (e.key.startsWith("Arrow") || e.key === " ") e.preventDefault();
     });
@@ -83,16 +81,14 @@ export class Input {
 
   _initButtons() {
     const isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-    const shoot = document.getElementById("btn-shoot");
-    const pass = document.getElementById("btn-pass");
-    if (!isTouch || !shoot || !pass) return;
+    const action = document.getElementById("btn-action");
+    if (!isTouch || !action) return;
 
     document.getElementById("actions")?.classList.remove("hidden");
-    const bind = (el, fn) => {
-      el.addEventListener("touchstart", (e) => { e.preventDefault(); fn(); }, { passive: false });
-    };
-    bind(shoot, () => { this.pendingShoot = true; });
-    bind(pass, () => { this.pendingPass = true; });
+    action.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      this.pendingAction = true;
+    }, { passive: false });
   }
 
   getDirection() {
@@ -108,6 +104,5 @@ export class Input {
     return { x, y };
   }
 
-  consumeShoot() { const v = this.pendingShoot; this.pendingShoot = false; return v; }
-  consumePass() { const v = this.pendingPass; this.pendingPass = false; return v; }
+  consumeAction() { const v = this.pendingAction; this.pendingAction = false; return v; }
 }

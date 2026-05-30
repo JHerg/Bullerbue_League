@@ -38,6 +38,7 @@ const selHome = document.getElementById("sel-home");
 const selAway = document.getElementById("sel-away");
 const selMode = document.getElementById("sel-mode");
 const selDiff = document.getElementById("sel-diff");
+const selHalf = document.getElementById("sel-half");
 const selPlayer = document.getElementById("sel-player");
 const lblPlayer = document.getElementById("lbl-player");
 
@@ -77,6 +78,7 @@ document.getElementById("btn-start").addEventListener("click", () => {
     mode: selMode.value,
     difficulty: DIFFICULTY[selDiff.value],
     userPlayerIndex: parseInt(selPlayer.value, 10) || 9,
+    minutesPerHalf: parseInt(selHalf.value, 10) || 2,
   });
 
   document.getElementById("menu").classList.add("hidden");
@@ -89,10 +91,19 @@ document.getElementById("btn-start").addEventListener("click", () => {
 // HUD
 // --------------------------------------------------------------------------
 const sbScore = document.getElementById("sb-score");
+const sbClock = document.getElementById("sb-clock");
 const msgEl = document.getElementById("message");
+
+function fmtTime(sec) {
+  const s = Math.floor(sec);
+  return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+}
 
 function updateHUD() {
   sbScore.textContent = `${match.score.home} : ${match.score.away}`;
+  sbClock.textContent = match.finished
+    ? "Ende"
+    : `${match.half}. HZ ${fmtTime(match.clock)}`;
   if (match.message) {
     msgEl.textContent = match.message;
     msgEl.classList.add("show");

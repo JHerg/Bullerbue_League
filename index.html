@@ -12,6 +12,7 @@
     <span id="sb-home"></span>
     <span id="sb-score">0 : 0</span>
     <span id="sb-away"></span>
+    <span id="sb-clock">1. HZ 00:00</span>
   </div>
 
   <!-- Tor-/Status-Meldung -->
@@ -25,10 +26,9 @@
     <div id="joystick-knob"></div>
   </div>
 
-  <!-- Aktions-Buttons (nur Touch) -->
+  <!-- Aktions-Button (nur Touch) -->
   <div id="actions" class="hidden">
-    <button id="btn-pass" class="action-btn">PASS</button>
-    <button id="btn-shoot" class="action-btn">SCHUSS</button>
+    <button id="btn-action" class="action-btn">AKTION</button>
   </div>
 
   <!-- Startmenü -->
@@ -64,8 +64,17 @@
         </select>
       </label>
 
+      <label>Halbzeitdauer
+        <select id="sel-half">
+          <option value="1">2 × 1 Minute</option>
+          <option value="2" selected>2 × 2 Minuten</option>
+          <option value="3">2 × 3 Minuten</option>
+          <option value="5">2 × 5 Minuten</option>
+        </select>
+      </label>
+
       <button id="btn-start">Anpfiff!</button>
-      <p class="hint">PC: WASD/Pfeile laufen · Leertaste = Schuss · E = Pass</p>
+      <p class="hint">PC: WASD/Pfeile = laufen · Leertaste = Aktion<br>(am Ball: Schuss/Pass · ohne Ball: anfordern / grätschen)</p>
     </div>
   </div>
 

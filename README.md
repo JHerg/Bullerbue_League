@@ -29,6 +29,16 @@ unserer Feature-Master-Liste entwickelt wird. Läuft ohne Installation auf
 - **Spielmodus „Anstoß":** freie Teamauswahl im Startmenü, Anzeigetafel,
   Tor-Erkennung mit Anstoß nach dem Treffer.
 
+### Meilenstein 3 — Regeln, Aktion & Halbzeit
+- **Aus-Erkennung:** Seitenaus → **Einwurf**, Toraus → **Abstoß** oder **Eckball**
+  (korrekt nach letztem Ballkontakt), statt an den Banden abzuprallen.
+- **Kontextabhängige Leertaste** (eine Taste für alles):
+  - am Ball → **Schuss** (in Tornähe) bzw. **Pass** nach vorn,
+  - ohne Ball & eigenes Team in Ballbesitz → **Ball anfordern** (Mitspieler passt zu dir),
+  - ohne Ball & Gegner am Ball → **Grätsche** (Hechten + Ball erobern).
+- **Halbzeitdauer wählbar** im Startmenü (2 × 1 / 2 / 3 / 5 Minuten).
+- **Halbzeit** mit **Seitenwechsel** + laufende **Spieluhr** und Schlusspfiff.
+
 ## 🚀 Starten
 
 Da das Spiel ES-Module nutzt, muss es über einen kleinen Webserver laufen
@@ -75,10 +85,10 @@ Reihenfolge nach Priorität für die nächsten Schritte:
 3. **[erledigt]** Zwei Mannschaften mit Fake-Namen + Startelf-Aufstellungen (18 Teams).
 4. **[erledigt]** Spieler-Fokus-Modi: Team-Modus & Einzelspieler-Modus.
 5. **[erledigt]** Gegner-KI mit 4 Schwierigkeitsstufen.
-6. Spielzeit/Halbzeit + Regel bei Unentschieden (Verlängerung/Elfmeterschießen).
-7. **Liga-Modus** (18 Teams, Hin-/Rückrunde, Tabelle).
-8. **Pokal-/Turniermodus** (K.o., Verlängerung, Elfmeterschießen).
-9. Flanken & spezielle Abschluss-Mechaniken.
-10. Feinschliff: kuratierte Fake-Spielernamen je Team, Abseits, Einwürfe/Ecken.
+6. **[erledigt]** Spielzeit, Halbzeit/Seitenwechsel, Aus-Regeln (Einwurf/Ecke/Abstoß).
+7. Regel bei Unentschieden (Verlängerung / Elfmeterschießen).
+8. **Liga-Modus** (18 Teams, Hin-/Rückrunde, Tabelle).
+9. **Pokal-/Turniermodus** (K.o., Verlängerung, Elfmeterschießen).
+10. Flanken & spezielle Abschluss-Mechaniken; kuratierte Spielernamen, Abseits.
 
 > Diese Liste arbeiten wir Schritt für Schritt ab — „Vibe Coding" mit rotem Faden.

@@ -3,6 +3,7 @@
 
 import { buildSquad } from "./teams.js";
 import { Player } from "./player.js";
+import { MARGIN, FIELD } from "./config.js";
 
 export class Team {
   constructor(def, attackRight, difficulty) {
@@ -23,5 +24,17 @@ export class Team {
 
   reset() {
     for (const p of this.players) p.reset();
+  }
+
+  // Seitenwechsel zur Halbzeit: Angriffsrichtung umdrehen und alle
+  // Heimpositionen an der Mittellinie spiegeln.
+  switchSides() {
+    this.attackRight = !this.attackRight;
+    const centerX = MARGIN + FIELD.width / 2;
+    for (const p of this.players) {
+      p.homeX = 2 * centerX - p.homeX;
+      p.facing = { x: this.attackRight ? 1 : -1, y: 0 };
+      p.reset();
+    }
   }
 }
