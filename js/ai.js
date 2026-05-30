@@ -53,18 +53,37 @@ export function computeAI(player, ctx) {
   // -------- Torwart --------
   if (player.isKeeper) {
     if (ctx.isPossessor) {
-      // Ball klären: lang nach vorn schlagen.
-      const aim = aimWithNoise(oppGoalX - player.x, goalY - player.y, difficulty.passAccuracy);
+      // Ball gefangen -> kontrolliert nach vorn abschlagen (zum Mitspieler, sonst lang).
+      const mate = bestPassOption(player, ctx);
+      const tx = mate ? mate.x : oppGoalX;
+      const ty = mate ? mate.y : goalY;
+      const aim = aimWithNoise(tx - player.x, ty - player.y, difficulty.passAccuracy);
       return { dir: { x: 0, y: 0 }, kick: { dirX: aim.x, dirY: aim.y, power: KICK.shootPower } };
     }
-    const lineX = ownGoalX + (team.attackRight ? 28 : -28);
-    const distBall = Math.hypot(ball.x - player.x, ball.y - player.y);
-    // Bei nahem Ball herauslaufen, sonst auf der Linie mitgehen.
-    if (distBall < 95) {
-      return { dir: steer(player, ball.x, ball.y), kick: null };
+
+    // Position auf einer kurzen Linie vor dem eigenen Tor.
+    const lineX = ownGoalX + (team.attackRight ? 26 : -26);
+    const half = GOAL.height / 2;
+
+    // Standard: Ball-Höhe verfolgen, auf Tormaul begrenzt.
+    let ty = clamp(ball.y, goalY - half, goalY + half);
+
+    // Fliegt der Ball aufs Tor zu, den voraussichtlichen Kreuzungspunkt abdecken.
+    const towardOwn = team.attackRight ? ball.vx < -25 : ball.vx > 25;
+    const distX = Math.abs(ball.x - lineX);
+    if (towardOwn && distX < 460) {
+      const t = distX / Math.max(40, Math.abs(ball.vx));
+      const projY = ball.y + ball.vy * t;
+      ty = clamp(projY, goalY - half, goalY + half);
     }
-    const ty = Math.max(goalY - 70, Math.min(goalY + 70, ball.y));
-    return { dir: steer(player, lineX, ty), kick: null };
+
+    // Nur bei sehr nahem Ball vor dem Tor herauslaufen (1-gegen-1).
+    const distBall = Math.hypot(ball.x - player.x, ball.y - player.y);
+    const inFront = team.attackRight ? ball.x < lineX + 150 : ball.x > lineX - 150;
+    if (distBall < 75 && inFront) {
+      return { dir: steer(player, ball.x, ball.y, 2), kick: null };
+    }
+    return { dir: steer(player, lineX, ty, 2), kick: null };
   }
 
   // -------- Spieler hat den Ball --------

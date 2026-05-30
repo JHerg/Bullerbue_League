@@ -2,7 +2,7 @@
 // aus der Formation. Bewegt sich per Zielrichtung (von Eingabe ODER KI) mit
 // Beschleunigung/Reibung und bleibt im Spielfeld.
 
-import { PLAYER, WORLD } from "./config.js";
+import { PLAYER, WORLD, BALL } from "./config.js";
 
 export class Player {
   constructor(data, team) {
@@ -19,6 +19,9 @@ export class Player {
     this.vy = 0;
     this.radius = PLAYER.radius;
     this.facing = { x: team.attackRight ? 1 : -1, y: 0 };
+
+    // Torhüter haben einen größeren Aktionsradius (fangen/abwehren).
+    this.controlRadius = this.role === "TW" ? 26 : BALL.controlRadius;
 
     this.isUser = false;         // wird vom Spieler gesteuert?
   }
@@ -65,13 +68,33 @@ export class Player {
     ctx.ellipse(this.x, this.y + this.radius * 0.7, this.radius, this.radius * 0.5, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Auswahl-Ring für den aktuell gesteuerten Spieler
+    // Auswahl-Markierung für den aktuell gesteuerten Spieler
     if (highlighted) {
       ctx.beginPath();
       ctx.strokeStyle = "#ffeb3b";
       ctx.lineWidth = 3;
       ctx.arc(this.x, this.y, this.radius + 5, 0, Math.PI * 2);
       ctx.stroke();
+
+      // Pfeil über dem Kopf
+      const ay = this.y - this.radius - 10;
+      ctx.beginPath();
+      ctx.fillStyle = "#ffeb3b";
+      ctx.moveTo(this.x, ay + 7);
+      ctx.lineTo(this.x - 6, ay - 2);
+      ctx.lineTo(this.x + 6, ay - 2);
+      ctx.closePath();
+      ctx.fill();
+
+      // Name
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 10px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "bottom";
+      ctx.strokeStyle = "rgba(0,0,0,0.7)";
+      ctx.lineWidth = 3;
+      ctx.strokeText(this.name, this.x, ay - 4);
+      ctx.fillText(this.name, this.x, ay - 4);
     }
 
     // Körper / Trikot

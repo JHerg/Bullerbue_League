@@ -18,6 +18,9 @@
   <!-- Tor-/Status-Meldung -->
   <div id="message"></div>
 
+  <!-- Schuss-Ladebalken -->
+  <div id="power-bar" class="hidden"><div id="power-fill"></div></div>
+
   <canvas id="game"></canvas>
 
   <!-- Virtueller Joystick (nur Touch) -->
@@ -26,8 +29,9 @@
     <div id="joystick-knob"></div>
   </div>
 
-  <!-- Aktions-Button (nur Touch) -->
+  <!-- Aktions-Buttons (nur Touch) -->
   <div id="actions" class="hidden">
+    <button id="btn-switch" class="action-btn small">WECHSEL</button>
     <button id="btn-action" class="action-btn">AKTION</button>
   </div>
 
@@ -74,7 +78,7 @@
       </label>
 
       <button id="btn-start">Anpfiff!</button>
-      <p class="hint">PC: WASD/Pfeile = laufen · Leertaste = Aktion<br>(am Ball: Schuss/Pass · ohne Ball: anfordern / grätschen)</p>
+      <p class="hint">PC: WASD/Pfeile = laufen · Leertaste = Aktion (halten = härterer Schuss)<br>am Ball: kurz=Pass / lang=Schuss · ohne Ball: anfordern / grätschen · Shift/Q = Spieler wechseln</p>
     </div>
   </div>
 

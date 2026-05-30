@@ -39,6 +39,15 @@ unserer Feature-Master-Liste entwickelt wird. Läuft ohne Installation auf
 - **Halbzeitdauer wählbar** im Startmenü (2 × 1 / 2 / 3 / 5 Minuten).
 - **Halbzeit** mit **Seitenwechsel** + laufende **Spieluhr** und Schlusspfiff.
 
+### Meilenstein 4 — Spielgefühl
+- **Bessere Torwart-KI:** bleibt im Tor, stellt sich zwischen Ball und Tor,
+  antizipiert Schüsse, läuft nur bei nahem Ball heraus und hat einen größeren
+  Fang-/Abwehrradius → deutlich weniger „billige" Gegentore.
+- **Schuss-Power über Haltedauer:** Leertaste kurz = Pass, gehalten = härterer
+  Schuss (Ladebalken zeigt die Power an).
+- **Aktiver Spieler** deutlich markiert (Ring + Pfeil + Name) und im Team-Modus
+  per **Shift/Q** (Touch: „WECHSEL") manuell wechselbar.
+
 ## 🚀 Starten
 
 Da das Spiel ES-Module nutzt, muss es über einen kleinen Webserver laufen

@@ -70,6 +70,28 @@ html, body {
 }
 #message.show { opacity: 1; }
 
+/* ---------- Schuss-Ladebalken ---------- */
+#power-bar {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 180px;
+  height: 12px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 6px;
+  overflow: hidden;
+  z-index: 25;
+  pointer-events: none;
+}
+#power-fill {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, #ffeb3b, #e53935);
+  transition: width 0.04s linear;
+}
+
 /* ---------- Virtueller Joystick ---------- */
 #joystick {
   position: fixed;
@@ -118,6 +140,13 @@ html, body {
   font-size: 14px;
   touch-action: none;
   background: rgba(229, 57, 53, 0.45);
+}
+.action-btn.small {
+  width: 64px;
+  height: 64px;
+  font-size: 11px;
+  align-self: flex-end;
+  background: rgba(255, 255, 255, 0.18);
 }
 
 /* ---------- Startmenü ---------- */

@@ -27,6 +27,7 @@ export class Match {
     this.score = { home: 0, away: 0 };
     this.message = "";
     this.pauseTimer = 0;
+    this.manualTimer = 0; // > 0: manuell gewählter Spieler bleibt aktiv
 
     // Spieluhr / Halbzeit
     this.halfLength = minutesPerHalf * 60; // Sekunden pro Halbzeit
@@ -47,6 +48,10 @@ export class Match {
     // Spieluhr
     this.clock += dt;
     if (this.clock >= this.halfLength) { this._endHalf(); return; }
+
+    // Manuellen Spielerwechsel (Team-Modus) verarbeiten.
+    this.manualTimer = Math.max(0, this.manualTimer - dt);
+    if (this.mode === "team" && input.consumeSwitch()) this._switchPlayer();
 
     // Ball-Jäger pro Team
     this.home.chaser = this._closestOutfield(this.home);
@@ -70,6 +75,8 @@ export class Match {
   // ---- Fokus-Modus: welchen Spieler steuert der Mensch? ----
   _selectUserPlayer() {
     if (this.mode === "single") { this.userPlayer = this.userFixed; return; }
+    // Nach manuellem Wechsel kurz die Auswahl beibehalten.
+    if (this.manualTimer > 0) return;
     let best = this.userPlayer && this.userPlayer.team === this.home ? this.userPlayer : null;
     let bestDist = best ? Math.hypot(best.x - this.ball.x, best.y - this.ball.y) - 22 : Infinity;
     for (const p of this.home.outfield) {
@@ -79,12 +86,26 @@ export class Match {
     this.userPlayer = best || this.home.outfield[0];
   }
 
+  // Manueller Wechsel: nächster Feldspieler (nach Ball-Nähe sortiert).
+  _switchPlayer() {
+    const list = this.home.outfield
+      .slice()
+      .sort((a, b) =>
+        Math.hypot(a.x - this.ball.x, a.y - this.ball.y) -
+        Math.hypot(b.x - this.ball.x, b.y - this.ball.y));
+    const idx = list.indexOf(this.userPlayer);
+    this.userPlayer = list[(idx + 1) % list.length];
+    this.manualTimer = 2.5;
+  }
+
   // ---- Nutzer-Steuerung inkl. kontextabhängiger Leertaste ----
   _updateUser(dt, p, input) {
     const dir = input.getDirection();
     p.update(dt, dir, 1);
 
-    if (!input.consumeAction()) return;
+    const action = input.consumeAction();
+    if (!action) return;
+    const charge = action.charge; // 0..1 (Haltedauer der Leertaste)
 
     const ball = this.ball;
     const distBall = Math.hypot(ball.x - p.x, ball.y - p.y);
@@ -92,12 +113,9 @@ export class Match {
     const teammateHasBall = ball.owner && ball.owner.team === p.team && ball.owner !== p;
 
     if (atBall) {
-      // Am Ball -> Schuss aufs Tor (in Reichweite) oder Pass nach vorn.
       const g = goalsForTeam(p.team);
-      const distGoal = Math.hypot(g.oppGoalX - p.x, g.goalY - p.y);
-      if (distGoal < USER.shootRange) {
-        ball.kick(g.oppGoalX - p.x, g.goalY - p.y, KICK.shootPower, p.team);
-      } else {
+      if (charge < 0.35) {
+        // Kurzer Druck -> Pass nach vorn.
         const mate = this._bestPass(p);
         if (mate) {
           const dx = mate.x - p.x, dy = mate.y - p.y;
@@ -105,6 +123,15 @@ export class Match {
           ball.kick(dx, dy, power, p.team);
         } else {
           ball.kick(p.facing.x, p.facing.y, KICK.passPower, p.team);
+        }
+      } else {
+        // Gehaltener Druck -> Schuss, Härte nach Ladung.
+        const power = KICK.passPower + (KICK.shootPower - KICK.passPower) * charge;
+        const distGoal = Math.hypot(g.oppGoalX - p.x, g.goalY - p.y);
+        if (distGoal < USER.shootRange * 1.8) {
+          ball.kick(g.oppGoalX - p.x, g.goalY - p.y, power, p.team);
+        } else {
+          ball.kick(p.facing.x, p.facing.y, power, p.team);
         }
       }
     } else if (teammateHasBall) {

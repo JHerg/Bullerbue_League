@@ -31,12 +31,13 @@ export class Ball {
       this.kickTimer -= dt;
       this.owner = null;
     } else {
-      // Nächsten Spieler innerhalb des Kontrollradius suchen.
+      // Nächsten Spieler innerhalb seines (individuellen) Kontrollradius suchen.
       let best = null;
-      let bestDist = BALL.controlRadius;
+      let bestDist = Infinity;
       for (const p of players) {
+        const r = p.controlRadius || BALL.controlRadius;
         const d = Math.hypot(p.x - this.x, p.y - this.y);
-        if (d < bestDist) { bestDist = d; best = p; }
+        if (d < r && d < bestDist) { bestDist = d; best = p; }
       }
       this.owner = best;
       if (best) this.lastTouchTeam = best.team;

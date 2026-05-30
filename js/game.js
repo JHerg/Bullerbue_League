@@ -94,6 +94,18 @@ document.getElementById("btn-start").addEventListener("click", () => {
 const sbScore = document.getElementById("sb-score");
 const sbClock = document.getElementById("sb-clock");
 const msgEl = document.getElementById("message");
+const powerBar = document.getElementById("power-bar");
+const powerFill = document.getElementById("power-fill");
+
+function updatePowerBar() {
+  const c = input.getCharge();
+  if (c > 0) {
+    powerBar.classList.remove("hidden");
+    powerFill.style.width = Math.round(c * 100) + "%";
+  } else {
+    powerBar.classList.add("hidden");
+  }
+}
 
 function fmtTime(sec) {
   const s = Math.floor(sec);
@@ -127,6 +139,7 @@ function loop(now) {
     const target = match.cameraTarget;
     camera.follow(target.x, target.y);
     updateHUD();
+    updatePowerBar();
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
