@@ -2,7 +2,7 @@
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
 import { DIFFICULTY } from "./config.js";
-import { TEAMS, buildSquad, teamById, ratingOf } from "./teams.js";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js";
 import { Input } from "./input.js";
 import { Camera } from "./camera.js";
 import { drawPitch } from "./pitch.js";
@@ -80,10 +80,22 @@ selMode.addEventListener("change", () => {
 function updateTypeUI() {
   const type = selType.value;
   const isAnstoss = type === "anstoss";
-  lblAway.classList.toggle("hidden", !isAnstoss);
+  const isElfer = type === "elfer";
+  const isSeason = type === "liga" || type === "pokal";
+
+  // Gegner-Auswahl bei Anstoß und Elfmeterschießen.
+  lblAway.classList.toggle("hidden", !(isAnstoss || isElfer));
   lblHome.childNodes[0].nodeValue = isAnstoss ? "Heimteam" : "Dein Team";
-  btnStart.textContent = isAnstoss ? "Anpfiff!" : "Saison starten";
-  const canResume = !isAnstoss && season.hasSave(type);
+
+  // Match-Optionen werden beim reinen Elfmeterschießen nicht gebraucht.
+  selMode.parentElement.classList.toggle("hidden", isElfer);
+  selDiff.parentElement.classList.toggle("hidden", isElfer);
+  selHalf.parentElement.classList.toggle("hidden", isElfer);
+  lblPlayer.classList.toggle("hidden", isElfer || selMode.value !== "single");
+
+  btnStart.textContent = isElfer ? "Elfmeterschießen" : isAnstoss ? "Anpfiff!" : "Saison starten";
+
+  const canResume = isSeason && season.hasSave(type);
   btnResume.classList.toggle("hidden", !canResume);
 }
 selType.addEventListener("change", updateTypeUI);
@@ -102,17 +114,32 @@ function getMatchOptions() {
 btnStart.addEventListener("click", () => {
   const type = selType.value;
   const opts = getMatchOptions();
-  if (type === "anstoss") {
+  if (type === "anstoss" || type === "elfer") {
     if (selHome.value === selAway.value) {
       selAway.value = TEAMS.find((t) => t.id !== selHome.value).id;
     }
-    runMatch(teamById(selHome.value), teamById(selAway.value), opts).then(showMenu);
+    if (type === "anstoss") {
+      runMatch(teamById(selHome.value), teamById(selAway.value), opts).then(showMenu);
+    } else {
+      startPenaltyOnly(teamById(selHome.value), teamById(selAway.value));
+    }
   } else {
     menuEl.classList.add("hidden");
     if (type === "liga") season.startLeague(selHome.value, opts);
     else season.startCup(selHome.value, opts);
   }
 });
+
+// Reines Elfmeterschießen (eigene Spielart): Mini-Game direkt starten.
+function startPenaltyOnly(homeDef, awayDef) {
+  menuEl.classList.add("hidden");
+  penalties.run({
+    homeShort: homeDef.short, homeName: homeDef.name,
+    homeColors: homeDef.colors, homeRating: ratingOf(homeDef.id),
+    awayShort: awayDef.short, awayName: awayDef.name,
+    awayColors: ensureContrast(homeDef.colors, awayDef.colors), awayRating: ratingOf(awayDef.id),
+  }).then(showMenu);
+}
 
 btnResume.addEventListener("click", () => {
   menuEl.classList.add("hidden");
