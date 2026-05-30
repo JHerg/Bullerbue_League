@@ -246,17 +246,25 @@ export class Match {
     if (out.kick) this.ball.kick(out.kick.dirX, out.kick.dirY, out.kick.power, p.team);
   }
 
+  // Pass-Ziel des Nutzers: nächster Mitspieler in der aktuellen
+  // Blick-/Laufrichtung (nicht zwingend nach vorn). Gibt es keinen Mitspieler
+  // im Sichtkegel, liefert es null -> der Aufrufer spielt in die Blickrichtung.
   _bestPass(p) {
-    const forward = p.team.attackRight ? 1 : -1;
+    const aimLen = Math.hypot(p.facing.x, p.facing.y) || 1;
+    const ax = p.facing.x / aimLen, ay = p.facing.y / aimLen;
+
     let best = null, bestScore = -Infinity;
     for (const mate of p.team.players) {
-      if (mate === p || mate.isKeeper) continue;
+      if (mate === p) continue;
       const dx = mate.x - p.x, dy = mate.y - p.y;
       const dist = Math.hypot(dx, dy);
-      if (dist < 35 || dist > 420) continue;
-      const progress = (mate.x - p.x) * forward;
-      const facingBias = (dx * p.facing.x + dy * p.facing.y) / dist;
-      const score = progress + facingBias * 120;
+      if (dist < 22 || dist > 460) continue;
+
+      const align = (dx * ax + dy * ay) / dist; // -1..1, 1 = genau in Blickrichtung
+      if (align < 0.35) continue;                // nur Mitspieler im Sichtkegel (~70°)
+
+      // Bevorzugt gut ausgerichtete UND nahe Mitspieler.
+      const score = align - dist * 0.0016;
       if (score > bestScore) { bestScore = score; best = mate; }
     }
     return best;
