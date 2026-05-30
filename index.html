@@ -35,16 +35,37 @@
     <button id="btn-action" class="action-btn">AKTION</button>
   </div>
 
+  <!-- Saison-Hub (Liga/Pokal) -->
+  <div id="hub" class="hidden">
+    <div id="hub-card">
+      <div id="hub-content"></div>
+      <div id="hub-buttons"></div>
+    </div>
+  </div>
+
+  <!-- Ergebnis-Overlay nach einem gespielten Spiel -->
+  <div id="result" class="hidden">
+    <div id="result-text"></div>
+    <button id="btn-continue">Weiter</button>
+  </div>
+
   <!-- Startmenü -->
   <div id="menu">
     <div id="menu-card">
       <h1>Bullerbue League ⚽</h1>
-      <p class="sub">Anstoß – freies Spiel</p>
 
-      <label>Heimteam
+      <label>Spielart
+        <select id="sel-type">
+          <option value="anstoss">Anstoß – freies Spiel</option>
+          <option value="liga">Liga-Saison (18 Teams)</option>
+          <option value="pokal">Pokal (K.o.)</option>
+        </select>
+      </label>
+
+      <label id="lbl-home">Heimteam
         <select id="sel-home"></select>
       </label>
-      <label>Auswärtsteam
+      <label id="lbl-away">Auswärtsteam
         <select id="sel-away"></select>
       </label>
 
@@ -78,8 +99,9 @@
       </label>
 
       <button id="btn-start">Anpfiff!</button>
+      <button id="btn-resume" class="hidden">Saison fortsetzen</button>
       <p class="hint">PC: WASD/Pfeile = laufen · Leertaste = Aktion (halten = härterer Schuss)<br>am Ball: kurz=Pass / lang=Schuss · ohne Ball: anfordern / grätschen · Shift/Q = Spieler wechseln</p>
-      <p class="version">Build 2026-05-30-d · Torwart-Steuerung-Fix aktiv</p>
+      <p class="version">Build 2026-05-30-e · Liga &amp; Pokal</p>
     </div>
   </div>
 

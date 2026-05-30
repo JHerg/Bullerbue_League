@@ -48,6 +48,17 @@ unserer Feature-Master-Liste entwickelt wird. Läuft ohne Installation auf
 - **Aktiver Spieler** deutlich markiert (Ring + Pfeil + Name) und im Team-Modus
   per **Shift/Q** (Touch: „WECHSEL") manuell wechselbar.
 
+### Meilenstein 5 — Saison: Liga, Pokal & Speichern
+- **Liga-Modus:** komplette Saison mit 18 Teams, **Hin- & Rückrunde** (34 Spieltage),
+  **Tabelle** (Punkte/Tordifferenz) und Spielplan. Pro Spieltag dein Spiel **selbst
+  spielen** oder **simulieren**; die übrigen Partien werden automatisch simuliert.
+- **Pokal-Modus:** K.o.-Baum mit 16 Teams (Achtel-/Viertel-/Halbfinale, Finale),
+  Unentschieden im selbst gespielten Spiel wird per **Elfmeterschießen** entschieden.
+- **Schnell-Simulation** nicht gespielter Partien anhand von Team-Stärken.
+- **Speichern/Laden** (localStorage): Saison wird automatisch gesichert und kann
+  über **„Saison fortsetzen"** weitergeführt werden.
+- **Build-Kennung** im Startmenü, um die live ausgelieferte Version zu erkennen.
+
 ## 🚀 Starten
 
 Da das Spiel ES-Module nutzt, muss es über einen kleinen Webserver laufen
@@ -95,9 +106,10 @@ Reihenfolge nach Priorität für die nächsten Schritte:
 4. **[erledigt]** Spieler-Fokus-Modi: Team-Modus & Einzelspieler-Modus.
 5. **[erledigt]** Gegner-KI mit 4 Schwierigkeitsstufen.
 6. **[erledigt]** Spielzeit, Halbzeit/Seitenwechsel, Aus-Regeln (Einwurf/Ecke/Abstoß).
-7. Regel bei Unentschieden (Verlängerung / Elfmeterschießen).
-8. **Liga-Modus** (18 Teams, Hin-/Rückrunde, Tabelle).
-9. **Pokal-/Turniermodus** (K.o., Verlängerung, Elfmeterschießen).
-10. Flanken & spezielle Abschluss-Mechaniken; kuratierte Spielernamen, Abseits.
+7. **[erledigt]** Liga-Modus (18 Teams, Hin-/Rückrunde, Tabelle, Spielplan).
+8. **[erledigt]** Pokal-/Turniermodus (K.o.-Baum, Elfmeterschießen).
+9. **[erledigt]** Speichern/Laden des Saison-Fortschritts (localStorage).
+10. Verlängerung & echtes Elfmeterschießen als spielbares Mini-Game.
+11. Flanken & spezielle Abschluss-Mechaniken; kuratierte Spielernamen, Abseits.
 
 > Diese Liste arbeiten wir Schritt für Schritt ab — „Vibe Coding" mit rotem Faden.

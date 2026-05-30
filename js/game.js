@@ -2,11 +2,12 @@
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
 import { DIFFICULTY } from "./config.js";
-import { TEAMS, buildSquad } from "./teams.js";
+import { TEAMS, buildSquad, teamById } from "./teams.js";
 import { Input } from "./input.js";
 import { Camera } from "./camera.js";
 import { drawPitch } from "./pitch.js";
 import { Match } from "./match.js";
+import * as season from "./seasonui.js";
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -34,6 +35,7 @@ resize();
 // --------------------------------------------------------------------------
 // Startmenü
 // --------------------------------------------------------------------------
+const selType = document.getElementById("sel-type");
 const selHome = document.getElementById("sel-home");
 const selAway = document.getElementById("sel-away");
 const selMode = document.getElementById("sel-mode");
@@ -41,6 +43,14 @@ const selDiff = document.getElementById("sel-diff");
 const selHalf = document.getElementById("sel-half");
 const selPlayer = document.getElementById("sel-player");
 const lblPlayer = document.getElementById("lbl-player");
+const lblHome = document.getElementById("lbl-home");
+const lblAway = document.getElementById("lbl-away");
+const btnStart = document.getElementById("btn-start");
+const btnResume = document.getElementById("btn-resume");
+const menuEl = document.getElementById("menu");
+const scoreboardEl = document.getElementById("scoreboard");
+const hubEl = document.getElementById("hub");
+const resultEl = document.getElementById("result");
 
 for (const t of TEAMS) {
   selHome.add(new Option(t.name, t.id));
@@ -49,14 +59,14 @@ for (const t of TEAMS) {
 selHome.value = "bav";
 selAway.value = "dor";
 
-// Spielerliste fürs Einzelspieler-Menü passend zum Heimteam füllen.
+// Spielerliste fürs Einzelspieler-Menü passend zum (Heim-/Dein) Team füllen.
 function refreshPlayerList() {
-  const def = TEAMS.find((t) => t.id === selHome.value);
+  const def = teamById(selHome.value);
   selPlayer.innerHTML = "";
   buildSquad(def, true).forEach((p, i) => {
     selPlayer.add(new Option(`#${p.number} ${p.name} (${p.role})`, String(i)));
   });
-  selPlayer.value = "9"; // standardmäßig ein Stürmer
+  selPlayer.value = "9";
 }
 refreshPlayerList();
 selHome.addEventListener("change", refreshPlayerList);
@@ -65,28 +75,90 @@ selMode.addEventListener("change", () => {
   lblPlayer.classList.toggle("hidden", selMode.value !== "single");
 });
 
-document.getElementById("btn-start").addEventListener("click", () => {
-  if (selHome.value === selAway.value) {
-    // Gleiche Teams vermeiden: Auswärts auf ein anderes setzen.
-    const other = TEAMS.find((t) => t.id !== selHome.value);
-    selAway.value = other.id;
-  }
-  const homeDef = TEAMS.find((t) => t.id === selHome.value);
-  const awayDef = TEAMS.find((t) => t.id === selAway.value);
+// Sichtbarkeit/Beschriftung je nach Spielart.
+function updateTypeUI() {
+  const type = selType.value;
+  const isAnstoss = type === "anstoss";
+  lblAway.classList.toggle("hidden", !isAnstoss);
+  lblHome.childNodes[0].nodeValue = isAnstoss ? "Heimteam" : "Dein Team";
+  btnStart.textContent = isAnstoss ? "Anpfiff!" : "Saison starten";
+  const canResume = !isAnstoss && season.hasSave(type);
+  btnResume.classList.toggle("hidden", !canResume);
+}
+selType.addEventListener("change", updateTypeUI);
+updateTypeUI();
 
+function getMatchOptions() {
   const playerIdx = parseInt(selPlayer.value, 10);
-  match = new Match(homeDef, awayDef, {
+  return {
     mode: selMode.value,
     difficulty: DIFFICULTY[selDiff.value],
     userPlayerIndex: Number.isInteger(playerIdx) ? playerIdx : 9,
     minutesPerHalf: parseInt(selHalf.value, 10) || 2,
-  });
+  };
+}
 
-  document.getElementById("menu").classList.add("hidden");
-  document.getElementById("scoreboard").classList.remove("hidden");
-  document.getElementById("sb-home").textContent = homeDef.short;
-  document.getElementById("sb-away").textContent = awayDef.short;
+btnStart.addEventListener("click", () => {
+  const type = selType.value;
+  const opts = getMatchOptions();
+  if (type === "anstoss") {
+    if (selHome.value === selAway.value) {
+      selAway.value = TEAMS.find((t) => t.id !== selHome.value).id;
+    }
+    runMatch(teamById(selHome.value), teamById(selAway.value), opts).then(showMenu);
+  } else {
+    menuEl.classList.add("hidden");
+    if (type === "liga") season.startLeague(selHome.value, opts);
+    else season.startCup(selHome.value, opts);
+  }
 });
+
+btnResume.addEventListener("click", () => {
+  menuEl.classList.add("hidden");
+  season.resume(selType.value, getMatchOptions());
+});
+
+// --------------------------------------------------------------------------
+// Match-Steuerung (auch von der Saison genutzt)
+// --------------------------------------------------------------------------
+let matchResolve = null;
+let resultShown = false;
+
+// Startet ein Match und liefert beim "Weiter" den Endstand { home, away }.
+function runMatch(homeDef, awayDef, opts) {
+  return new Promise((resolve) => {
+    matchResolve = resolve;
+    resultShown = false;
+    match = new Match(homeDef, awayDef, opts);
+    menuEl.classList.add("hidden");
+    hubEl.classList.add("hidden");
+    resultEl.classList.add("hidden");
+    scoreboardEl.classList.remove("hidden");
+    document.getElementById("sb-home").textContent = homeDef.short;
+    document.getElementById("sb-away").textContent = awayDef.short;
+  });
+}
+
+function showMenu() {
+  match = null;
+  scoreboardEl.classList.add("hidden");
+  resultEl.classList.add("hidden");
+  hubEl.classList.add("hidden");
+  menuEl.classList.remove("hidden");
+  updateTypeUI();
+}
+
+document.getElementById("btn-continue").addEventListener("click", () => {
+  const score = match ? { home: match.score.home, away: match.score.away } : { home: 0, away: 0 };
+  match = null;
+  scoreboardEl.classList.add("hidden");
+  resultEl.classList.add("hidden");
+  const r = matchResolve;
+  matchResolve = null;
+  if (r) r(score);
+});
+
+season.init({ runMatch, showMenu });
 
 // --------------------------------------------------------------------------
 // HUD
@@ -140,6 +212,13 @@ function loop(now) {
     camera.follow(target.x, target.y);
     updateHUD();
     updatePowerBar();
+
+    // Bei Spielende das Ergebnis-Overlay mit "Weiter" einblenden.
+    if (match.finished && !resultShown) {
+      resultShown = true;
+      document.getElementById("result-text").textContent = match.message;
+      resultEl.classList.remove("hidden");
+    }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.save();
