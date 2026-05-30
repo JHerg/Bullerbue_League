@@ -49,6 +49,31 @@
     <button id="btn-continue">Weiter</button>
   </div>
 
+  <!-- Elfmeterschießen (Mini-Game) -->
+  <div id="penalty" class="hidden">
+    <div id="pen-card">
+      <div id="pen-title">Elfmeterschießen</div>
+      <div id="pen-score">0 : 0</div>
+      <div id="pen-dots"></div>
+      <div id="pen-scene">
+        <div id="pen-goal">
+          <div class="pen-zone"></div>
+          <div class="pen-zone"></div>
+          <div class="pen-zone"></div>
+          <div id="pen-keeper"></div>
+        </div>
+        <div id="pen-ball"></div>
+      </div>
+      <div id="pen-status"></div>
+      <div id="pen-buttons">
+        <button data-z="0">◀ Links</button>
+        <button data-z="1">▲ Mitte</button>
+        <button data-z="2">Rechts ▶</button>
+      </div>
+      <button id="pen-continue" class="hidden">Weiter</button>
+    </div>
+  </div>
+
   <!-- Startmenü -->
   <div id="menu">
     <div id="menu-card">
@@ -101,7 +126,7 @@
       <button id="btn-start">Anpfiff!</button>
       <button id="btn-resume" class="hidden">Saison fortsetzen</button>
       <p class="hint">PC: WASD/Pfeile = laufen · <b>Leertaste = Schuss</b> (halten = härter) · <b>F = Pass / Grätsche / Spielerwechsel</b><br>Tablet: Joystick + Buttons „SCHUSS" und „PASS"</p>
-      <p class="version">Build 2026-05-30-i · Team-Modus: Ballführer-Steuerung</p>
+      <p class="version">Build 2026-05-30-j · Verlängerung + Elfmeterschießen</p>
     </div>
   </div>
 

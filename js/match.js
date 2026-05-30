@@ -11,7 +11,7 @@ import { ensureContrast } from "./teams.js";
 const EDGE = 8; // wie weit innerhalb der Linie der Ball bei Standards liegt
 
 export class Match {
-  constructor(homeDef, awayDef, { mode, difficulty, userPlayerIndex = 9, minutesPerHalf = 2 }) {
+  constructor(homeDef, awayDef, { mode, difficulty, userPlayerIndex = 9, minutesPerHalf = 2, knockout = false }) {
     // Eigene Mitspieler: festes Profil. Gegner: gewählte Schwierigkeit.
     this.home = new Team(homeDef, true, DIFFICULTY_TEAMMATE);
     this.away = new Team(awayDef, false, difficulty);
@@ -33,14 +33,23 @@ export class Match {
     this.pauseTimer = 0;
     this.manualTimer = 0; // > 0: manuell gewählter Spieler bleibt aktiv
 
-    // Spieluhr / Halbzeit
-    this.halfLength = minutesPerHalf * 60; // Sekunden pro Halbzeit
-    this.half = 1;
+    // Spieluhr / Halbzeit / Verlängerung
+    this.knockout = knockout;                 // K.o.-Spiel? (Verlängerung/Elfmeter)
+    this.halfLength = minutesPerHalf * 60;    // Sekunden pro reguläre Halbzeit
+    this.etLength = Math.max(45, this.halfLength * 0.5); // Verlängerungshälfte
+    this.periodLength = this.halfLength;      // Länge des aktuellen Abschnitts
+    this.half = 1;                            // 1,2 = regulär; 3,4 = Verlängerung
     this.clock = 0;
+    this.wentToExtra = false;
     this.finished = false;
+    this.outcome = null;                      // "decided" | "penalties"
 
     // Anstoß für das Heimteam.
     this._kickoff(this.home);
+  }
+
+  get periodLabel() {
+    return this.half <= 2 ? `${this.half}. HZ` : `${this.half - 2}. VL`;
   }
 
   // Profil der KI je nach Team (eigene Mitspieler vs. Gegner).
@@ -94,7 +103,7 @@ export class Match {
 
     // Spieluhr
     this.clock += dt;
-    if (this.clock >= this.halfLength) { this._endHalf(); return; }
+    if (this.clock >= this.periodLength) { this._endHalf(); return; }
 
     this.manualTimer = Math.max(0, this.manualTimer - dt);
 
@@ -356,21 +365,56 @@ export class Match {
   }
 
   _endHalf() {
+    const tied = this.score.home === this.score.away;
+
     if (this.half === 1) {
-      this.half = 2;
-      this.clock = 0;
-      this.home.switchSides();
-      this.away.switchSides();
+      this.half = 2; this.clock = 0;
+      this.home.switchSides(); this.away.switchSides();
       this._kickoff(this.away); // Anstoß 2. Halbzeit für das Auswärtsteam
       this.message = "Halbzeit – Seitenwechsel";
       this.pauseTimer = 2.4;
-    } else {
-      this.finished = true;
-      const s = this.score;
-      const result = s.home === s.away ? "Unentschieden" :
-        (s.home > s.away ? `${this.home.name} gewinnt` : `${this.away.name} gewinnt`);
-      this.message = `Schlusspfiff!   ${this.home.short} ${s.home} : ${s.away} ${this.away.short}\n${result}`;
+      return;
     }
+
+    if (this.half === 2) {
+      if (!this.knockout || !tied) { this._finishDecided(); return; }
+      // K.o. & unentschieden -> Verlängerung (1. Hälfte)
+      this.wentToExtra = true;
+      this.half = 3; this.clock = 0; this.periodLength = this.etLength;
+      this.home.switchSides(); this.away.switchSides();
+      this._kickoff(this.home);
+      this.message = "Verlängerung – 1. Hälfte";
+      this.pauseTimer = 2.4;
+      return;
+    }
+
+    if (this.half === 3) {
+      this.half = 4; this.clock = 0;
+      this.home.switchSides(); this.away.switchSides();
+      this._kickoff(this.away);
+      this.message = "Verlängerung – 2. Hälfte";
+      this.pauseTimer = 2.4;
+      return;
+    }
+
+    // Ende der Verlängerung
+    if (tied) {
+      this.finished = true;
+      this.outcome = "penalties";
+      this.message = "Elfmeterschießen!";
+    } else {
+      this._finishDecided();
+    }
+  }
+
+  _finishDecided() {
+    this.finished = true;
+    this.outcome = "decided";
+    const s = this.score;
+    const suffix = this.wentToExtra ? " n.V." : "";
+    const result = s.home === s.away ? "Unentschieden" :
+      (s.home > s.away ? `${this.home.name} gewinnt${suffix}` : `${this.away.name} gewinnt${suffix}`);
+    this.message = `Schlusspfiff!   ${this.home.short} ${s.home} : ${s.away} ${this.away.short}\n${result}`;
   }
 
   get cameraTarget() { return this.userPlayer; }

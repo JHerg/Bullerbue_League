@@ -70,6 +70,15 @@ unserer Feature-Master-Liste entwickelt wird. Läuft ohne Installation auf
   Tablet: zwei Buttons „SCHUSS" und „PASS".
 - **Leichtere Gegner-KI** (eigene Mitspieler mit festem, hilfreichem Profil).
 
+### Meilenstein 7 — K.o.: Verlängerung & Elfmeterschießen
+- **Verlängerung:** Steht ein selbst gespieltes Pokalspiel nach 90 Min remis,
+  folgen zwei kurze Verlängerungshälften (mit Seitenwechsel).
+- **Elfmeterschießen als Mini-Game:** Bleibt es auch nach Verlängerung remis,
+  entscheidet ein **spielbares** Elfmeterschießen — du **schießt** (Ecke wählen)
+  und **hältst** (Ecke wählen), Best-of-5 plus Sudden Death.
+  Steuerung: Pfeile/`A`·`W`/Leertaste·`D` oder Buttons „Links/Mitte/Rechts".
+- Der Pokal-Baum zeigt, wie eine Partie entschieden wurde (`n.V.` / `i.E.`).
+
 ## 🚀 Starten
 
 Da das Spiel ES-Module nutzt, muss es über einen kleinen Webserver laufen
@@ -120,7 +129,7 @@ Reihenfolge nach Priorität für die nächsten Schritte:
 7. **[erledigt]** Liga-Modus (18 Teams, Hin-/Rückrunde, Tabelle, Spielplan).
 8. **[erledigt]** Pokal-/Turniermodus (K.o.-Baum, Elfmeterschießen).
 9. **[erledigt]** Speichern/Laden des Saison-Fortschritts (localStorage).
-10. Verlängerung & echtes Elfmeterschießen als spielbares Mini-Game.
+10. **[erledigt]** Verlängerung & spielbares Elfmeterschießen (Mini-Game).
 11. Flanken & spezielle Abschluss-Mechaniken; kuratierte Spielernamen, Abseits.
 
 > Diese Liste arbeiten wir Schritt für Schritt ab — „Vibe Coding" mit rotem Faden.

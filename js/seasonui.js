@@ -8,7 +8,6 @@
 import { TEAMS, teamById } from "./teams.js";
 import * as L from "./league.js";
 import * as C from "./cup.js";
-import { penaltyShootout } from "./sim.js";
 import { saveSeason, loadSeason } from "./storage.js";
 
 let deps = null;
@@ -63,9 +62,9 @@ function name(id) { return teamById(id).name; }
 function short(id) { return teamById(id).short; }
 
 // ---- Gespieltes Nutzer-Match: Nutzerteam ist immer das gesteuerte (home) ----
-async function _playUserMatch(oppId) {
-  const score = await deps.runMatch(teamById(state.userTeam), teamById(oppId), opts);
-  return { userGoals: score.home, oppGoals: score.away };
+// Liefert das volle Ergebnis-Objekt { home, away, winner, decidedBy, penalties }.
+function _playUserMatch(oppId, knockout = false) {
+  return deps.runMatch(teamById(state.userTeam), teamById(oppId), { ...opts, knockout });
 }
 
 // ============================ LIGA ============================
@@ -103,12 +102,12 @@ async function _playLeague() {
   const fx = L.userFixture(state, round);
   const opp = fx.home === state.userTeam ? fx.away : fx.home;
 
-  const r = await _playUserMatch(opp);
+  const r = await _playUserMatch(opp, false);
   const userIsHome = fx.home === state.userTeam;
   const results = [{
     home: fx.home, away: fx.away,
-    hs: userIsHome ? r.userGoals : r.oppGoals,
-    as: userIsHome ? r.oppGoals : r.userGoals,
+    hs: userIsHome ? r.home : r.away,
+    as: userIsHome ? r.away : r.home,
   }];
   for (const m of L.simulateRound(state, round, fx)) results.push(m);
 
@@ -172,17 +171,14 @@ async function _playCup() {
   const tie = C.userTie(state);
   const opp = tie.home === state.userTeam ? tie.away : tie.home;
 
-  const r = await _playUserMatch(opp);
+  // K.o.-Spiel: Verlängerung & spielbares Elfmeterschießen liefern den Sieger.
+  const r = await _playUserMatch(opp, true);
   const userIsHome = tie.home === state.userTeam;
-  const hs = userIsHome ? r.userGoals : r.oppGoals;
-  const as = userIsHome ? r.oppGoals : r.userGoals;
+  const hs = userIsHome ? r.home : r.away;
+  const as = userIsHome ? r.away : r.home;
+  const winner = r.winner === "home" ? state.userTeam : opp;
 
-  let winner, decided = "regulär";
-  if (hs > as) winner = tie.home;
-  else if (as > hs) winner = tie.away;
-  else { winner = penaltyShootout(tie.home, tie.away).winner; decided = "i.E."; }
-
-  C.setTieResult(tie, hs, as, winner, decided);
+  C.setTieResult(tie, hs, as, winner, r.decidedBy || "regulär");
   C.simulateRest(state, tie);
   C.advance(state);
   saveSeason(state);
@@ -204,8 +200,8 @@ function _bracketHtml() {
     html += `<div class="bracket-round"><h4>${C.ROUND_NAMES[i] || `Runde ${i + 1}`}</h4>`;
     for (const t of round) {
       const meCls = (t.home === state.userTeam || t.away === state.userTeam) ? "me" : "";
-      const res = t.winner === null ? "–"
-        : `${t.hs}:${t.as}${t.decided === "i.E." ? " i.E." : ""}`;
+      const dlabel = t.decided === "i.E." ? " i.E." : t.decided === "n.V." ? " n.V." : "";
+      const res = t.winner === null ? "–" : `${t.hs}:${t.as}${dlabel}`;
       const hl = t.winner === t.home ? "<b>" : "";
       const hr = t.winner === t.home ? "</b>" : "";
       const al = t.winner === t.away ? "<b>" : "";

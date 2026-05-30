@@ -2,12 +2,13 @@
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
 import { DIFFICULTY } from "./config.js";
-import { TEAMS, buildSquad, teamById } from "./teams.js";
+import { TEAMS, buildSquad, teamById, ratingOf } from "./teams.js";
 import { Input } from "./input.js";
 import { Camera } from "./camera.js";
 import { drawPitch } from "./pitch.js";
 import { Match } from "./match.js";
 import * as season from "./seasonui.js";
+import * as penalties from "./penalties.js";
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -124,11 +125,15 @@ btnResume.addEventListener("click", () => {
 let matchResolve = null;
 let resultShown = false;
 
-// Startet ein Match und liefert beim "Weiter" den Endstand { home, away }.
+let penaltiesStarted = false;
+
+// Startet ein Match und liefert beim Abschluss ein Ergebnis-Objekt:
+//   { home, away, winner: "home"|"away"|null, decidedBy, penalties }
 function runMatch(homeDef, awayDef, opts) {
   return new Promise((resolve) => {
     matchResolve = resolve;
     resultShown = false;
+    penaltiesStarted = false;
     match = new Match(homeDef, awayDef, opts);
     menuEl.classList.add("hidden");
     hubEl.classList.add("hidden");
@@ -137,6 +142,15 @@ function runMatch(homeDef, awayDef, opts) {
     document.getElementById("sb-home").textContent = homeDef.short;
     document.getElementById("sb-away").textContent = awayDef.short;
   });
+}
+
+function resolveRunMatch(score) {
+  match = null;
+  scoreboardEl.classList.add("hidden");
+  resultEl.classList.add("hidden");
+  const r = matchResolve;
+  matchResolve = null;
+  if (r) r(score);
 }
 
 function showMenu() {
@@ -148,14 +162,31 @@ function showMenu() {
   updateTypeUI();
 }
 
-document.getElementById("btn-continue").addEventListener("click", () => {
-  const score = match ? { home: match.score.home, away: match.score.away } : { home: 0, away: 0 };
-  match = null;
+// Elfmeterschießen starten (K.o.-Spiel blieb auch nach Verlängerung remis).
+function startPenalties() {
+  const h = match.home, a = match.away;
   scoreboardEl.classList.add("hidden");
-  resultEl.classList.add("hidden");
-  const r = matchResolve;
-  matchResolve = null;
-  if (r) r(score);
+  msgEl.classList.remove("show");
+  penalties.run({
+    homeShort: h.short, homeName: h.name, homeColors: h.colors, homeRating: ratingOf(h.id),
+    awayShort: a.short, awayName: a.name, awayColors: a.colors, awayRating: ratingOf(a.id),
+  }).then((pen) => {
+    resolveRunMatch({
+      home: match.score.home, away: match.score.away,
+      winner: pen.winner, decidedBy: "i.E.",
+      penalties: { home: pen.home, away: pen.away },
+    });
+  });
+}
+
+document.getElementById("btn-continue").addEventListener("click", () => {
+  if (!match) { resolveRunMatch({ home: 0, away: 0, winner: null, decidedBy: "regulär", penalties: null }); return; }
+  const s = match.score;
+  const winner = s.home > s.away ? "home" : s.away > s.home ? "away" : null;
+  resolveRunMatch({
+    home: s.home, away: s.away, winner,
+    decidedBy: match.wentToExtra ? "n.V." : "regulär", penalties: null,
+  });
 });
 
 season.init({ runMatch, showMenu });
@@ -188,7 +219,7 @@ function updateHUD() {
   sbScore.textContent = `${match.score.home} : ${match.score.away}`;
   sbClock.textContent = match.finished
     ? "Ende"
-    : `${match.half}. HZ ${fmtTime(match.clock)}`;
+    : `${match.periodLabel} ${fmtTime(match.clock)}`;
   if (match.message) {
     msgEl.textContent = match.message;
     msgEl.classList.add("show");
@@ -213,11 +244,16 @@ function loop(now) {
     updateHUD();
     updatePowerBar();
 
-    // Bei Spielende das Ergebnis-Overlay mit "Weiter" einblenden.
-    if (match.finished && !resultShown) {
-      resultShown = true;
-      document.getElementById("result-text").textContent = match.message;
-      resultEl.classList.remove("hidden");
+    // Bei Spielende: entweder Elfmeterschießen starten oder Ergebnis zeigen.
+    if (match.finished) {
+      if (match.outcome === "penalties" && !penaltiesStarted) {
+        penaltiesStarted = true;
+        startPenalties();
+      } else if (match.outcome === "decided" && !resultShown) {
+        resultShown = true;
+        document.getElementById("result-text").textContent = match.message;
+        resultEl.classList.remove("hidden");
+      }
     }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);

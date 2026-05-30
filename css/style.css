@@ -301,6 +301,98 @@ table.standings tr.cl td:first-child { color: #4caf50; }
 .tie.me { background: rgba(255, 202, 40, 0.22); font-weight: 700; }
 .tie .res { opacity: 0.9; font-variant-numeric: tabular-nums; }
 
+/* ---------- Elfmeterschießen ---------- */
+#penalty {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 30%, #1b7a1b, #0b3d0b);
+  z-index: 60;
+  padding: 16px;
+}
+#pen-card {
+  width: min(460px, 100%);
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  padding: 18px 20px;
+  color: #fff;
+  text-align: center;
+}
+#pen-title { font-size: 20px; font-weight: 800; }
+#pen-score { font-size: 26px; font-weight: 800; letter-spacing: 1px; margin: 6px 0; }
+#pen-dots { display: flex; flex-direction: column; gap: 4px; align-items: center; margin-bottom: 10px; }
+.pen-row { display: flex; align-items: center; gap: 6px; }
+.pen-side { width: 38px; text-align: left; font-size: 12px; font-weight: 700; opacity: 0.85; }
+.pdot { width: 13px; height: 13px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.5); display: inline-block; }
+.pdot.g { background: #4caf50; }
+.pdot.m { background: #e53935; }
+.pdot.e { background: rgba(255,255,255,0.12); }
+
+#pen-scene {
+  position: relative;
+  height: 170px;
+  margin: 8px 0 10px;
+}
+#pen-goal {
+  position: absolute;
+  top: 0; left: 8%; right: 8%;
+  height: 96px;
+  border: 4px solid #fff;
+  border-bottom: none;
+  display: flex;
+}
+.pen-zone { flex: 1; border-right: 1px dashed rgba(255,255,255,0.25); }
+.pen-zone:last-child { border-right: none; }
+#pen-keeper {
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  width: 40px; height: 52px;
+  transform: translateX(-50%);
+  border-radius: 6px;
+  background: #ffd600;
+  border: 2px solid #111;
+  transition: left 0.45s cubic-bezier(.5,1.6,.5,1);
+}
+#pen-ball {
+  position: absolute;
+  bottom: 8%;
+  left: 50%;
+  width: 20px; height: 20px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #333;
+  transition: left 0.45s ease-out, bottom 0.45s ease-out;
+}
+#pen-status { min-height: 26px; font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+#pen-buttons { display: flex; gap: 10px; }
+#pen-buttons button {
+  flex: 1;
+  padding: 16px 8px;
+  border: none;
+  border-radius: 10px;
+  background: #ffca28;
+  color: #1b3a1b;
+  font-weight: 800;
+  font-size: 15px;
+  cursor: pointer;
+}
+#pen-continue {
+  margin-top: 12px;
+  padding: 14px 40px;
+  border: none;
+  border-radius: 10px;
+  background: #43a047;
+  color: #fff;
+  font-weight: 800;
+  font-size: 18px;
+  cursor: pointer;
+}
+
 /* ---------- Ergebnis-Overlay ---------- */
 #result {
   position: fixed;
