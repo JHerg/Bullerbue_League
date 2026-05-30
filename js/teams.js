@@ -77,6 +77,22 @@ export const TEAMS = [
   { id: "elv", name: "SV Elversbergen",      short: "ELV", colors: ["#212121", "#ff6f00"], formation: "4-2-3-1" },
 ];
 
+// Team-Stärke (für die Schnell-Simulation nicht gespielter Partien),
+// angelehnt an die reale Hierarchie.
+export const RATINGS = {
+  bav: 90, lev: 86, dor: 85, lai: 84, stu: 81, fra: 80, fre: 78, wob: 76,
+  hof: 76, bmg: 75, wer: 75, uni: 74, mai: 73, aug: 72, koe: 71, sch: 70,
+  pad: 68, elv: 67,
+};
+
+export function ratingOf(id) {
+  return RATINGS[id] ?? 74;
+}
+
+export function teamById(id) {
+  return TEAMS.find((t) => t.id === id);
+}
+
 // ---------------------------------------------------------------------------
 // Fake-Spielernamen: deterministische Generierung aus Namens-Pools, damit
 // jedes Team eine stabile, "echte" Startelf hat (z. B. "Harry Cohen").

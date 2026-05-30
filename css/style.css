@@ -203,3 +203,9 @@ html, body {
 }
 #btn-start:active { transform: translateY(1px); }
 #menu-card .hint { opacity: 0.7; font-size: 12px; text-align: center; }
+#menu-card .version {
+  opacity: 0.55;
+  font-size: 11px;
+  text-align: center;
+  font-family: monospace;
+}
