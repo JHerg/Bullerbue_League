@@ -1,7 +1,7 @@
 // Liga-Modus: Spielplan (Hin- & Rückrunde) und Tabellenberechnung.
 // Reine Datenlogik ohne DOM – dadurch headless testbar.
 
-import { simulateMatch } from "./sim.js?v=m";
+import { simulateMatch } from "./sim.js?v=o";
 
 // Doppel-Rundenturnier-Spielplan nach dem Kreis-Verfahren.
 // teamIds: Array mit gerader Anzahl Teams. Liefert Array von Spieltagen,

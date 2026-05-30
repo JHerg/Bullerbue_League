@@ -1,0 +1,10 @@
+remaining_v_m:
+0
+count_v_o:
+39
+version_line:
+Build 2026-05-30-o · 2.5D: individuelle Spieler + Laufdynamik
+protolink:
+prototyp.html?v=o
+syntax:
+done
