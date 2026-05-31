@@ -5,7 +5,7 @@
 // 1 = gegnerisches Tor / y: 0 = oben, 1 = unten) und werden im Spiel auf
 // Welt-Koordinaten und Angriffsrichtung umgerechnet.
 
-import { MARGIN, FIELD } from "./config.js?v=u";
+import { MARGIN, FIELD } from "./config.js?v=v";
 
 // ---------------------------------------------------------------------------
 // Formations-Vorlagen
@@ -152,9 +152,19 @@ function hash(str) {
 // Manuelle Spieler-Overrides je Team (nach Aufstellungs-Index 0..10).
 // Überschreibt den generierten Namen und/oder die Rückennummer.
 const SQUAD_OVERRIDES = {
+  // Bavaria München (4-2-3-1): individuelle Aufstellung mit Fake-Namen.
   bav: {
-    5: { name: "Jacob Jajo", number: 6 },       // #6
-    6: { name: "Alexander Pavlo", number: 45 }, // #7-Slot -> Nr. 45
+    0: { name: "Manuel Neumann", number: 1 },    // TW
+    1: { name: "Alfonso Davila", number: 19 },   // LV
+    2: { name: "Dion Upagecu", number: 4 },      // IV
+    3: { name: "Kim Min-Jae Song", number: 3 },  // IV
+    4: { name: "Josip Stanic", number: 2 },      // RV
+    5: { name: "Jacob Jajo", number: 6 },        // DM — bleibt
+    6: { name: "Alexander Pavlo", number: 45 },  // DM — bleibt
+    7: { name: "Leroy Sané-Berg", number: 10 },  // OM
+    8: { name: "Jamal Muserati", number: 42 },   // OM
+    9: { name: "Serge Gnabbuni", number: 7 },    // OM
+    10: { name: "Harry Cane", number: 9 },       // ST
   },
 };
 

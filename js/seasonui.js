@@ -5,10 +5,10 @@
 //   deps.runMatch(homeDef, awayDef, opts) -> Promise<{home, away}>  (Endstand)
 //   deps.showMenu()                       -> zurück ins Startmenü
 
-import { TEAMS, teamById } from "./teams.js?v=u";
-import * as L from "./league.js?v=u";
-import * as C from "./cup.js?v=u";
-import { saveSeason, loadSeason } from "./storage.js?v=u";
+import { TEAMS, teamById } from "./teams.js?v=v";
+import * as L from "./league.js?v=v";
+import * as C from "./cup.js?v=v";
+import { saveSeason, loadSeason } from "./storage.js?v=v";
 
 let deps = null;
 let state = null;
