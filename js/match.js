@@ -2,11 +2,11 @@
 // kontextabhängige Nutzer-Aktion (Leertaste), Aus-Erkennung
 // (Einwurf/Ecke/Abstoß), Tore, Spieluhr und Halbzeit mit Seitenwechsel.
 
-import { WORLD, FIELD, MARGIN, GOAL, BALL, KICK, PLAYER, USER, DIFFICULTY_TEAMMATE } from "./config.js?v=q";
-import { Team } from "./team.js?v=q";
-import { Ball } from "./ball.js?v=q";
-import { computeAI } from "./ai.js?v=q";
-import { ensureContrast } from "./teams.js?v=q";
+import { WORLD, FIELD, MARGIN, GOAL, BALL, KICK, PLAYER, USER, DIFFICULTY_TEAMMATE } from "./config.js?v=r";
+import { Team } from "./team.js?v=r";
+import { Ball } from "./ball.js?v=r";
+import { computeAI } from "./ai.js?v=r";
+import { ensureContrast } from "./teams.js?v=r";
 
 const EDGE = 8; // wie weit innerhalb der Linie der Ball bei Standards liegt
 
@@ -65,6 +65,19 @@ export class Match {
     return team === this.home ? this.teamDifficulty : this.oppDifficulty;
   }
 
+  // Legt den Ball dem Ausführenden an den Fuß (Ballbesitz), damit Standards
+  // (Anstoß, Einwurf, Ecke, Abstoß) als Pass gespielt werden statt frei zu liegen.
+  _giveBallTo(taker) {
+    const f = taker.facing;
+    this.ball.x = taker.x + f.x * BALL.dribbleOffset;
+    this.ball.y = taker.y + f.y * BALL.dribbleOffset;
+    this.ball.vx = 0; this.ball.vy = 0;
+    this.ball.owner = taker;
+    this.ball.kickTimer = 0;
+    this.ball.lastTouchTeam = taker.team;
+    this.ball.lastTouchPlayer = taker;
+  }
+
   // Anstoß: beide Teams in ihre eigene Hälfte, Ball auf den Mittelpunkt,
   // ein zentraler Spieler des berechtigten Teams stellt sich an den Ball.
   _kickoff(team) {
@@ -84,6 +97,7 @@ export class Match {
       taker.y = cy;
       taker.vx = 0; taker.vy = 0;
       taker.facing = { x: team.attackRight ? 1 : -1, y: 0 };
+      this._giveBallTo(taker); // Anstoß wird gespielt (Ball am Fuß)
     }
   }
 
@@ -390,10 +404,26 @@ export class Match {
     if (taker) {
       taker.x = x; taker.y = y;
       taker.vx = 0; taker.vy = 0;
-      taker.facing = { x: team.attackRight ? 1 : -1, y: 0 };
+      // Einwurf: Richtung ins Feld; Ecke/Abstoß: Richtung Gegnertor.
+      taker.facing = this._restartFacing(type, team, x, y);
+      this._giveBallTo(taker); // Standard wird gespielt (Ball am Fuß)
     }
     this.message = type;
     this.pauseTimer = 0.9;
+  }
+
+  // Blickrichtung des Standard-Ausführenden (zeigt sinnvoll ins Feld).
+  _restartFacing(type, team, x, y) {
+    const cx = MARGIN + FIELD.width / 2, cy = MARGIN + FIELD.height / 2;
+    if (type === "Einwurf") {
+      // Vom Seitenrand nach innen (vertikal), leicht nach vorn.
+      const fwd = team.attackRight ? 1 : -1;
+      const inY = y < cy ? 1 : -1;
+      const len = Math.hypot(fwd * 0.6, inY) || 1;
+      return { x: (fwd * 0.6) / len, y: inY / len };
+    }
+    // Ecke/Abstoß: in Richtung gegnerisches Tor.
+    return { x: team.attackRight ? 1 : -1, y: 0 };
   }
 
   _endHalf() {

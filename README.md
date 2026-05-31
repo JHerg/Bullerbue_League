@@ -132,7 +132,7 @@ Reihenfolge nach Priorität für die nächsten Schritte:
 10. **[erledigt]** Verlängerung & spielbares Elfmeterschießen (Mini-Game).
 11. Flanken & spezielle Abschluss-Mechaniken; kuratierte Spielernamen, Abseits.
 12. **Stadion-Atmosphäre:** Zuschauer und Bandenwerbung (wird separat entwickelt).
-13. **Einwurf & Anstoß als spielbarer Pass** (statt automatischer Ballzuteilung).
+13. **[erledigt]** Einwurf & Anstoß als spielbarer Pass (Ball am Fuß des Ausführenden).
 14. **Torwart-Sprung:** als Torwart mit der Leertaste springen/abheben (Paraden).
 15. **[erledigt]** Statistiken: Torschützenliste in Liga & Pokal + Spielbericht am Spielende.
 

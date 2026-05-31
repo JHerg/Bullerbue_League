@@ -5,7 +5,7 @@
 // 1 = gegnerisches Tor / y: 0 = oben, 1 = unten) und werden im Spiel auf
 // Welt-Koordinaten und Angriffsrichtung umgerechnet.
 
-import { MARGIN, FIELD } from "./config.js?v=q";
+import { MARGIN, FIELD } from "./config.js?v=r";
 
 // ---------------------------------------------------------------------------
 // Formations-Vorlagen
@@ -149,11 +149,21 @@ function hash(str) {
   return h >>> 0;
 }
 
+// Manuelle Spieler-Overrides je Team (nach Aufstellungs-Index 0..10).
+// Überschreibt den generierten Namen und/oder die Rückennummer.
+const SQUAD_OVERRIDES = {
+  bav: {
+    5: { name: "Jacob Jajo", number: 6 },       // #6
+    6: { name: "Alexander Pavlo", number: 45 }, // #7-Slot -> Nr. 45
+  },
+};
+
 // Baut die 11er-Aufstellung für ein Team: Namen + Rollen + Welt-Positionen.
 // attackRight = true  -> Team greift nach rechts an (eigenes Tor links).
 export function buildSquad(team, attackRight) {
   const formation = FORMATIONS[team.formation];
   const seed = hash(team.id);
+  const overrides = SQUAD_OVERRIDES[team.id] || {};
 
   return formation.map((slot, i) => {
     const fn = FIRST_NAMES[(seed + i * 7) % FIRST_NAMES.length];
@@ -164,10 +174,11 @@ export function buildSquad(team, attackRight) {
     const homeX = MARGIN + fx * FIELD.width;
     const homeY = MARGIN + slot.y * FIELD.height;
 
+    const ov = overrides[i] || {};
     return {
-      name: `${fn} ${ln}`,
+      name: ov.name || `${fn} ${ln}`,
       role: slot.role,
-      number: i + 1,
+      number: ov.number ?? i + 1,
       homeX,
       homeY,
     };
