@@ -311,6 +311,7 @@ html, body {
 #hub-buttons button.ghost { background: transparent; border: 1px solid rgba(255,255,255,0.4); color: #fff; }
 
 /* Tabelle */
+.scorers-h { font-size: 15px; margin: 14px 0 6px; opacity: 0.9; }
 table.standings { width: 100%; border-collapse: collapse; font-size: 13px; }
 table.standings th, table.standings td { padding: 4px 6px; text-align: center; }
 table.standings th { opacity: 0.7; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.2); }
@@ -441,6 +442,27 @@ table.standings tr.cl td:first-child { color: #4caf50; }
   text-align: center;
   white-space: pre-line;
   padding: 0 20px;
+}
+.rep-head { font-size: clamp(24px, 5vw, 40px); margin-bottom: 14px; }
+.rep-grid {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  font-size: clamp(13px, 2.2vw, 17px);
+  font-weight: 600;
+}
+.rep-col {
+  flex: 1;
+  max-width: 240px;
+  text-align: center;
+  line-height: 1.5;
+}
+.rep-team {
+  font-weight: 800;
+  opacity: 0.9;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  margin-bottom: 6px;
+  padding-bottom: 4px;
 }
 #btn-continue {
   padding: 14px 40px;

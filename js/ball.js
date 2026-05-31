@@ -1,7 +1,7 @@
 // Der Ball: rollt mit Reibung, prallt an den Banden ab, wird vom ballführenden
 // Spieler "geführt" (Dribbling) und kann geschossen/gepasst werden.
 
-import { BALL, WORLD } from "./config.js?v=p";
+import { BALL, WORLD } from "./config.js?v=q";
 
 export class Ball {
   constructor(x, y) {
@@ -13,6 +13,7 @@ export class Ball {
 
     this.owner = null;          // Spieler, der den Ball aktuell führt
     this.lastTouchTeam = null;  // Team des letzten Ballkontakts (Ballbesitz)
+    this.lastTouchPlayer = null;// Spieler des letzten Ballkontakts (z. B. Torschütze)
     this.kickTimer = 0;         // > 0: Ball ist frei (kein Führen möglich)
   }
 
@@ -40,7 +41,7 @@ export class Ball {
         if (d < r && d < bestDist) { bestDist = d; best = p; }
       }
       this.owner = best;
-      if (best) this.lastTouchTeam = best.team;
+      if (best) { this.lastTouchTeam = best.team; this.lastTouchPlayer = best; }
     }
 
     if (this.owner) {
@@ -69,14 +70,15 @@ export class Ball {
     this.y = Math.min(Math.max(this.y, this.radius), WORLD.height - this.radius);
   }
 
-  // Ball in eine Richtung treten (Schuss/Pass).
-  kick(dirX, dirY, power, byTeam) {
+  // Ball in eine Richtung treten (Schuss/Pass). byPlayer optional (Torschütze).
+  kick(dirX, dirY, power, byTeam, byPlayer = null) {
     const len = Math.hypot(dirX, dirY) || 1;
     this.vx = (dirX / len) * power;
     this.vy = (dirY / len) * power;
     this.owner = null;
     this.kickTimer = BALL.kickCooldown;
     if (byTeam) this.lastTouchTeam = byTeam;
+    if (byPlayer) this.lastTouchPlayer = byPlayer;
   }
 
   draw(ctx) {

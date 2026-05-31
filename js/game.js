@@ -1,14 +1,14 @@
 // Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { DIFFICULTY } from "./config.js?v=p";
-import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js?v=p";
-import { Input } from "./input.js?v=p";
-import { Camera } from "./camera.js?v=p";
-import { drawPitch } from "./pitch.js?v=p";
-import { Match } from "./match.js?v=p";
-import * as season from "./seasonui.js?v=p";
-import * as penalties from "./penalties.js?v=p";
+import { DIFFICULTY } from "./config.js?v=q";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js?v=q";
+import { Input } from "./input.js?v=q";
+import { Camera } from "./camera.js?v=q";
+import { drawPitch } from "./pitch.js?v=q";
+import { Match } from "./match.js?v=q";
+import * as season from "./seasonui.js?v=q";
+import * as penalties from "./penalties.js?v=q";
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -202,17 +202,51 @@ function startPenalties() {
       home: match.score.home, away: match.score.away,
       winner: pen.winner, decidedBy: "i.E.",
       penalties: { home: pen.home, away: pen.away },
+      ...matchScorers(),
     });
   });
 }
 
+// Spielbericht: Ergebnis + Torschützen-Chronik beider Teams im Overlay.
+function showReport() {
+  const el = document.getElementById("result-text");
+  const h = match.home, a = match.away, s = match.score;
+  const suffix = match.wentToExtra ? " n.V." : "";
+  const head = `${h.short} ${s.home} : ${s.away} ${a.short}${suffix}`;
+
+  const homeGoals = match.goals.filter((g) => g.team === "home");
+  const awayGoals = match.goals.filter((g) => g.team === "away");
+  const fmt = (g) => `${g.minute}'&nbsp;${g.scorer}`;
+  const col = (goals) => goals.length
+    ? goals.map(fmt).join("<br>")
+    : '<span style="opacity:.6">–</span>';
+
+  el.innerHTML =
+    `<div class="rep-head">${head}</div>` +
+    `<div class="rep-grid">` +
+      `<div class="rep-col"><div class="rep-team">${h.name}</div>${col(homeGoals)}</div>` +
+      `<div class="rep-col"><div class="rep-team">${a.name}</div>${col(awayGoals)}</div>` +
+    `</div>`;
+}
+
+// Torschützen des gespielten Matches in Saison-Format umwandeln.
+function matchScorers() {
+  const goals = match ? match.goals : [];
+  return {
+    homeScorers: goals.filter((g) => g.team === "home").map((g) => g.scorer),
+    awayScorers: goals.filter((g) => g.team === "away").map((g) => g.scorer),
+    goals: goals.map((g) => ({ ...g })),
+  };
+}
+
 document.getElementById("btn-continue").addEventListener("click", () => {
-  if (!match) { resolveRunMatch({ home: 0, away: 0, winner: null, decidedBy: "regulär", penalties: null }); return; }
+  if (!match) { resolveRunMatch({ home: 0, away: 0, winner: null, decidedBy: "regulär", penalties: null, homeScorers: [], awayScorers: [], goals: [] }); return; }
   const s = match.score;
   const winner = s.home > s.away ? "home" : s.away > s.home ? "away" : null;
   resolveRunMatch({
     home: s.home, away: s.away, winner,
     decidedBy: match.wentToExtra ? "n.V." : "regulär", penalties: null,
+    ...matchScorers(),
   });
 });
 
@@ -278,7 +312,7 @@ function loop(now) {
         startPenalties();
       } else if (match.outcome === "decided" && !resultShown) {
         resultShown = true;
-        document.getElementById("result-text").textContent = match.message;
+        showReport();
         resultEl.classList.remove("hidden");
       }
     }

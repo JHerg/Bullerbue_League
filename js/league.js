@@ -1,7 +1,7 @@
 // Liga-Modus: Spielplan (Hin- & Rückrunde) und Tabellenberechnung.
 // Reine Datenlogik ohne DOM – dadurch headless testbar.
 
-import { simulateMatch } from "./sim.js?v=p";
+import { simulateMatch } from "./sim.js?v=q";
 
 // Doppel-Rundenturnier-Spielplan nach dem Kreis-Verfahren.
 // teamIds: Array mit gerader Anzahl Teams. Liefert Array von Spieltagen,
@@ -56,8 +56,8 @@ export function simulateRound(state, roundIndex, skipPair = null) {
   const out = [];
   for (const f of fixtures) {
     if (skipPair && f.home === skipPair.home && f.away === skipPair.away) continue;
-    const { hs, as } = simulateMatch(f.home, f.away);
-    out.push({ home: f.home, away: f.away, hs, as });
+    const { hs, as, homeScorers, awayScorers } = simulateMatch(f.home, f.away);
+    out.push({ home: f.home, away: f.away, hs, as, homeScorers, awayScorers });
   }
   return out;
 }
@@ -90,6 +90,23 @@ export function computeTable(state) {
   for (const r of table) r.gd = r.gf - r.ga;
   table.sort((x, y) => y.pts - x.pts || y.gd - x.gd || y.gf - x.gf);
   return table;
+}
+
+// Torschützenliste über alle gespeicherten Spiele: [{ name, team, goals }] sortiert.
+export function computeScorers(state) {
+  const tally = {}; // name -> { name, team, goals }
+  const add = (name, teamId) => {
+    if (!name) return;
+    const key = name + "@" + teamId;
+    (tally[key] || (tally[key] = { name, team: teamId, goals: 0 })).goals++;
+  };
+  for (const key of Object.keys(state.results)) {
+    for (const m of state.results[key]) {
+      (m.homeScorers || []).forEach((n) => add(n, m.home));
+      (m.awayScorers || []).forEach((n) => add(n, m.away));
+    }
+  }
+  return Object.values(tally).sort((a, b) => b.goals - a.goals || a.name.localeCompare(b.name));
 }
 
 export const TOTAL_ROUNDS = (teamCount) => (teamCount - 1) * 2;

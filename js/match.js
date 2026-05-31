@@ -2,11 +2,11 @@
 // kontextabhängige Nutzer-Aktion (Leertaste), Aus-Erkennung
 // (Einwurf/Ecke/Abstoß), Tore, Spieluhr und Halbzeit mit Seitenwechsel.
 
-import { WORLD, FIELD, MARGIN, GOAL, BALL, KICK, PLAYER, USER, DIFFICULTY_TEAMMATE } from "./config.js?v=p";
-import { Team } from "./team.js?v=p";
-import { Ball } from "./ball.js?v=p";
-import { computeAI } from "./ai.js?v=p";
-import { ensureContrast } from "./teams.js?v=p";
+import { WORLD, FIELD, MARGIN, GOAL, BALL, KICK, PLAYER, USER, DIFFICULTY_TEAMMATE } from "./config.js?v=q";
+import { Team } from "./team.js?v=q";
+import { Ball } from "./ball.js?v=q";
+import { computeAI } from "./ai.js?v=q";
+import { ensureContrast } from "./teams.js?v=q";
 
 const EDGE = 8; // wie weit innerhalb der Linie der Ball bei Standards liegt
 
@@ -29,6 +29,7 @@ export class Match {
     this.userPlayer = this.userFixed;
 
     this.score = { home: 0, away: 0 };
+    this.goals = []; // Torchronik: { team:"home"|"away", scorer, minute, own }
     this.message = "";
     this.pauseTimer = 0;
     this.manualTimer = 0; // > 0: manuell gewählter Spieler bleibt aktiv
@@ -50,6 +51,13 @@ export class Match {
 
   get periodLabel() {
     return this.half <= 2 ? `${this.half}. HZ` : `${this.half - 2}. VL`;
+  }
+
+  // Spielminute, normiert auf 90' (reguläre Halbzeiten) bzw. 90'+ (Verlängerung).
+  _matchMinute() {
+    const frac = Math.min(1, this.clock / this.periodLength);
+    if (this.half <= 2) return Math.max(1, Math.round((this.half - 1) * 45 + frac * 45));
+    return Math.max(91, Math.round(90 + (this.half - 3) * 15 + frac * 15));
   }
 
   // Profil der KI je nach Team (eigene Mitspieler vs. Gegner).
@@ -181,9 +189,9 @@ export class Match {
       const power = KICK.shootPower * (0.6 + 0.4 * shoot.charge);
       const distGoal = Math.hypot(g.oppGoalX - p.x, g.goalY - p.y);
       if (distGoal < USER.shootRange * 1.8) {
-        ball.kick(g.oppGoalX - p.x, g.goalY - p.y, power, p.team);
+        ball.kick(g.oppGoalX - p.x, g.goalY - p.y, power, p.team, p);
       } else {
-        ball.kick(p.facing.x, p.facing.y, power, p.team);
+        ball.kick(p.facing.x, p.facing.y, power, p.team, p);
       }
     }
 
@@ -195,9 +203,9 @@ export class Match {
         if (mate) {
           const dx = mate.x - p.x, dy = mate.y - p.y;
           const power = Math.min(KICK.passPowerMax, KICK.passPower + Math.hypot(dx, dy) * KICK.passPerPx);
-          ball.kick(dx, dy, power, p.team);
+          ball.kick(dx, dy, power, p.team, p);
         } else {
-          ball.kick(p.facing.x, p.facing.y, KICK.passPower, p.team);
+          ball.kick(p.facing.x, p.facing.y, KICK.passPower, p.team, p);
         }
       } else if (teammateHasBall) {
         // Eigenes Team am Ball, du aber nicht: Spieler wechseln (Team) bzw. Ball anfordern (Einzel).
@@ -206,13 +214,13 @@ export class Match {
           const o = ball.owner;
           const dx = p.x - o.x, dy = p.y - o.y;
           const power = Math.min(KICK.passPowerMax, KICK.passPower + Math.hypot(dx, dy) * KICK.passPerPx);
-          ball.kick(dx, dy, power, p.team);
+          ball.kick(dx, dy, power, p.team, p);
         }
       } else {
         // Gegner/loser Ball: nah dran grätschen, sonst wechseln (Team) bzw. hechten (Einzel).
         if (distBall < USER.tackleRange) {
           const g = goalsForTeam(p.team);
-          ball.kick(g.oppGoalX - p.x, g.goalY - p.y, KICK.passPower * 0.8, p.team);
+          ball.kick(g.oppGoalX - p.x, g.goalY - p.y, KICK.passPower * 0.8, p.team, p);
         } else if (this.mode === "team") {
           this._switchPlayer();
         } else {
@@ -243,7 +251,7 @@ export class Match {
     };
     const out = computeAI(p, ctx);
     p.update(dt, out.dir, profile.speed);
-    if (out.kick) this.ball.kick(out.kick.dirX, out.kick.dirY, out.kick.power, p.team);
+    if (out.kick) this.ball.kick(out.kick.dirX, out.kick.dirY, out.kick.power, p.team, p);
   }
 
   // Pass-Ziel des Nutzers: nächster Mitspieler in der aktuellen
@@ -315,7 +323,23 @@ export class Match {
     const conceder = scorer === this.home ? this.away : this.home;
     if (scorer === this.home) this.score.home++; else this.score.away++;
 
-    this.message = `TOR für ${scorer.name}!   ${this.home.short} ${this.score.home} : ${this.score.away} ${this.away.short}`;
+    // Torschütze aus dem letzten Ballkontakt; Eigentor, wenn der letzte
+    // Kontakt vom kassierenden Team kam.
+    const last = this.ball.lastTouchPlayer;
+    const ownGoal = last && last.team === conceder;
+    const scorerPlayer = (last && last.team === scorer) ? last : null;
+    const scorerName = ownGoal ? `${last.name} (ET)`
+      : (scorerPlayer ? scorerPlayer.name : "unbekannt");
+    if (scorerPlayer) scorerPlayer.goals = (scorerPlayer.goals || 0) + 1;
+
+    this.goals.push({
+      team: scorer === this.home ? "home" : "away",
+      scorer: scorerName,
+      minute: this._matchMinute(),
+      own: !!ownGoal,
+    });
+
+    this.message = `TOR für ${scorer.name}!   ${this.home.short} ${this.score.home} : ${this.score.away} ${this.away.short}\n${scorerName}`;
     this._kickoff(conceder); // Anstoß für die Mannschaft, die das Tor kassiert hat (stellt beide Teams)
     this.pauseTimer = 2.2;
     return true;

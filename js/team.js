@@ -1,9 +1,9 @@
 // Eine Mannschaft: 11 Spieler aus der Startelf-Datenbasis, Farben, Angriffs-
 // richtung und Schwierigkeitsprofil für die KI.
 
-import { buildSquad } from "./teams.js?v=p";
-import { Player } from "./player.js?v=p";
-import { MARGIN, FIELD } from "./config.js?v=p";
+import { buildSquad } from "./teams.js?v=q";
+import { Player } from "./player.js?v=q";
+import { MARGIN, FIELD } from "./config.js?v=q";
 
 export class Team {
   constructor(def, attackRight, difficulty) {

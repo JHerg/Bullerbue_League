@@ -5,10 +5,10 @@
 //   deps.runMatch(homeDef, awayDef, opts) -> Promise<{home, away}>  (Endstand)
 //   deps.showMenu()                       -> zurück ins Startmenü
 
-import { TEAMS, teamById } from "./teams.js?v=p";
-import * as L from "./league.js?v=p";
-import * as C from "./cup.js?v=p";
-import { saveSeason, loadSeason } from "./storage.js?v=p";
+import { TEAMS, teamById } from "./teams.js?v=q";
+import * as L from "./league.js?v=q";
+import * as C from "./cup.js?v=q";
+import { saveSeason, loadSeason } from "./storage.js?v=q";
 
 let deps = null;
 let state = null;
@@ -84,6 +84,7 @@ function _renderLeague() {
     html += _fixtureHtml(fx.home, fx.away);
   }
   html += _standingsTable(table);
+  html += _scorersTable(L.computeScorers(state));
   contentEl().innerHTML = html;
 
   if (over) {
@@ -97,6 +98,20 @@ function _renderLeague() {
   }
 }
 
+// Torschützenliste (Top 10) als kompakte Tabelle.
+function _scorersTable(scorers) {
+  if (!scorers.length) return "";
+  const top = scorers.slice(0, 10);
+  let rows = "";
+  top.forEach((s, i) => {
+    const cls = s.team === state.userTeam ? "me" : "";
+    rows += `<tr class="${cls}"><td>${i + 1}</td><td class="team">${s.name}</td>` +
+      `<td>${short(s.team)}</td><td><b>${s.goals}</b></td></tr>`;
+  });
+  return `<h3 class="scorers-h">⚽ Torschützen</h3>` +
+    `<table class="standings"><tr><th>#</th><th class="team">Spieler</th><th>Team</th><th>Tore</th></tr>${rows}</table>`;
+}
+
 async function _playLeague() {
   const round = state.currentRound;
   const fx = L.userFixture(state, round);
@@ -104,10 +119,13 @@ async function _playLeague() {
 
   const r = await _playUserMatch(opp, false);
   const userIsHome = fx.home === state.userTeam;
+  // Torschützen: r.homeScorers gehört dem Nutzerteam, r.awayScorers dem Gegner.
   const results = [{
     home: fx.home, away: fx.away,
     hs: userIsHome ? r.home : r.away,
     as: userIsHome ? r.away : r.home,
+    homeScorers: userIsHome ? r.homeScorers : r.awayScorers,
+    awayScorers: userIsHome ? r.awayScorers : r.homeScorers,
   }];
   for (const m of L.simulateRound(state, round, fx)) results.push(m);
 
@@ -149,6 +167,7 @@ function _renderCup() {
     html += tie ? _fixtureHtml(tie.home, tie.away) : `<div class="fixture">Dein Team ist ausgeschieden</div>`;
   }
   html += _bracketHtml();
+  html += _scorersTable(C.computeScorers(state));
   contentEl().innerHTML = html;
 
   if (state.champion) {
@@ -177,8 +196,10 @@ async function _playCup() {
   const hs = userIsHome ? r.home : r.away;
   const as = userIsHome ? r.away : r.home;
   const winner = r.winner === "home" ? state.userTeam : opp;
+  const homeScorers = userIsHome ? r.homeScorers : r.awayScorers;
+  const awayScorers = userIsHome ? r.awayScorers : r.homeScorers;
 
-  C.setTieResult(tie, hs, as, winner, r.decidedBy || "regulär");
+  C.setTieResult(tie, hs, as, winner, r.decidedBy || "regulär", homeScorers, awayScorers);
   C.simulateRest(state, tie);
   C.advance(state);
   saveSeason(state);

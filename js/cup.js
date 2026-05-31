@@ -1,8 +1,8 @@
 // Pokal-Modus: K.o.-Baum mit 16 Teams (Achtel-, Viertel-, Halbfinale, Finale).
 // Reine Datenlogik ohne DOM.
 
-import { simulateKnockout } from "./sim.js?v=p";
-import { ratingOf } from "./teams.js?v=p";
+import { simulateKnockout } from "./sim.js?v=q";
+import { ratingOf } from "./teams.js?v=q";
 
 export const ROUND_NAMES = ["Achtelfinale", "Viertelfinale", "Halbfinale", "Finale"];
 
@@ -46,14 +46,32 @@ export function userTie(state) {
 }
 
 // Ergebnis einer Partie eintragen (Sieger ggf. per Elfmeter bestimmt).
-export function setTieResult(tie, hs, as, winner, decided = "regulär") {
+export function setTieResult(tie, hs, as, winner, decided = "regulär", homeScorers = [], awayScorers = []) {
   tie.hs = hs; tie.as = as; tie.winner = winner; tie.decided = decided;
+  tie.homeScorers = homeScorers; tie.awayScorers = awayScorers;
 }
 
 // Eine nicht gespielte Partie simulieren.
 export function simulateTie(tie) {
   const r = simulateKnockout(tie.home, tie.away);
-  setTieResult(tie, r.hs, r.as, r.winner, r.decided);
+  setTieResult(tie, r.hs, r.as, r.winner, r.decided, r.homeScorers, r.awayScorers);
+}
+
+// Torschützenliste über alle gespielten Pokalpartien.
+export function computeScorers(state) {
+  const tally = {};
+  const add = (name, teamId) => {
+    if (!name) return;
+    const key = name + "@" + teamId;
+    (tally[key] || (tally[key] = { name, team: teamId, goals: 0 })).goals++;
+  };
+  for (const round of state.rounds) {
+    for (const t of round) {
+      (t.homeScorers || []).forEach((n) => add(n, t.home));
+      (t.awayScorers || []).forEach((n) => add(n, t.away));
+    }
+  }
+  return Object.values(tally).sort((a, b) => b.goals - a.goals || a.name.localeCompare(b.name));
 }
 
 // Alle offenen Partien der aktuellen Runde simulieren (außer optional einer).
