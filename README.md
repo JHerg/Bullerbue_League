@@ -133,7 +133,7 @@ Reihenfolge nach Priorität für die nächsten Schritte:
 11. Flanken & spezielle Abschluss-Mechaniken; kuratierte Spielernamen, Abseits.
 12. **Stadion-Atmosphäre:** Zuschauer und Bandenwerbung (wird separat entwickelt).
 13. **[erledigt]** Einwurf & Anstoß als spielbarer Pass (Ball am Fuß des Ausführenden).
-14. **Torwart-Sprung:** als Torwart mit der Leertaste springen/abheben (Paraden).
+14. **[erledigt]** Torwart-Sprung: als Torwart mit der Leertaste hechten/abheben (Paraden).
 15. **[erledigt]** Statistiken: Torschützenliste in Liga & Pokal + Spielbericht am Spielende.
 
 > Diese Liste arbeiten wir Schritt für Schritt ab — „Vibe Coding" mit rotem Faden.

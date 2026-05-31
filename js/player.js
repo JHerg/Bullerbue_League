@@ -2,7 +2,7 @@
 // aus der Formation. Bewegt sich per Zielrichtung (von Eingabe ODER KI) mit
 // Beschleunigung/Reibung und bleibt im Spielfeld.
 
-import { PLAYER, WORLD, BALL } from "./config.js?v=r";
+import { PLAYER, WORLD, BALL, KEEPER } from "./config.js?v=s";
 
 export class Player {
   constructor(data, team) {
@@ -21,12 +21,16 @@ export class Player {
     this.facing = { x: team.attackRight ? 1 : -1, y: 0 };
 
     // Torhüter haben einen größeren Aktionsradius (fangen/abwehren).
-    this.controlRadius = this.role === "TW" ? 26 : BALL.controlRadius;
+    this.baseControlRadius = this.role === "TW" ? 26 : BALL.controlRadius;
+    this.controlRadius = this.baseControlRadius;
 
+    this.diveTimer = 0;          // > 0: Torwart hechtet gerade
+    this.diveCooldown = 0;       // Pause bis zum nächsten Sprung
     this.isUser = false;         // wird vom Spieler gesteuert?
   }
 
   get isKeeper() { return this.role === "TW"; }
+  get isDiving() { return this.diveTimer > 0; }
 
   // Setzt die Position zurück auf die Formationsposition (z. B. nach Anstoß).
   reset() {
@@ -38,6 +42,22 @@ export class Player {
 
   // dir: normierte Zielrichtung {x,y}; speedMul skaliert das Tempo (Schwierigkeit).
   update(dt, dir, speedMul = 1) {
+    if (this.diveCooldown > 0) this.diveCooldown -= dt;
+
+    // Während des Torwart-Sprungs trägt der Hecht-Impuls; keine Eingabe-Steuerung.
+    if (this.diveTimer > 0) {
+      this.diveTimer -= dt;
+      this.controlRadius = this.baseControlRadius + KEEPER.diveReach;
+      this.x += this.vx * dt;
+      this.y += this.vy * dt;
+      this.vx *= Math.max(0, 1 - 3 * dt);
+      this.vy *= Math.max(0, 1 - 3 * dt);
+      this.x = Math.min(Math.max(this.x, this.radius), WORLD.width - this.radius);
+      this.y = Math.min(Math.max(this.y, this.radius), WORLD.height - this.radius);
+      return;
+    }
+    this.controlRadius = this.baseControlRadius;
+
     const maxSpeed = PLAYER.speed * speedMul;
     const targetVx = dir.x * maxSpeed;
     const targetVy = dir.y * maxSpeed;
@@ -59,6 +79,18 @@ export class Player {
 
     this.x = Math.min(Math.max(this.x, this.radius), WORLD.width - this.radius);
     this.y = Math.min(Math.max(this.y, this.radius), WORLD.height - this.radius);
+  }
+
+  // Torwart-Sprung in eine Richtung auslösen.
+  startDive(dx, dy) {
+    if (this.diveCooldown > 0) return false;
+    const len = Math.hypot(dx, dy) || 1;
+    this.vx = (dx / len) * KEEPER.diveSpeed;
+    this.vy = (dy / len) * KEEPER.diveSpeed;
+    this.facing = { x: dx / len, y: dy / len };
+    this.diveTimer = KEEPER.diveTime;
+    this.diveCooldown = KEEPER.diveTime + KEEPER.cooldown;
+    return true;
   }
 
   draw(ctx, highlighted) {
@@ -97,10 +129,15 @@ export class Player {
       ctx.fillText(this.name, this.x, ay - 4);
     }
 
-    // Körper / Trikot
+    // Körper / Trikot. Beim Hechten als gestreckte Ellipse in Sprungrichtung.
     ctx.beginPath();
     ctx.fillStyle = this.team.colors[0];
-    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    if (this.isDiving) {
+      const ang = Math.atan2(this.facing.y, this.facing.x);
+      ctx.ellipse(this.x, this.y, this.radius * 1.9, this.radius * 0.8, ang, 0, Math.PI * 2);
+    } else {
+      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    }
     ctx.fill();
     ctx.lineWidth = 2;
     ctx.strokeStyle = this.team.colors[1];

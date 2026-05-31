@@ -2,11 +2,11 @@
 // kontextabhängige Nutzer-Aktion (Leertaste), Aus-Erkennung
 // (Einwurf/Ecke/Abstoß), Tore, Spieluhr und Halbzeit mit Seitenwechsel.
 
-import { WORLD, FIELD, MARGIN, GOAL, BALL, KICK, PLAYER, USER, DIFFICULTY_TEAMMATE } from "./config.js?v=r";
-import { Team } from "./team.js?v=r";
-import { Ball } from "./ball.js?v=r";
-import { computeAI } from "./ai.js?v=r";
-import { ensureContrast } from "./teams.js?v=r";
+import { WORLD, FIELD, MARGIN, GOAL, BALL, KICK, PLAYER, USER, DIFFICULTY_TEAMMATE } from "./config.js?v=s";
+import { Team } from "./team.js?v=s";
+import { Ball } from "./ball.js?v=s";
+import { computeAI } from "./ai.js?v=s";
+import { ensureContrast } from "./teams.js?v=s";
 
 const EDGE = 8; // wie weit innerhalb der Linie der Ball bei Standards liegt
 
@@ -196,8 +196,22 @@ export class Match {
     const atBall = ball.owner === p || distBall < BALL.controlRadius * 1.7;
     const teammateHasBall = ball.owner && ball.owner.team === p.team && ball.owner !== p;
 
+    // Während eines Torwart-Sprungs keine weitere Eingabe verarbeiten.
+    if (p.isDiving) return;
+
     // --- Schuss (Leertaste, Haltedauer = Härte) ---
     const shoot = input.consumeShoot();
+
+    // Torwart-Sprung: steuerst du den Torwart und bist nicht am Ball,
+    // hechtet er mit der Leertaste (Laufrichtung, sonst Richtung Ball).
+    if (shoot && p.isKeeper && !atBall) {
+      const dir2 = input.getDirection();
+      const dx = (dir2.x || dir2.y) ? dir2.x : (ball.x - p.x);
+      const dy = (dir2.x || dir2.y) ? dir2.y : (ball.y - p.y);
+      p.startDive(dx, dy);
+      return;
+    }
+
     if (shoot && atBall) {
       const g = goalsForTeam(p.team);
       const power = KICK.shootPower * (0.6 + 0.4 * shoot.charge);

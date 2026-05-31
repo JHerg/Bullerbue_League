@@ -58,6 +58,14 @@ export const USER = {
   lunge: 540,        // Tempo des Hechtens/Grätschens Richtung Ball
 };
 
+// Torwart-Sprung/Hechten (Leertaste, wenn man den Torwart steuert).
+export const KEEPER = {
+  diveSpeed: 760,    // Hecht-Geschwindigkeit
+  diveTime: 0.42,    // Dauer des Sprungs in Sekunden
+  diveReach: 30,     // zusätzlicher Fangradius während des Sprungs (px)
+  cooldown: 0.7,     // Pause bis zum nächsten Sprung
+};
+
 // Kamera: wie schnell sie dem Spieler folgt (0..1, höher = direkter)
 export const CAMERA = {
   lerp: 0.12,
