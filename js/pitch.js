@@ -2,7 +2,7 @@
 // Mittelkreis, Strafräume, Torräume, Elfmeterpunkte und Tore.
 // Alles in Welt-Koordinaten; die Kamera-Translation passiert im Game-Loop.
 
-import { FIELD, MARGIN, WORLD, COLORS, PX_PER_M } from "./config.js?v=t";
+import { FIELD, MARGIN, WORLD, COLORS, PX_PER_M } from "./config.js?v=u";
 
 // Zuschauer-Teppich für die Top-Down-Ansicht: farbige Punkte im Randbereich
 // rings ums Spielfeld. Deterministisch erzeugt (einmalig gecached) und mit
@@ -55,6 +55,56 @@ export function drawCrowdTopDown(ctx, t = 0) {
     ctx.fillRect(d.x, d.y, 3, 3);
   }
   ctx.globalAlpha = 1;
+}
+
+// Fake-Sponsoren für die Bandenwerbung (ausgedachte Namen).
+export const SPONSORS = [
+  { text: "BULLERBÜ BANK", bg: "#0d47a1", fg: "#ffffff" },
+  { text: "FIKTIVA COLA", bg: "#c62828", fg: "#ffffff" },
+  { text: "TORWERK AG", bg: "#1b5e20", fg: "#ffffff" },
+  { text: "PAVLO REISEN", bg: "#f9a825", fg: "#1b1b1b" },
+  { text: "JAJO SPORT", bg: "#000000", fg: "#ffd600" },
+  { text: "ELVERA TELEKOM", bg: "#6a1b9a", fg: "#ffffff" },
+  { text: "KICKMAXX", bg: "#00838f", fg: "#ffffff" },
+  { text: "RASEN24", bg: "#2e7d32", fg: "#ffffff" },
+];
+
+// Bandenwerbung (Top-Down): farbige Werbetafeln direkt außerhalb der Längs-
+// und Torlinien, Text entlang der Bande. Läuft langsam durch (Animation).
+export function drawBoards(ctx, t = 0) {
+  const ox = MARGIN, oy = MARGIN, fw = FIELD.width, fh = FIELD.height;
+  const depth = 9;          // Höhe/Tiefe der Bande
+  const seg = 150;          // Länge einer Tafel
+  const off = (t * 0.02) % (seg * SPONSORS.length); // langsamer Durchlauf
+
+  const board = (x, y, w, h, horizontal) => {
+    ctx.save();
+    // Auf die Bande clippen
+    ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+    const count = Math.ceil((horizontal ? w : h) / seg) + 2;
+    for (let i = -1; i < count; i++) {
+      const s = SPONSORS[((i % SPONSORS.length) + SPONSORS.length) % SPONSORS.length];
+      let sx, sy, sw, sh;
+      if (horizontal) { sx = x + i * seg - off; sy = y; sw = seg - 3; sh = h; }
+      else { sx = x; sy = y + i * seg - off; sw = w; sh = seg - 3; }
+      ctx.fillStyle = s.bg; ctx.fillRect(sx, sy, sw, sh);
+      ctx.fillStyle = s.fg;
+      ctx.font = `bold ${Math.floor(h * (horizontal ? 0.6 : 0.6))}px sans-serif`;
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.save();
+      ctx.translate(sx + sw / 2, sy + sh / 2);
+      if (!horizontal) ctx.rotate(-Math.PI / 2);
+      ctx.fillText(s.text, 0, 0);
+      ctx.restore();
+    }
+    ctx.restore();
+  };
+
+  // Längsseiten (oben/unten) und Torseiten (links/rechts), je knapp außerhalb der Linie.
+  board(ox, oy - depth - 3, fw, depth, true);          // oben
+  board(ox, oy + fh + 3, fw, depth, true);             // unten
+  board(ox - depth - 3, oy, depth, fh, false);         // links
+  board(ox + fw + 3, oy, depth, fh, false);            // rechts
 }
 
 export function drawPitch(ctx) {

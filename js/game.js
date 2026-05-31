@@ -1,15 +1,15 @@
 // Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { DIFFICULTY, WORLD } from "./config.js?v=t";
-import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js?v=t";
-import { Input } from "./input.js?v=t";
-import { Camera } from "./camera.js?v=t";
-import { drawPitch, drawCrowdTopDown } from "./pitch.js?v=t";
-import { Match } from "./match.js?v=t";
-import { render as render25 } from "./render2d5.js?v=t";
-import * as season from "./seasonui.js?v=t";
-import * as penalties from "./penalties.js?v=t";
+import { DIFFICULTY, WORLD } from "./config.js?v=u";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js?v=u";
+import { Input } from "./input.js?v=u";
+import { Camera } from "./camera.js?v=u";
+import { drawPitch, drawCrowdTopDown, drawBoards } from "./pitch.js?v=u";
+import { Match } from "./match.js?v=u";
+import { render as render25 } from "./render2d5.js?v=u";
+import * as season from "./seasonui.js?v=u";
+import * as penalties from "./penalties.js?v=u";
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -336,7 +336,8 @@ function loop(now) {
       ctx.save();
       ctx.translate(-camera.x, -camera.y);
       drawPitch(ctx);
-      drawCrowdTopDown(ctx);
+      drawCrowdTopDown(ctx, now);
+      drawBoards(ctx, now);
       match.ball.draw(ctx);
       for (const p of match.allPlayers) {
         p.draw(ctx, p === match.userPlayer);

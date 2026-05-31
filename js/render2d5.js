@@ -3,7 +3,8 @@
 // Tiefen-Staffelung), Tornetzen, Eckbögen, Tribünen-Andeutung und Ball-Drall.
 // Keine externen Assets. Tuning-Werte im VIEW-Block.
 
-import { WORLD, FIELD, MARGIN, GOAL, PLAYER, PX_PER_M } from "./config.js?v=t";
+import { WORLD, FIELD, MARGIN, GOAL, PLAYER, PX_PER_M } from "./config.js?v=u";
+import { SPONSORS } from "./pitch.js?v=u";
 
 // ---- Tuning ----
 const VIEW = {
@@ -104,8 +105,26 @@ function drawStands(ctx, w, h, tMs = 0) {
       ctx.beginPath(); ctx.arc(cx, cy - headR * 0.3, headR, 0, Math.PI * 2); ctx.fill();
     }
   }
-  // dunkle Bande/Werbebanden-Streifen am Übergang zum Rasen
-  ctx.fillStyle = "rgba(0,0,0,0.35)"; ctx.fillRect(0, horizonY - 5, w, 5);
+  // Werbebanden-Streifen am Übergang Tribüne -> Rasen (animiert durchlaufend).
+  const bh = Math.max(10, h * 0.035);              // Bandenhöhe
+  const by = horizonY - bh;
+  const segW = 168;
+  const off = (tMs * 0.05) % (segW * SPONSORS.length);
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, by, w, bh); ctx.clip();
+  const count = Math.ceil(w / segW) + 2;
+  for (let i = -1; i < count; i++) {
+    const s = SPONSORS[((i % SPONSORS.length) + SPONSORS.length) % SPONSORS.length];
+    const sx = i * segW - off;
+    ctx.fillStyle = s.bg; ctx.fillRect(sx, by, segW - 4, bh);
+    ctx.fillStyle = s.fg;
+    ctx.font = `bold ${Math.floor(bh * 0.6)}px sans-serif`;
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(s.text, sx + (segW - 4) / 2, by + bh / 2);
+  }
+  ctx.restore();
+  // schmaler Schatten unter der Bande
+  ctx.fillStyle = "rgba(0,0,0,0.3)"; ctx.fillRect(0, horizonY, w, 3);
   ctx.fillStyle = "#0a3d0a"; ctx.fillRect(0, horizonY, w, h - horizonY);
 }
 

@@ -2,7 +2,7 @@
 // linearer Interpolation und klemmt an die Weltgrenzen, damit nie über den
 // Spielfeldrand hinaus gescrollt wird.
 
-import { WORLD, CAMERA } from "./config.js?v=t";
+import { WORLD, CAMERA } from "./config.js?v=u";
 
 export class Camera {
   constructor() {
