@@ -2,7 +2,60 @@
 // Mittelkreis, Strafräume, Torräume, Elfmeterpunkte und Tore.
 // Alles in Welt-Koordinaten; die Kamera-Translation passiert im Game-Loop.
 
-import { FIELD, MARGIN, WORLD, COLORS, PX_PER_M } from "./config.js?v=s";
+import { FIELD, MARGIN, WORLD, COLORS, PX_PER_M } from "./config.js?v=t";
+
+// Zuschauer-Teppich für die Top-Down-Ansicht: farbige Punkte im Randbereich
+// rings ums Spielfeld. Deterministisch erzeugt (einmalig gecached) und mit
+// leichtem Flackern, damit das Stadion lebendig wirkt.
+let crowdDots = null;
+function buildCrowd() {
+  const dots = [];
+  const blockColors = ["#c62828", "#1565c0", "#fdd835", "#ffffff", "#2e7d32", "#ef6c00"];
+  let seed = 1337;
+  const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+
+  const band = MARGIN - 6;          // Tiefe der Tribüne
+  const gap = 6;                    // Abstand der Sitze
+  const ox = MARGIN, oy = MARGIN, fw = FIELD.width, fh = FIELD.height;
+
+  // Hilfsfunktion: ein Rang entlang einer Kante füllen.
+  const fillStrip = (x0, y0, x1, y1, rows, nx, ny) => {
+    const len = Math.hypot(x1 - x0, y1 - y0);
+    const cols = Math.floor(len / gap);
+    for (let r = 1; r <= rows; r++) {
+      const blockBase = Math.floor(rnd() * blockColors.length);
+      for (let c = 0; c < cols; c++) {
+        if (rnd() < 0.06) continue; // Lücken
+        const t = c / cols;
+        const bx = x0 + (x1 - x0) * t + nx * (r * gap);
+        const by = y0 + (y1 - y0) * t + ny * (r * gap);
+        // Fan-Blöcke: in Abschnitten gleiche Farbe
+        const block = Math.floor(c / 14);
+        const col = blockColors[(blockBase + block) % blockColors.length];
+        dots.push({ x: bx + (rnd() - 0.5) * 2, y: by + (rnd() - 0.5) * 2, c: col, ph: rnd() * 6.28 });
+      }
+    }
+  };
+
+  const rows = Math.max(3, Math.floor(band / gap));
+  fillStrip(ox, oy - 2, ox + fw, oy - 2, rows, 0, -1);              // oben
+  fillStrip(ox, oy + fh + 2, ox + fw, oy + fh + 2, rows, 0, 1);     // unten
+  fillStrip(ox - 2, oy, ox - 2, oy + fh, rows, -1, 0);             // links
+  fillStrip(ox + fw + 2, oy, ox + fw + 2, oy + fh, rows, 1, 0);    // rechts
+  return dots;
+}
+
+export function drawCrowdTopDown(ctx, t = 0) {
+  if (!crowdDots) crowdDots = buildCrowd();
+  for (const d of crowdDots) {
+    // leichtes Flackern (Stehen/Bewegen)
+    const a = 0.75 + 0.25 * Math.sin(d.ph + t * 0.004);
+    ctx.globalAlpha = a;
+    ctx.fillStyle = d.c;
+    ctx.fillRect(d.x, d.y, 3, 3);
+  }
+  ctx.globalAlpha = 1;
+}
 
 export function drawPitch(ctx) {
   // Hintergrund (Auslaufzone)

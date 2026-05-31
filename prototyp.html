@@ -3,23 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Bullerbue League — 2.5D-Prototyp ⚽</title>
+  <title>Bullerbue League — 2.5D ⚽</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
   <!-- Zurück zum Hauptspiel -->
-  <a id="back-link" href="index.html">← zurück zum Spiel</a>
+  <a id="back-link" href="index.html">← klassische Ansicht</a>
 
   <!-- Anzeigetafel -->
-  <div id="scoreboard">
+  <div id="scoreboard" class="hidden">
     <span id="sb-home"></span>
     <span id="sb-score">0 : 0</span>
     <span id="sb-away"></span>
-    <span id="sb-clock">2.5D-Prototyp</span>
+    <span id="sb-clock">1. HZ 00:00</span>
   </div>
 
   <!-- Tor-/Status-Meldung -->
   <div id="message"></div>
+
+  <!-- Schuss-Ladebalken -->
+  <div id="power-bar" class="hidden"><div id="power-fill"></div></div>
 
   <canvas id="game"></canvas>
 
@@ -35,6 +38,102 @@
     <button id="btn-shoot" class="action-btn">SCHUSS</button>
   </div>
 
-  <script type="module" src="js/proto.js?v=s"></script>
+  <!-- Saison-Hub (Liga/Pokal) -->
+  <div id="hub" class="hidden">
+    <div id="hub-card">
+      <div id="hub-content"></div>
+      <div id="hub-buttons"></div>
+    </div>
+  </div>
+
+  <!-- Ergebnis-Overlay nach einem gespielten Spiel -->
+  <div id="result" class="hidden">
+    <div id="result-text"></div>
+    <button id="btn-continue">Weiter</button>
+  </div>
+
+  <!-- Elfmeterschießen (Mini-Game) -->
+  <div id="penalty" class="hidden">
+    <div id="pen-card">
+      <div id="pen-title">Elfmeterschießen</div>
+      <div id="pen-score">0 : 0</div>
+      <div id="pen-dots"></div>
+      <div id="pen-scene">
+        <div id="pen-goal">
+          <div class="pen-zone"></div>
+          <div class="pen-zone"></div>
+          <div class="pen-zone"></div>
+          <div id="pen-keeper"></div>
+        </div>
+        <div id="pen-ball"></div>
+      </div>
+      <div id="pen-status"></div>
+      <div id="pen-buttons">
+        <button data-z="0">◀ Links</button>
+        <button data-z="1">▲ Mitte</button>
+        <button data-z="2">Rechts ▶</button>
+      </div>
+      <button id="pen-continue" class="hidden">Weiter</button>
+    </div>
+  </div>
+
+  <!-- Startmenü -->
+  <div id="menu">
+    <div id="menu-card">
+      <h1>Bullerbue League ⚽ <span style="font-size:14px;opacity:.7">2.5D</span></h1>
+
+      <label>Spielart
+        <select id="sel-type">
+          <option value="anstoss">Anstoß – freies Spiel</option>
+          <option value="liga">Liga-Saison (18 Teams)</option>
+          <option value="pokal">Pokal (K.o.)</option>
+          <option value="elfer">Elfmeterschießen</option>
+        </select>
+      </label>
+
+      <label id="lbl-home">Heimteam
+        <select id="sel-home"></select>
+      </label>
+      <label id="lbl-away">Auswärtsteam
+        <select id="sel-away"></select>
+      </label>
+
+      <label>Fokus-Modus
+        <select id="sel-mode">
+          <option value="team">Team-Modus (Spieler am Ball)</option>
+          <option value="single">Einzelspieler-Modus (fester Spieler)</option>
+        </select>
+      </label>
+
+      <label id="lbl-player" class="hidden">Dein Spieler
+        <select id="sel-player"></select>
+      </label>
+
+      <label>Schwierigkeit
+        <select id="sel-diff">
+          <option>Einfach</option>
+          <option selected>Mittel</option>
+          <option>Schwer</option>
+          <option>Ultimativ</option>
+        </select>
+      </label>
+
+      <label>Halbzeitdauer
+        <select id="sel-half">
+          <option value="1">2 × 1 Minute</option>
+          <option value="2" selected>2 × 2 Minuten</option>
+          <option value="3">2 × 3 Minuten</option>
+          <option value="5">2 × 5 Minuten</option>
+        </select>
+      </label>
+
+      <button id="btn-start">Anpfiff!</button>
+      <button id="btn-resume" class="hidden">Saison fortsetzen</button>
+      <p class="hint">2.5D-Ansicht mit Zuschauern · gleiche Steuerung wie im Hauptspiel<br>PC: WASD/Pfeile · Leertaste = Schuss · F = Pass/Grätsche/Wechsel</p>
+      <p class="version">Build 2026-05-30-t · 2.5D-Vollspiel + Zuschauer</p>
+    </div>
+  </div>
+
+  <script type="module" src="js/proto.js?v=t"></script>
 </body>
 </html>

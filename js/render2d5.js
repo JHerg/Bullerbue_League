@@ -3,7 +3,7 @@
 // Tiefen-Staffelung), Tornetzen, Eckbögen, Tribünen-Andeutung und Ball-Drall.
 // Keine externen Assets. Tuning-Werte im VIEW-Block.
 
-import { WORLD, FIELD, MARGIN, GOAL, PLAYER, PX_PER_M } from "./config.js?v=s";
+import { WORLD, FIELD, MARGIN, GOAL, PLAYER, PX_PER_M } from "./config.js?v=t";
 
 // ---- Tuning ----
 const VIEW = {
@@ -58,7 +58,7 @@ function makeProjector(w, h, camX) {
 
 export function render(ctx, w, h, match, camX, dtMs) {
   const project = makeProjector(w, h, camX);
-  drawStands(ctx, w, h);
+  drawStands(ctx, w, h, render._t = (render._t || 0) + dtMs);
   drawPitch(ctx, project, w, h);
 
   const ents = match.allPlayers.map((p) => ({ p, y: p.y })).concat([{ ball: match.ball, y: match.ball.y }]);
@@ -69,17 +69,43 @@ export function render(ctx, w, h, match, camX, dtMs) {
   }
 }
 
-// ---------- Hintergrund / Tribüne ----------
-function drawStands(ctx, w, h) {
+// ---------- Hintergrund / Tribüne (erkennbare Zuschauer) ----------
+const STAND_COLORS = ["#c62828", "#1565c0", "#fdd835", "#ffffff", "#2e7d32", "#ef6c00", "#6a1b9a"];
+function drawStands(ctx, w, h, tMs = 0) {
   const horizonY = h * VIEW.horizon;
+  // Betonkonstruktion + Dach
   let g = ctx.createLinearGradient(0, 0, 0, horizonY);
-  g.addColorStop(0, "#14202a"); g.addColorStop(1, "#27424f");
+  g.addColorStop(0, "#0e1822"); g.addColorStop(1, "#33525f");
   ctx.fillStyle = g; ctx.fillRect(0, 0, w, horizonY);
-  // angedeutete Zuschauer (Punkte-Raster)
-  ctx.fillStyle = "rgba(255,255,255,0.05)";
-  for (let y = 6; y < horizonY - 4; y += 7)
-    for (let x = (y % 14); x < w; x += 9) ctx.fillRect(x, y, 2, 2);
-  // unterer Bildrand dunkel (Rasenkante)
+
+  // Zuschauer in Reihen: nähere Reihen (unten) größer -> Tiefenwirkung.
+  let seed = 20240530;
+  const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+  const rows = 9;
+  for (let r = 0; r < rows; r++) {
+    const ry = (horizonY * (r + 0.6)) / rows;       // y der Reihe
+    const persp = 0.35 + 0.65 * (r / rows);          // hinten klein, vorn groß
+    const headR = 1.6 + persp * 2.6;                 // Kopfradius
+    const step = headR * 2.5;
+    const blockBase = Math.floor(rnd() * STAND_COLORS.length);
+    for (let x = (r % 2) * step * 0.5, c = 0; x < w; x += step, c++) {
+      if (rnd() < 0.05) continue;                    // Lücken
+      const block = Math.floor((x / w) * 8);
+      const shirt = STAND_COLORS[(blockBase + block) % STAND_COLORS.length];
+      // gelegentliches Aufstehen/Jubeln -> leichter Höhen-Offset
+      const jump = (Math.sin(tMs * 0.003 + x * 0.05 + r) > 0.94) ? -headR * 0.8 : 0;
+      const cx = x + (rnd() - 0.5) * step * 0.3;
+      const cy = ry + jump;
+      // Oberkörper (Trikot)
+      ctx.fillStyle = shirt;
+      ctx.fillRect(cx - headR * 0.9, cy, headR * 1.8, headR * 1.9);
+      // Kopf
+      ctx.fillStyle = "#e8b58a";
+      ctx.beginPath(); ctx.arc(cx, cy - headR * 0.3, headR, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  // dunkle Bande/Werbebanden-Streifen am Übergang zum Rasen
+  ctx.fillStyle = "rgba(0,0,0,0.35)"; ctx.fillRect(0, horizonY - 5, w, 5);
   ctx.fillStyle = "#0a3d0a"; ctx.fillRect(0, horizonY, w, h - horizonY);
 }
 

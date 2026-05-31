@@ -1,21 +1,27 @@
 // Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { DIFFICULTY } from "./config.js?v=s";
-import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js?v=s";
-import { Input } from "./input.js?v=s";
-import { Camera } from "./camera.js?v=s";
-import { drawPitch } from "./pitch.js?v=s";
-import { Match } from "./match.js?v=s";
-import * as season from "./seasonui.js?v=s";
-import * as penalties from "./penalties.js?v=s";
+import { DIFFICULTY, WORLD } from "./config.js?v=t";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js?v=t";
+import { Input } from "./input.js?v=t";
+import { Camera } from "./camera.js?v=t";
+import { drawPitch, drawCrowdTopDown } from "./pitch.js?v=t";
+import { Match } from "./match.js?v=t";
+import { render as render25 } from "./render2d5.js?v=t";
+import * as season from "./seasonui.js?v=t";
+import * as penalties from "./penalties.js?v=t";
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
+// Ansichts-Modus: Top-Down (Hauptspiel) oder 2.5D (Prototyp, via Flag im HTML).
+const VIEW_MODE = (typeof window !== "undefined" && window.BULLERBUE_VIEW === "2.5d") ? "2.5d" : "topdown";
+
 const input = new Input();
 const camera = new Camera();
 let match = null;
+let viewW = window.innerWidth, viewH = window.innerHeight;
+let cam25X = WORLD.width / 2; // horizontale Kamera für die 2.5D-Ansicht
 
 // --------------------------------------------------------------------------
 // Canvas-Größe (inkl. HiDPI)
@@ -23,6 +29,7 @@ let match = null;
 function resize() {
   const dpr = window.devicePixelRatio || 1;
   const w = window.innerWidth, h = window.innerHeight;
+  viewW = w; viewH = h;
   canvas.width = Math.floor(w * dpr);
   canvas.height = Math.floor(h * dpr);
   canvas.style.width = w + "px";
@@ -300,8 +307,6 @@ function loop(now) {
 
   if (match) {
     match.update(dt, input);
-    const target = match.cameraTarget;
-    camera.follow(target.x, target.y);
     updateHUD();
     updatePowerBar();
 
@@ -317,17 +322,27 @@ function loop(now) {
       }
     }
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.save();
-    ctx.translate(-camera.x, -camera.y);
-
-    drawPitch(ctx);
-    match.ball.draw(ctx);
-    for (const p of match.allPlayers) {
-      p.draw(ctx, p === match.userPlayer);
+    if (VIEW_MODE === "2.5d") {
+      // 2.5D-Schrägsicht: horizontale Kamera folgt dem gesteuerten Spieler.
+      const target = match.cameraTarget;
+      cam25X += (target.x - cam25X) * 0.1;
+      cam25X = Math.max(WORLD.width * 0.22, Math.min(WORLD.width * 0.78, cam25X));
+      render25(ctx, viewW, viewH, match, cam25X, dt * 1000);
+    } else {
+      // Top-Down: Scrolling-Kamera.
+      const target = match.cameraTarget;
+      camera.follow(target.x, target.y);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.translate(-camera.x, -camera.y);
+      drawPitch(ctx);
+      drawCrowdTopDown(ctx);
+      match.ball.draw(ctx);
+      for (const p of match.allPlayers) {
+        p.draw(ctx, p === match.userPlayer);
+      }
+      ctx.restore();
     }
-
-    ctx.restore();
   }
 
   requestAnimationFrame(loop);
