@@ -131,5 +131,9 @@ Reihenfolge nach Priorität für die nächsten Schritte:
 9. **[erledigt]** Speichern/Laden des Saison-Fortschritts (localStorage).
 10. **[erledigt]** Verlängerung & spielbares Elfmeterschießen (Mini-Game).
 11. Flanken & spezielle Abschluss-Mechaniken; kuratierte Spielernamen, Abseits.
+12. **Stadion-Atmosphäre:** Zuschauer und Bandenwerbung (wird separat entwickelt).
+13. **Einwurf & Anstoß als spielbarer Pass** (statt automatischer Ballzuteilung).
+14. **Torwart-Sprung:** als Torwart mit der Leertaste springen/abheben (Paraden).
+15. **Statistiken:** Torschützenliste in Liga & Pokal + Spielbericht am Spielende.
 
 > Diese Liste arbeiten wir Schritt für Schritt ab — „Vibe Coding" mit rotem Faden.
