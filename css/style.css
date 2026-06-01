@@ -185,6 +185,12 @@ html, body {
   font-size: 13px;
   font-weight: 600;
 }
+#menu-card label.check {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+#menu-card label.check input { width: 18px; height: 18px; }
 #menu-card select {
   padding: 9px 10px;
   border-radius: 8px;

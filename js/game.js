@@ -1,15 +1,16 @@
 // Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { DIFFICULTY, WORLD } from "./config.js?v=y";
-import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js?v=y";
-import { Input } from "./input.js?v=y";
-import { Camera } from "./camera.js?v=y";
-import { drawPitch, drawCrowdTopDown, drawBoards } from "./pitch.js?v=y";
-import { Match } from "./match.js?v=y";
-import { render as render25 } from "./render2d5.js?v=y";
-import * as season from "./seasonui.js?v=y";
-import * as penalties from "./penalties.js?v=y";
+import { DIFFICULTY, WORLD } from "./config.js?v=z";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js?v=z";
+import { Input } from "./input.js?v=z";
+import { Camera } from "./camera.js?v=z";
+import { drawPitch, drawCrowdTopDown, drawBoards } from "./pitch.js?v=z";
+import { Match } from "./match.js?v=z";
+import { render as render25 } from "./render2d5.js?v=z";
+import * as season from "./seasonui.js?v=z";
+import * as penalties from "./penalties.js?v=z";
+import * as commentary from "./commentary.js?v=z";
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -118,7 +119,15 @@ function getMatchOptions() {
   };
 }
 
+// Kommentator-Schalter aus dem Menü (Checkbox).
+const chkComm = document.getElementById("chk-comm");
+function applyCommentarySetting() {
+  if (chkComm) commentary.setEnabled(chkComm.checked);
+}
+chkComm?.addEventListener("change", applyCommentarySetting);
+
 btnStart.addEventListener("click", () => {
+  applyCommentarySetting();
   const type = selType.value;
   const opts = getMatchOptions();
   if (type === "anstoss" || type === "elfer") {
@@ -169,6 +178,7 @@ function runMatch(homeDef, awayDef, opts) {
     resultShown = false;
     penaltiesStarted = false;
     match = new Match(homeDef, awayDef, opts);
+    commentary.reset();
     menuEl.classList.add("hidden");
     hubEl.classList.add("hidden");
     resultEl.classList.add("hidden");
@@ -307,6 +317,7 @@ function loop(now) {
 
   if (match) {
     match.update(dt, input);
+    commentary.update(match, now);
     updateHUD();
     updatePowerBar();
 
