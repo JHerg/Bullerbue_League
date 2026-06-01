@@ -1,7 +1,7 @@
 // Der Ball: rollt mit Reibung, prallt an den Banden ab, wird vom ballführenden
 // Spieler "geführt" (Dribbling) und kann geschossen/gepasst werden.
 
-import { BALL, WORLD } from "./config.js?v=z";
+import { BALL, WORLD } from "./config.js?v=a2";
 
 export class Ball {
   constructor(x, y) {

@@ -2,7 +2,7 @@
 // aus der Formation. Bewegt sich per Zielrichtung (von Eingabe ODER KI) mit
 // Beschleunigung/Reibung und bleibt im Spielfeld.
 
-import { PLAYER, WORLD, BALL, KEEPER } from "./config.js?v=z";
+import { PLAYER, WORLD, BALL, KEEPER } from "./config.js?v=a2";
 
 export class Player {
   constructor(data, team) {
@@ -32,6 +32,14 @@ export class Player {
 
   get isKeeper() { return this.role === "TW"; }
   get isDiving() { return this.diveTimer > 0; }
+
+  // Sichtbarer Körperradius (Top-Down): bei stämmigen Spielern (build-Override)
+  // breiter gezeichnet. build 1.0 -> normal, 1.45 -> deutlich breiter.
+  get bodyRadius() {
+    const b = this.buildOverride;
+    if (!b) return this.radius;
+    return this.radius * (1 + Math.max(0, b - 1) * 0.7);
+  }
 
   // Setzt die Position zurück auf die Formationsposition (z. B. nach Anstoß).
   reset() {
@@ -130,14 +138,16 @@ export class Player {
       ctx.fillText(this.name, this.x, ay - 4);
     }
 
-    // Körper / Trikot. Beim Hechten als gestreckte Ellipse in Sprungrichtung.
+    // Körper / Trikot. Beim Hechten als gestreckte Ellipse in Sprungrichtung;
+    // stämmige Spieler werden breiter gezeichnet (bodyRadius).
+    const br = this.bodyRadius;
     ctx.beginPath();
     ctx.fillStyle = this.team.colors[0];
     if (this.isDiving) {
       const ang = Math.atan2(this.facing.y, this.facing.x);
-      ctx.ellipse(this.x, this.y, this.radius * 1.9, this.radius * 0.8, ang, 0, Math.PI * 2);
+      ctx.ellipse(this.x, this.y, br * 1.9, br * 0.8, ang, 0, Math.PI * 2);
     } else {
-      ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+      ctx.arc(this.x, this.y, br, 0, Math.PI * 2);
     }
     ctx.fill();
     ctx.lineWidth = 2;

@@ -5,7 +5,7 @@
 // 1 = gegnerisches Tor / y: 0 = oben, 1 = unten) und werden im Spiel auf
 // Welt-Koordinaten und Angriffsrichtung umgerechnet.
 
-import { MARGIN, FIELD } from "./config.js?v=z";
+import { MARGIN, FIELD } from "./config.js?v=a2";
 
 // ---------------------------------------------------------------------------
 // Formations-Vorlagen
@@ -216,7 +216,7 @@ const SQUAD_OVERRIDES = {
   fra: {
     0: { name: "Kev Tralbert", number: 1 },
     1: { name: "Nat Braun", number: 36 },
-    2: { name: "Jürgi Bluti", number: 99, build: 1.45 },
+    2: { name: "Jürgi Bluti", number: 99, build: 1.8 },
     3: { name: "Arto Theate", number: 35 },
     4: { name: "Rasmus Kristof", number: 23 },
     5: { name: "Elias Skhira", number: 15 },
