@@ -2,13 +2,14 @@
 // aus der Formation. Bewegt sich per Zielrichtung (von Eingabe ODER KI) mit
 // Beschleunigung/Reibung und bleibt im Spielfeld.
 
-import { PLAYER, WORLD, BALL, KEEPER } from "./config.js?v=x";
+import { PLAYER, WORLD, BALL, KEEPER } from "./config.js?v=y";
 
 export class Player {
   constructor(data, team) {
     this.name = data.name;
     this.role = data.role;
     this.number = data.number;
+    this.buildOverride = data.build; // optionaler Statur-Faktor (Renderer)
     this.homeX = data.homeX;
     this.homeY = data.homeY;
 

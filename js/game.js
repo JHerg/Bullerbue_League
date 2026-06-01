@@ -1,15 +1,15 @@
 // Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { DIFFICULTY, WORLD } from "./config.js?v=x";
-import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js?v=x";
-import { Input } from "./input.js?v=x";
-import { Camera } from "./camera.js?v=x";
-import { drawPitch, drawCrowdTopDown, drawBoards } from "./pitch.js?v=x";
-import { Match } from "./match.js?v=x";
-import { render as render25 } from "./render2d5.js?v=x";
-import * as season from "./seasonui.js?v=x";
-import * as penalties from "./penalties.js?v=x";
+import { DIFFICULTY, WORLD } from "./config.js?v=y";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js?v=y";
+import { Input } from "./input.js?v=y";
+import { Camera } from "./camera.js?v=y";
+import { drawPitch, drawCrowdTopDown, drawBoards } from "./pitch.js?v=y";
+import { Match } from "./match.js?v=y";
+import { render as render25 } from "./render2d5.js?v=y";
+import * as season from "./seasonui.js?v=y";
+import * as penalties from "./penalties.js?v=y";
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");

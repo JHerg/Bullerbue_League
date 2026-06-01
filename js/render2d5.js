@@ -3,8 +3,8 @@
 // Tiefen-Staffelung), Tornetzen, Eckbögen, Tribünen-Andeutung und Ball-Drall.
 // Keine externen Assets. Tuning-Werte im VIEW-Block.
 
-import { WORLD, FIELD, MARGIN, GOAL, PLAYER, PX_PER_M } from "./config.js?v=x";
-import { SPONSORS } from "./pitch.js?v=x";
+import { WORLD, FIELD, MARGIN, GOAL, PLAYER, PX_PER_M } from "./config.js?v=y";
+import { SPONSORS } from "./pitch.js?v=y";
 
 // ---- Tuning ----
 const VIEW = {
@@ -35,13 +35,16 @@ function attrsFor(p) {
   if (a) return a;
   const seed = hash(p.team.id + ":" + p.number);
   const r = (n) => ((seed >>> n) & 0xff) / 255;
+  // Statur: per Override gesetzt (z. B. stämmiger Spieler) oder zufällig.
+  const build = p.buildOverride ?? (0.88 + r(7) * 0.34);
   a = {
     skin: SKIN[seed % SKIN.length],
     hair: HAIR[(seed >>> 3) % HAIR.length],
     boot: BOOT[(seed >>> 6) % BOOT.length],
     hasHair: r(11) > 0.16,
-    height: 0.9 + r(5) * 0.26,
-    build: 0.88 + r(7) * 0.34,
+    // Kräftige Spieler wirken etwas kleiner/gedrungener.
+    height: (0.9 + r(5) * 0.26) * (build > 1.2 ? 0.94 : 1),
+    build,
     legPhase: r(13) * Math.PI * 2,
   };
   attrs.set(p, a);

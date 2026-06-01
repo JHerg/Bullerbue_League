@@ -3,4 +3,4 @@
 // So teilt sich der Prototyp die gesamte Spielphysik mit dem Hauptspiel.
 
 window.BULLERBUE_VIEW = "2.5d";
-import("./game.js?v=x");
+import("./game.js?v=y");
