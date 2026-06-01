@@ -2,7 +2,7 @@
 // aus der Formation. Bewegt sich per Zielrichtung (von Eingabe ODER KI) mit
 // Beschleunigung/Reibung und bleibt im Spielfeld.
 
-import { PLAYER, WORLD, BALL, KEEPER } from "./config.js?v=a2";
+import { PLAYER, WORLD, BALL, KEEPER } from "./config.js?v=b2";
 
 export class Player {
   constructor(data, team) {
@@ -10,6 +10,7 @@ export class Player {
     this.role = data.role;
     this.number = data.number;
     this.buildOverride = data.build; // optionaler Statur-Faktor (Renderer)
+    this.speedFactor = data.speed || 1; // optionaler Tempo-Faktor (z. B. schneller Spieler)
     this.homeX = data.homeX;
     this.homeY = data.homeY;
 
@@ -67,7 +68,7 @@ export class Player {
     }
     this.controlRadius = this.baseControlRadius;
 
-    const maxSpeed = PLAYER.speed * speedMul;
+    const maxSpeed = PLAYER.speed * speedMul * this.speedFactor;
     const targetVx = dir.x * maxSpeed;
     const targetVy = dir.y * maxSpeed;
 

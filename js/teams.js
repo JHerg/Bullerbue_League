@@ -5,7 +5,7 @@
 // 1 = gegnerisches Tor / y: 0 = oben, 1 = unten) und werden im Spiel auf
 // Welt-Koordinaten und Angriffsrichtung umgerechnet.
 
-import { MARGIN, FIELD } from "./config.js?v=a2";
+import { MARGIN, FIELD } from "./config.js?v=b2";
 
 // ---------------------------------------------------------------------------
 // Formations-Vorlagen
@@ -159,7 +159,7 @@ const SQUAD_OVERRIDES = {
     2: { name: "Dion Upagecu", number: 4 },      // IV
     3: { name: "Minho Sangwoo", number: 3 },     // IV
     4: { name: "Josip Stanic", number: 2 },      // RV
-    5: { name: "Jacob Jajo", number: 6 },        // DM — bleibt
+    5: { name: "Jacob Jajo", number: 6, speed: 1.3 }, // DM — bleibt, aber schneller
     6: { name: "Alexander Pavlo", number: 45 },  // DM — bleibt
     7: { name: "Lenny Sarno", number: 10 },      // OM
     8: { name: "Jamal Murano", number: 42 },     // OM
@@ -445,6 +445,7 @@ export function buildSquad(team, attackRight) {
       role: slot.role,
       number: ov.number ?? i + 1,
       build: ov.build,   // optionaler Statur-Faktor (z. B. stämmiger Spieler)
+      speed: ov.speed,   // optionaler Tempo-Faktor (z. B. schneller Spieler)
       homeX,
       homeY,
     };

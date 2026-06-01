@@ -2,7 +2,7 @@
 // Mittelkreis, Strafräume, Torräume, Elfmeterpunkte und Tore.
 // Alles in Welt-Koordinaten; die Kamera-Translation passiert im Game-Loop.
 
-import { FIELD, MARGIN, WORLD, COLORS, PX_PER_M } from "./config.js?v=a2";
+import { FIELD, MARGIN, WORLD, COLORS, PX_PER_M } from "./config.js?v=b2";
 
 // Zuschauer-Teppich für die Top-Down-Ansicht: farbige Punkte im Randbereich
 // rings ums Spielfeld. Deterministisch erzeugt (einmalig gecached) und mit
