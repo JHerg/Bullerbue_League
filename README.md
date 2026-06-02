@@ -135,5 +135,6 @@ Reihenfolge nach Priorität für die nächsten Schritte:
 13. **[erledigt]** Einwurf & Anstoß als spielbarer Pass (Ball am Fuß des Ausführenden).
 14. **[erledigt]** Torwart-Sprung: als Torwart mit der Leertaste hechten/abheben (Paraden).
 15. **[erledigt]** Statistiken: Torschützenliste in Liga & Pokal + Spielbericht am Spielende.
+16. **[erledigt]** Hallenturnier (3 gegen 3, 32 Teams in 8 Gruppen, K.o., eigene Spielerauswahl).
 
 > Diese Liste arbeiten wir Schritt für Schritt ab — „Vibe Coding" mit rotem Faden.

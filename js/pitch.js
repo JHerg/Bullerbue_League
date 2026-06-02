@@ -2,7 +2,28 @@
 // Mittelkreis, Strafräume, Torräume, Elfmeterpunkte und Tore.
 // Alles in Welt-Koordinaten; die Kamera-Translation passiert im Game-Loop.
 
-import { FIELD, MARGIN, WORLD, COLORS, PX_PER_M } from "./config.js?v=b2";
+import { FIELD, MARGIN, WORLD, COLORS, PX_PER_M, GOAL } from "./config.js?v=c2";
+
+// Banden für den Hallenmodus: kräftiger Rahmen rings ums Feld, mit Lücke am
+// Tormaul (links/rechts). Wird über drawPitch gelegt.
+export function drawIndoorBoards(ctx) {
+  const ox = MARGIN, oy = MARGIN, w = FIELD.width, h = FIELD.height;
+  const th = 6; // Bandendicke
+  const gh = GOAL.height, gy0 = GOAL.centerY - gh / 2, gy1 = GOAL.centerY + gh / 2;
+  ctx.fillStyle = "#e8edf2";          // helle Bande
+  // Oben & unten (durchgehend)
+  ctx.fillRect(ox - th, oy - th, w + th * 2, th);
+  ctx.fillRect(ox - th, oy + h, w + th * 2, th);
+  // Links & rechts: in zwei Segmenten (Lücke am Tor)
+  ctx.fillRect(ox - th, oy - th, th, (gy0 - (oy - th)));
+  ctx.fillRect(ox - th, gy1, th, (oy + h + th) - gy1);
+  ctx.fillRect(ox + w, oy - th, th, (gy0 - (oy - th)));
+  ctx.fillRect(ox + w, gy1, th, (oy + h + th) - gy1);
+  // rote Oberkante als Akzent
+  ctx.fillStyle = "rgba(200,40,40,0.7)";
+  ctx.fillRect(ox - th, oy - th, w + th * 2, 2);
+  ctx.fillRect(ox - th, oy + h + th - 2, w + th * 2, 2);
+}
 
 // Zuschauer-Teppich für die Top-Down-Ansicht: farbige Punkte im Randbereich
 // rings ums Spielfeld. Deterministisch erzeugt (einmalig gecached) und mit

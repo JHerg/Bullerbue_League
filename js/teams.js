@@ -5,7 +5,7 @@
 // 1 = gegnerisches Tor / y: 0 = oben, 1 = unten) und werden im Spiel auf
 // Welt-Koordinaten und Angriffsrichtung umgerechnet.
 
-import { MARGIN, FIELD } from "./config.js?v=b2";
+import { MARGIN, FIELD } from "./config.js?v=c2";
 
 // ---------------------------------------------------------------------------
 // Formations-Vorlagen
@@ -450,4 +450,28 @@ export function buildSquad(team, attackRight) {
       homeY,
     };
   });
+}
+
+// Grobe Spielerstärke (für Hallenturnier-Simulation): Team-Rating + Rollenbonus.
+const ROLE_BONUS = { ST: 6, LA: 4, RA: 4, OM: 4, LM: 2, RM: 2, ZM: 2, DM: 1, IV: 0, LV: -1, RV: -1, TW: -4 };
+export function playerStrength(teamId, role) {
+  return ratingOf(teamId) + (ROLE_BONUS[role] ?? 0);
+}
+
+// Liefert ALLE Spieler aller Teams (für die Hallenturnier-Auswahl):
+// [{ uid, name, number, role, teamId, teamShort, teamName, build, speed, strength }]
+export function allPlayers() {
+  const out = [];
+  for (const t of TEAMS) {
+    buildSquad(t, true).forEach((p, i) => {
+      out.push({
+        uid: `${t.id}:${i}`,
+        name: p.name, number: p.number, role: p.role,
+        teamId: t.id, teamShort: t.short, teamName: t.name,
+        build: p.build, speed: p.speed,
+        strength: playerStrength(t.id, p.role),
+      });
+    });
+  }
+  return out;
 }

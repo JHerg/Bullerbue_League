@@ -2,19 +2,25 @@
 // kontextabhängige Nutzer-Aktion (Leertaste), Aus-Erkennung
 // (Einwurf/Ecke/Abstoß), Tore, Spieluhr und Halbzeit mit Seitenwechsel.
 
-import { WORLD, FIELD, MARGIN, GOAL, BALL, KICK, PLAYER, USER, DIFFICULTY_TEAMMATE } from "./config.js?v=b2";
-import { Team } from "./team.js?v=b2";
-import { Ball } from "./ball.js?v=b2";
-import { computeAI } from "./ai.js?v=b2";
-import { ensureContrast } from "./teams.js?v=b2";
+import { WORLD, FIELD, MARGIN, GOAL, BALL, KICK, PLAYER, USER, DIFFICULTY_TEAMMATE } from "./config.js?v=c2";
+import { Team } from "./team.js?v=c2";
+import { Ball } from "./ball.js?v=c2";
+import { computeAI } from "./ai.js?v=c2";
+import { ensureContrast } from "./teams.js?v=c2";
 
 const EDGE = 8; // wie weit innerhalb der Linie der Ball bei Standards liegt
 
 export class Match {
-  constructor(homeDef, awayDef, { mode, difficulty, userPlayerIndex = 9, minutesPerHalf = 2, knockout = false }) {
+  constructor(homeDef, awayDef, opts = {}) {
+    const {
+      mode, difficulty, userPlayerIndex = 9, minutesPerHalf = 2, knockout = false,
+      indoor = false, homeSquad = null, awaySquad = null, durationSec = 0,
+    } = opts;
+
+    this.indoor = indoor;
     // Eigene Mitspieler: festes Profil. Gegner: gewählte Schwierigkeit.
-    this.home = new Team(homeDef, true, DIFFICULTY_TEAMMATE);
-    this.away = new Team(awayDef, false, difficulty);
+    this.home = new Team(homeDef, true, DIFFICULTY_TEAMMATE, { indoor, squad: homeSquad });
+    this.away = new Team(awayDef, false, difficulty, { indoor, squad: awaySquad });
     // Trikot-Kollision vermeiden: Auswärtsteam ggf. auf Ausweichtrikot setzen.
     this.away.colors = ensureContrast(this.home.colors, this.away.colors);
     this.mode = mode;
@@ -36,8 +42,14 @@ export class Match {
 
     // Spieluhr / Halbzeit / Verlängerung
     this.knockout = knockout;                 // K.o.-Spiel? (Verlängerung/Elfmeter)
-    this.halfLength = minutesPerHalf * 60;    // Sekunden pro reguläre Halbzeit
-    this.etLength = Math.max(45, this.halfLength * 0.5); // Verlängerungshälfte
+    if (indoor) {
+      // Halle: ein durchgehender Abschnitt (3×30 s = 90 s), kein Seitenwechsel.
+      this.halfLength = durationSec || 90;
+      this.etLength = 0;
+    } else {
+      this.halfLength = minutesPerHalf * 60;  // Sekunden pro reguläre Halbzeit
+      this.etLength = Math.max(45, this.halfLength * 0.5); // Verlängerungshälfte
+    }
     this.periodLength = this.halfLength;      // Länge des aktuellen Abschnitts
     this.half = 1;                            // 1,2 = regulär; 3,4 = Verlängerung
     this.clock = 0;
@@ -50,6 +62,11 @@ export class Match {
   }
 
   get periodLabel() {
+    if (this.indoor) {
+      // Anzeige als Drittel (3×30 s): aktuelles Drittel aus der Uhr ableiten.
+      const third = Math.min(3, Math.floor(this.clock / (this.halfLength / 3)) + 1);
+      return `${third}/3`;
+    }
     return this.half <= 2 ? `${this.half}. HZ` : `${this.half - 2}. VL`;
   }
 
@@ -378,6 +395,21 @@ export class Match {
     const left = MARGIN, right = MARGIN + FIELD.width;
     const top = MARGIN, bottom = MARGIN + FIELD.height;
 
+    // Halle: Ball prallt an allen Banden ab (nur Tore zählen, kein Aus).
+    if (this.indoor) {
+      if (b.owner) return;
+      const r = b.radius, rest = -0.72;
+      const inMouth = Math.abs(b.y - GOAL.centerY) < GOAL.height / 2;
+      if (b.y < top + r) { b.y = top + r; if (b.vy < 0) b.vy *= rest; }
+      if (b.y > bottom - r) { b.y = bottom - r; if (b.vy > 0) b.vy *= rest; }
+      // Linke/rechte Bande nur abseits des Tormauls (im Maul = Tor, s. _checkGoal).
+      if (!inMouth) {
+        if (b.x < left + r) { b.x = left + r; if (b.vx < 0) b.vx *= rest; }
+        if (b.x > right - r) { b.x = right - r; if (b.vx > 0) b.vx *= rest; }
+      }
+      return;
+    }
+
     // Seitenaus -> Einwurf für das Team ohne letzten Ballkontakt.
     if (b.y < top || b.y > bottom) {
       const awarded = b.lastTouchTeam === this.home ? this.away : this.home;
@@ -442,6 +474,16 @@ export class Match {
 
   _endHalf() {
     const tied = this.score.home === this.score.away;
+
+    // Halle: ein Abschnitt; danach entschieden, im K.o. bei Remis Elfmeter.
+    if (this.indoor) {
+      if (this.knockout && tied) {
+        this.finished = true; this.outcome = "penalties"; this.message = "Elfmeterschießen!";
+      } else {
+        this._finishDecided();
+      }
+      return;
+    }
 
     if (this.half === 1) {
       this.half = 2; this.clock = 0;

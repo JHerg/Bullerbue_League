@@ -1,16 +1,17 @@
 // Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { DIFFICULTY, WORLD } from "./config.js?v=b2";
-import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js?v=b2";
-import { Input } from "./input.js?v=b2";
-import { Camera } from "./camera.js?v=b2";
-import { drawPitch, drawCrowdTopDown, drawBoards } from "./pitch.js?v=b2";
-import { Match } from "./match.js?v=b2";
-import { render as render25 } from "./render2d5.js?v=b2";
-import * as season from "./seasonui.js?v=b2";
-import * as penalties from "./penalties.js?v=b2";
-import * as commentary from "./commentary.js?v=b2";
+import { DIFFICULTY, WORLD } from "./config.js?v=c2";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js?v=c2";
+import { Input } from "./input.js?v=c2";
+import { Camera } from "./camera.js?v=c2";
+import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorBoards } from "./pitch.js?v=c2";
+import { Match } from "./match.js?v=c2";
+import { render as render25 } from "./render2d5.js?v=c2";
+import * as season from "./seasonui.js?v=c2";
+import * as penalties from "./penalties.js?v=c2";
+import * as commentary from "./commentary.js?v=c2";
+import * as tournament from "./tournamentui.js?v=c2";
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -90,20 +91,25 @@ function updateTypeUI() {
   const isAnstoss = type === "anstoss";
   const isElfer = type === "elfer";
   const isSeason = type === "liga" || type === "pokal";
+  const isHalle = type === "halle";
 
-  // Gegner-Auswahl bei Anstoß und Elfmeterschießen.
+  // Team-Auswahl im Menü nur bei Anstoß/Elfer; Halle wählt Teams im Hub.
+  lblHome.classList.toggle("hidden", isHalle);
   lblAway.classList.toggle("hidden", !(isAnstoss || isElfer));
   lblHome.childNodes[0].nodeValue = isAnstoss ? "Heimteam" : "Dein Team";
 
-  // Match-Optionen werden beim reinen Elfmeterschießen nicht gebraucht.
-  selMode.parentElement.classList.toggle("hidden", isElfer);
-  selDiff.parentElement.classList.toggle("hidden", isElfer);
-  selHalf.parentElement.classList.toggle("hidden", isElfer);
-  lblPlayer.classList.toggle("hidden", isElfer || selMode.value !== "single");
+  // Match-Optionen werden bei Elfmeterschießen/Halle nicht im Menü gebraucht.
+  const hideOpts = isElfer || isHalle;
+  selMode.parentElement.classList.toggle("hidden", hideOpts);
+  selDiff.parentElement.classList.toggle("hidden", hideOpts);
+  selHalf.parentElement.classList.toggle("hidden", hideOpts);
+  lblPlayer.classList.toggle("hidden", hideOpts || selMode.value !== "single");
 
-  btnStart.textContent = isElfer ? "Elfmeterschießen" : isAnstoss ? "Anpfiff!" : "Saison starten";
+  btnStart.textContent = isElfer ? "Elfmeterschießen"
+    : isHalle ? "Hallenturnier starten"
+    : isAnstoss ? "Anpfiff!" : "Saison starten";
 
-  const canResume = isSeason && season.hasSave(type);
+  const canResume = (isSeason && season.hasSave(type)) || (isHalle && tournament.hasSave());
   btnResume.classList.toggle("hidden", !canResume);
 }
 selType.addEventListener("change", updateTypeUI);
@@ -139,6 +145,9 @@ btnStart.addEventListener("click", () => {
     } else {
       startPenaltyOnly(teamById(selHome.value), teamById(selAway.value));
     }
+  } else if (type === "halle") {
+    menuEl.classList.add("hidden");
+    tournament.start();
   } else {
     menuEl.classList.add("hidden");
     if (type === "liga") season.startLeague(selHome.value, opts);
@@ -159,7 +168,8 @@ function startPenaltyOnly(homeDef, awayDef) {
 
 btnResume.addEventListener("click", () => {
   menuEl.classList.add("hidden");
-  season.resume(selType.value, getMatchOptions());
+  if (selType.value === "halle") tournament.resume();
+  else season.resume(selType.value, getMatchOptions());
 });
 
 // --------------------------------------------------------------------------
@@ -185,6 +195,20 @@ function runMatch(homeDef, awayDef, opts) {
     scoreboardEl.classList.remove("hidden");
     document.getElementById("sb-home").textContent = homeDef.short;
     document.getElementById("sb-away").textContent = awayDef.short;
+  });
+}
+
+// Hallenturnier-Match: 3 gegen 3, kein Torwart, Banden, 3×30 s.
+// homeDef/awayDef tragen .squad (3 Spieler). knockout -> bei Remis Elfmeter.
+function runIndoorMatch(homeDef, awayDef, { difficulty, knockout }) {
+  return runMatch(homeDef, awayDef, {
+    mode: "team",
+    difficulty,
+    knockout,
+    indoor: true,
+    durationSec: 90,            // 3 × 30 Sek
+    homeSquad: homeDef.squad,
+    awaySquad: awayDef.squad,
   });
 }
 
@@ -268,6 +292,7 @@ document.getElementById("btn-continue").addEventListener("click", () => {
 });
 
 season.init({ runMatch, showMenu });
+tournament.init({ runIndoorMatch, showMenu });
 
 // --------------------------------------------------------------------------
 // HUD
@@ -348,7 +373,7 @@ function loop(now) {
       ctx.translate(-camera.x, -camera.y);
       drawPitch(ctx);
       drawCrowdTopDown(ctx, now);
-      drawBoards(ctx, now);
+      if (match.indoor) drawIndoorBoards(ctx); else drawBoards(ctx, now);
       match.ball.draw(ctx);
       for (const p of match.allPlayers) {
         p.draw(ctx, p === match.userPlayer);
