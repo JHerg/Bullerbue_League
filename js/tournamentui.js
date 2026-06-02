@@ -6,10 +6,10 @@
 // deps: { runIndoorMatch(homeDef, awayDef, {difficulty, knockout}) -> Promise<result>,
 //         showMenu() }
 
-import { allPlayers, teamById as teamDef } from "./teams.js?v=d2";
-import { DIFFICULTY } from "./config.js?v=d2";
-import * as T from "./tournament.js?v=d2";
-import { saveSeason, loadSeason } from "./storage.js?v=d2";
+import { allPlayers, teamById as teamDef } from "./teams.js?v=e2";
+import { DIFFICULTY } from "./config.js?v=e2";
+import * as T from "./tournament.js?v=e2";
+import { saveSeason, loadSeason } from "./storage.js?v=e2";
 
 let deps = null;
 let state = null;
@@ -107,6 +107,7 @@ function _confirmTeam() {
 
 // ---------------- Gruppen-Hub ----------------
 function _renderGroup() {
+  hubEl().classList.remove("hidden"); // nach einem Spiel den Hub wieder zeigen
   if (state.phase === "ko") { _renderKo(); return; }
 
   const gi = state.userGroup;
@@ -188,6 +189,7 @@ function _toKo() {
 
 // ---------------- K.o.-Phase ----------------
 function _renderKo() {
+  hubEl().classList.remove("hidden"); // nach einem Spiel den Hub wieder zeigen
   let html = `<h2>Hallenturnier – ${state.champion ? "Beendet" : T.koRoundName(state)}</h2>`;
   if (state.champion) {
     html += `<div class="fixture">🏆 Turniersieger: ${_name(state.champion)}</div>`;
