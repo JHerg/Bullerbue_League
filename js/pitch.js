@@ -2,28 +2,75 @@
 // Mittelkreis, Strafräume, Torräume, Elfmeterpunkte und Tore.
 // Alles in Welt-Koordinaten; die Kamera-Translation passiert im Game-Loop.
 
-import { FIELD, MARGIN, WORLD, COLORS, PX_PER_M, GOAL } from "./config.js?v=c2";
+import { FIELD, MARGIN, WORLD, COLORS, PX_PER_M, GOAL, HALL } from "./config.js?v=d2";
 
-// Banden für den Hallenmodus: kräftiger Rahmen rings ums Feld, mit Lücke am
-// Tormaul (links/rechts). Wird über drawPitch gelegt.
-export function drawIndoorBoards(ctx) {
-  const ox = MARGIN, oy = MARGIN, w = FIELD.width, h = FIELD.height;
-  const th = 6; // Bandendicke
-  const gh = GOAL.height, gy0 = GOAL.centerY - gh / 2, gy1 = GOAL.centerY + gh / 2;
-  ctx.fillStyle = "#e8edf2";          // helle Bande
-  // Oben & unten (durchgehend)
-  ctx.fillRect(ox - th, oy - th, w + th * 2, th);
-  ctx.fillRect(ox - th, oy + h, w + th * 2, th);
-  // Links & rechts: in zwei Segmenten (Lücke am Tor)
-  ctx.fillRect(ox - th, oy - th, th, (gy0 - (oy - th)));
-  ctx.fillRect(ox - th, gy1, th, (oy + h + th) - gy1);
-  ctx.fillRect(ox + w, oy - th, th, (gy0 - (oy - th)));
-  ctx.fillRect(ox + w, gy1, th, (oy + h + th) - gy1);
-  // rote Oberkante als Akzent
-  ctx.fillStyle = "rgba(200,40,40,0.7)";
-  ctx.fillRect(ox - th, oy - th, w + th * 2, 2);
-  ctx.fillRect(ox - th, oy + h + th - 2, w + th * 2, 2);
+// Komplette Hallen-Darstellung (kleines Feld, Parkett, Banden, Tore) ohne
+// Zuschauer. Ersetzt drawPitch im Hallenmodus.
+export function drawIndoorPitch(ctx) {
+  const L = HALL.left, R = HALL.right, T = HALL.top, B = HALL.bottom;
+  const w = R - L, h = B - T;
+
+  // Dunkler Hallenhintergrund (Umlauf hinter den Banden)
+  ctx.fillStyle = "#23262b";
+  ctx.fillRect(0, 0, WORLD.width, WORLD.height);
+
+  // Parkettboden mit Dielen
+  ctx.fillStyle = "#caa46a";
+  ctx.fillRect(L, T, w, h);
+  ctx.strokeStyle = "rgba(120,85,40,0.35)";
+  ctx.lineWidth = 1;
+  for (let x = L; x <= R; x += 22) {
+    ctx.beginPath(); ctx.moveTo(x, T); ctx.lineTo(x, B); ctx.stroke();
+  }
+  // leichte Spielfeld-Einfärbung (Court-Bereich)
+  ctx.fillStyle = "rgba(40,90,60,0.18)";
+  ctx.fillRect(L, T, w, h);
+
+  // Linien (weiß): Außenlinie, Mittellinie, Mittelkreis
+  ctx.strokeStyle = "rgba(255,255,255,0.9)";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(L + 3, T + 3, w - 6, h - 6);
+  ctx.beginPath(); ctx.moveTo((L + R) / 2, T + 3); ctx.lineTo((L + R) / 2, B - 3); ctx.stroke();
+  ctx.beginPath(); ctx.arc((L + R) / 2, (T + B) / 2, 5 * PX_PER_M, 0, Math.PI * 2); ctx.stroke();
+
+  // Torräume (kleine Halbkreise vor den Toren)
+  const cy = (T + B) / 2, gr = 6 * PX_PER_M;
+  ctx.beginPath(); ctx.arc(L + 3, cy, gr, -Math.PI / 2, Math.PI / 2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(R - 3, cy, gr, Math.PI / 2, Math.PI * 1.5); ctx.stroke();
+
+  // Tore (Netz) in der Bandenlücke
+  const gh = HALL.goalHeight, gy0 = cy - gh / 2, gy1 = cy + gh / 2, gd = 14;
+  ctx.save();
+  ctx.strokeStyle = "rgba(255,255,255,0.95)"; ctx.lineWidth = 2;
+  ctx.strokeRect(L - gd, gy0, gd, gh);
+  ctx.strokeRect(R, gy0, gd, gh);
+  ctx.strokeStyle = "rgba(255,255,255,0.3)"; ctx.lineWidth = 1;
+  for (let i = 1; i < 4; i++) { const yy = gy0 + (gh * i) / 4; line2(ctx, L - gd, yy, L, yy); line2(ctx, R, yy, R + gd, yy); }
+  ctx.restore();
+
+  drawIndoorBoards(ctx);
 }
+
+// Banden für den Hallenmodus: kräftiger Rahmen rings ums kleine Feld, mit
+// Lücke am Tormaul (links/rechts).
+export function drawIndoorBoards(ctx) {
+  const L = HALL.left, R = HALL.right, T = HALL.top, B = HALL.bottom;
+  const w = R - L, h = B - T, th = 7;
+  const gh = HALL.goalHeight, cy = (T + B) / 2, gy0 = cy - gh / 2, gy1 = cy + gh / 2;
+  ctx.fillStyle = "#dfe4ea";          // helle Bande
+  ctx.fillRect(L - th, T - th, w + th * 2, th);      // oben
+  ctx.fillRect(L - th, B, w + th * 2, th);           // unten
+  ctx.fillRect(L - th, T - th, th, (gy0 - (T - th))); // links oben
+  ctx.fillRect(L - th, gy1, th, (B + th) - gy1);      // links unten
+  ctx.fillRect(R, T - th, th, (gy0 - (T - th)));      // rechts oben
+  ctx.fillRect(R, gy1, th, (B + th) - gy1);           // rechts unten
+  // farbige Werbe-Oberkante
+  ctx.fillStyle = "rgba(30,90,200,0.8)";
+  ctx.fillRect(L - th, T - th, w + th * 2, 2);
+  ctx.fillRect(L - th, B + th - 2, w + th * 2, 2);
+}
+
+function line2(ctx, x1, y1, x2, y2) { ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); }
 
 // Zuschauer-Teppich für die Top-Down-Ansicht: farbige Punkte im Randbereich
 // rings ums Spielfeld. Deterministisch erzeugt (einmalig gecached) und mit

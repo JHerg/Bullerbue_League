@@ -7,18 +7,10 @@
 //
 // ctx = { ball, difficulty, isChaser, isPossessor, teammates, opponents, dt }
 
-import { MARGIN, FIELD, GOAL, KICK } from "./config.js?v=c2";
+import { MARGIN, FIELD, GOAL, KICK } from "./config.js?v=d2";
 
 const FIELD_CX = MARGIN + FIELD.width / 2;
 const FIELD_CY = MARGIN + FIELD.height / 2;
-
-function goalsFor(team) {
-  return {
-    oppGoalX: team.attackRight ? GOAL.lineRight : GOAL.lineLeft,
-    ownGoalX: team.attackRight ? GOAL.lineLeft : GOAL.lineRight,
-    goalY: GOAL.centerY,
-  };
-}
 
 function steer(player, tx, ty, deadzone = 6) {
   const dx = tx - player.x;
@@ -48,7 +40,14 @@ function aimWithNoise(dx, dy, accuracy) {
 export function computeAI(player, ctx) {
   const { ball, difficulty } = ctx;
   const team = player.team;
-  const { oppGoalX, ownGoalX, goalY } = goalsFor(team);
+  // Geometrie: aus ctx.geo (z. B. Halle) oder Standard-Feld.
+  const geo = ctx.geo || {
+    left: MARGIN, right: MARGIN + FIELD.width, top: MARGIN, bottom: MARGIN + FIELD.height,
+    cx: FIELD_CX, cy: FIELD_CY, goalH: GOAL.height,
+  };
+  const oppGoalX = team.attackRight ? geo.right : geo.left;
+  const ownGoalX = team.attackRight ? geo.left : geo.right;
+  const goalY = geo.cy;
 
   // -------- Torwart --------
   if (player.isKeeper) {
@@ -63,7 +62,7 @@ export function computeAI(player, ctx) {
 
     // Position auf einer kurzen Linie vor dem eigenen Tor.
     const lineX = ownGoalX + (team.attackRight ? 26 : -26);
-    const half = GOAL.height / 2;
+    const half = geo.goalH / 2;
 
     // Standard: Ball-Höhe verfolgen, auf Tormaul begrenzt.
     let ty = clamp(ball.y, goalY - half, goalY + half);
@@ -122,21 +121,23 @@ export function computeAI(player, ctx) {
   const teamHasBall = ball.lastTouchTeam === team;
   const press = difficulty.press;
 
-  let shiftX = clamp((ball.x - FIELD_CX) * 0.18 * press, -130, 130);
-  let shiftY = clamp((ball.y - FIELD_CY) * 0.18 * press, -95, 95);
+  const fw = geo.right - geo.left;
+  const shiftMax = fw < 800 ? 70 : 130;   // Halle: kleinere Verschiebung
+  let shiftX = clamp((ball.x - geo.cx) * 0.18 * press, -shiftMax, shiftMax);
+  let shiftY = clamp((ball.y - geo.cy) * 0.18 * press, -shiftMax * 0.7, shiftMax * 0.7);
 
   // In Ballbesitz schieben Offensivkräfte stärker nach vorn.
   if (teamHasBall && isAttacker(player.role)) {
     shiftX += team.attackRight ? 40 : -40;
   }
 
-  const tx = clamp(player.homeX + shiftX, MARGIN + 10, MARGIN + FIELD.width - 10);
-  const ty = clamp(player.homeY + shiftY, MARGIN + 10, MARGIN + FIELD.height - 10);
+  const tx = clamp(player.homeX + shiftX, geo.left + 10, geo.right - 10);
+  const ty = clamp(player.homeY + shiftY, geo.top + 10, geo.bottom - 10);
   return { dir: steer(player, tx, ty), kick: null };
 }
 
 function isAttacker(role) {
-  return ["ST", "LA", "RA", "OM", "LM", "RM"].includes(role);
+  return ["ST", "LA", "RA", "OM", "LM", "RM", "ANG"].includes(role);
 }
 
 // Bester Anspielpartner: möglichst weit vorn und nicht eng gedeckt.

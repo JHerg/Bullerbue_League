@@ -1,17 +1,17 @@
 // Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { DIFFICULTY, WORLD } from "./config.js?v=c2";
-import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js?v=c2";
-import { Input } from "./input.js?v=c2";
-import { Camera } from "./camera.js?v=c2";
-import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorBoards } from "./pitch.js?v=c2";
-import { Match } from "./match.js?v=c2";
-import { render as render25 } from "./render2d5.js?v=c2";
-import * as season from "./seasonui.js?v=c2";
-import * as penalties from "./penalties.js?v=c2";
-import * as commentary from "./commentary.js?v=c2";
-import * as tournament from "./tournamentui.js?v=c2";
+import { DIFFICULTY, WORLD } from "./config.js?v=d2";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js?v=d2";
+import { Input } from "./input.js?v=d2";
+import { Camera } from "./camera.js?v=d2";
+import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=d2";
+import { Match } from "./match.js?v=d2";
+import { render as render25 } from "./render2d5.js?v=d2";
+import * as season from "./seasonui.js?v=d2";
+import * as penalties from "./penalties.js?v=d2";
+import * as commentary from "./commentary.js?v=d2";
+import * as tournament from "./tournamentui.js?v=d2";
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -358,7 +358,7 @@ function loop(now) {
       }
     }
 
-    if (VIEW_MODE === "2.5d") {
+    if (VIEW_MODE === "2.5d" && !match.indoor) {
       // 2.5D-Schrägsicht: horizontale Kamera folgt dem gesteuerten Spieler.
       const target = match.cameraTarget;
       cam25X += (target.x - cam25X) * 0.1;
@@ -371,9 +371,13 @@ function loop(now) {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.save();
       ctx.translate(-camera.x, -camera.y);
-      drawPitch(ctx);
-      drawCrowdTopDown(ctx, now);
-      if (match.indoor) drawIndoorBoards(ctx); else drawBoards(ctx, now);
+      if (match.indoor) {
+        drawIndoorPitch(ctx);          // Halle: kleines Feld, Parkett, Banden, keine Zuschauer
+      } else {
+        drawPitch(ctx);
+        drawCrowdTopDown(ctx, now);
+        drawBoards(ctx, now);
+      }
       match.ball.draw(ctx);
       for (const p of match.allPlayers) {
         p.draw(ctx, p === match.userPlayer);

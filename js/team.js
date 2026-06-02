@@ -1,19 +1,22 @@
 // Eine Mannschaft: 11 Spieler aus der Startelf-Datenbasis, Farben, Angriffs-
 // richtung und Schwierigkeitsprofil für die KI.
 
-import { buildSquad } from "./teams.js?v=c2";
-import { Player } from "./player.js?v=c2";
-import { MARGIN, FIELD } from "./config.js?v=c2";
+import { buildSquad } from "./teams.js?v=d2";
+import { Player } from "./player.js?v=d2";
+import { MARGIN, FIELD } from "./config.js?v=d2";
 
-// Hallen-Aufstellung für 3 Feldspieler (relativ: x 0=eigenes Tor..1=Gegnertor).
+// Hallen-Aufstellung: Torwart + 3 Feldspieler (relativ zum Spielbereich;
+// x 0=eigenes Tor..1=Gegnertor, y 0=oben..1=unten).
 const INDOOR_FORMATION = [
-  { role: "ABW", x: 0.26, y: 0.50 },
-  { role: "ANG", x: 0.60, y: 0.30 },
-  { role: "ANG", x: 0.60, y: 0.70 },
+  { role: "TW",  x: 0.05, y: 0.50 },
+  { role: "ABW", x: 0.30, y: 0.50 },
+  { role: "ANG", x: 0.58, y: 0.30 },
+  { role: "ANG", x: 0.58, y: 0.70 },
 ];
 
 export class Team {
-  // opts: { squad?: [{name,number,build,speed}], indoor?: bool }
+  // opts: { squad?: [{name,number,...}], indoor?, area?: {left,right,top,bottom},
+  //         keeperName? }
   constructor(def, attackRight, difficulty, opts = {}) {
     this.id = def.id;
     this.name = def.name;
@@ -25,15 +28,21 @@ export class Team {
 
     let squad;
     if (opts.squad) {
-      // Eigener Kader (z. B. Hallenturnier): Positionen aus INDOOR_FORMATION.
-      squad = opts.squad.map((d, i) => {
-        const slot = INDOOR_FORMATION[i % INDOOR_FORMATION.length];
+      // Hallenmodus: Torwart voranstellen, 3 gewählte Feldspieler dahinter.
+      const area = opts.area || { left: MARGIN, right: MARGIN + FIELD.width, top: MARGIN, bottom: MARGIN + FIELD.height };
+      const aw = area.right - area.left, ah = area.bottom - area.top;
+      const lineup = [
+        { name: opts.keeperName || "Hallenwart", number: 1 },
+        ...opts.squad.slice(0, 3),
+      ];
+      squad = lineup.map((d, i) => {
+        const slot = INDOOR_FORMATION[i] || INDOOR_FORMATION[INDOOR_FORMATION.length - 1];
         const fx = attackRight ? slot.x : 1 - slot.x;
         return {
           ...d,
-          role: d.role || slot.role,
-          homeX: MARGIN + fx * FIELD.width,
-          homeY: MARGIN + slot.y * FIELD.height,
+          role: slot.role,
+          homeX: area.left + fx * aw,
+          homeY: area.top + slot.y * ah,
         };
       });
     } else {
@@ -42,9 +51,9 @@ export class Team {
     this.players = squad.map((d) => new Player(d, this));
   }
 
-  // Im Hallenmodus gibt es keinen Torwart -> alle sind Feldspieler.
+  // Feldspieler (ohne Torwart) – in beiden Modi.
   get outfield() {
-    return this.indoor ? this.players : this.players.filter((p) => !p.isKeeper);
+    return this.players.filter((p) => !p.isKeeper);
   }
 
   reset() {

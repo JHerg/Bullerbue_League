@@ -3,8 +3,8 @@
 // Tiefen-Staffelung), Tornetzen, Eckbögen, Tribünen-Andeutung und Ball-Drall.
 // Keine externen Assets. Tuning-Werte im VIEW-Block.
 
-import { WORLD, FIELD, MARGIN, GOAL, PLAYER, PX_PER_M } from "./config.js?v=c2";
-import { SPONSORS } from "./pitch.js?v=c2";
+import { WORLD, FIELD, MARGIN, GOAL, PLAYER, PX_PER_M } from "./config.js?v=d2";
+import { SPONSORS } from "./pitch.js?v=d2";
 
 // ---- Tuning ----
 const VIEW = {

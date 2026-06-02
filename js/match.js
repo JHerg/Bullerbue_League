@@ -2,11 +2,11 @@
 // kontextabhängige Nutzer-Aktion (Leertaste), Aus-Erkennung
 // (Einwurf/Ecke/Abstoß), Tore, Spieluhr und Halbzeit mit Seitenwechsel.
 
-import { WORLD, FIELD, MARGIN, GOAL, BALL, KICK, PLAYER, USER, DIFFICULTY_TEAMMATE } from "./config.js?v=c2";
-import { Team } from "./team.js?v=c2";
-import { Ball } from "./ball.js?v=c2";
-import { computeAI } from "./ai.js?v=c2";
-import { ensureContrast } from "./teams.js?v=c2";
+import { WORLD, FIELD, MARGIN, GOAL, HALL, BALL, KICK, PLAYER, USER, DIFFICULTY_TEAMMATE } from "./config.js?v=d2";
+import { Team } from "./team.js?v=d2";
+import { Ball } from "./ball.js?v=d2";
+import { computeAI } from "./ai.js?v=d2";
+import { ensureContrast } from "./teams.js?v=d2";
 
 const EDGE = 8; // wie weit innerhalb der Linie der Ball bei Standards liegt
 
@@ -18,9 +18,20 @@ export class Match {
     } = opts;
 
     this.indoor = indoor;
+    // Spielbereich + Tor-Geometrie (Halle = kleineres Feld mit eigenen Toren).
+    if (indoor) {
+      this.area = { left: HALL.left, right: HALL.right, top: HALL.top, bottom: HALL.bottom };
+      this.goalH = HALL.goalHeight;
+    } else {
+      this.area = { left: MARGIN, right: MARGIN + FIELD.width, top: MARGIN, bottom: MARGIN + FIELD.height };
+      this.goalH = GOAL.height;
+    }
+    this.centerX = (this.area.left + this.area.right) / 2;
+    this.centerY = (this.area.top + this.area.bottom) / 2;
+
     // Eigene Mitspieler: festes Profil. Gegner: gewählte Schwierigkeit.
-    this.home = new Team(homeDef, true, DIFFICULTY_TEAMMATE, { indoor, squad: homeSquad });
-    this.away = new Team(awayDef, false, difficulty, { indoor, squad: awaySquad });
+    this.home = new Team(homeDef, true, DIFFICULTY_TEAMMATE, { indoor, squad: homeSquad, area: this.area, keeperName: homeDef.keeperName });
+    this.away = new Team(awayDef, false, difficulty, { indoor, squad: awaySquad, area: this.area, keeperName: awayDef.keeperName });
     // Trikot-Kollision vermeiden: Auswärtsteam ggf. auf Ausweichtrikot setzen.
     this.away.colors = ensureContrast(this.home.colors, this.away.colors);
     this.mode = mode;
@@ -28,6 +39,7 @@ export class Match {
     this.oppDifficulty = difficulty;           // KI des Gegners
 
     this.ball = new Ball(WORLD.width / 2, WORLD.height / 2);
+    if (indoor) this.ball.friction = 1.5; // Halle: Ball rollt weniger weit (mehr Kontrolle)
 
     this.allPlayers = [...this.home.players, ...this.away.players];
 
@@ -98,7 +110,7 @@ export class Match {
   // Anstoß: beide Teams in ihre eigene Hälfte, Ball auf den Mittelpunkt,
   // ein zentraler Spieler des berechtigten Teams stellt sich an den Ball.
   _kickoff(team) {
-    const cx = WORLD.width / 2, cy = WORLD.height / 2;
+    const cx = this.centerX, cy = this.centerY;
     this._placeOwnHalf(this.home);
     this._placeOwnHalf(this.away);
     this.ball.reset(cx, cy);
@@ -120,7 +132,7 @@ export class Match {
 
   // Stellt alle Spieler eines Teams in die EIGENE Hälfte (Formation gestaucht).
   _placeOwnHalf(team) {
-    const left = MARGIN, fw = FIELD.width;
+    const left = this.area.left, fw = this.area.right - this.area.left;
     for (const p of team.players) {
       const fracOwn = team.attackRight ? (p.homeX - left) / fw : (left + fw - p.homeX) / fw;
       const k = Math.min(0.46, fracOwn * 0.46); // bis knapp vor die Mittellinie
@@ -158,11 +170,23 @@ export class Match {
     }
 
     this._separate();
+    if (this.indoor) this._clampPlayers();
     this.ball.updatePossession(dt, this.allPlayers);
     this.ball.update(dt);
 
     if (this._checkGoal()) return;
     this._checkBounds();
+  }
+
+  // Halle: Spieler dürfen nicht über die Banden laufen (Torwart darf knapp
+  // hinter die Torlinie, alle anderen bleiben im Feld).
+  _clampPlayers() {
+    const a = this.area, r = PLAYER.radius;
+    for (const p of this.allPlayers) {
+      const ext = p.isKeeper ? 6 : 0; // Torwart minimal mehr Spielraum
+      p.x = Math.min(Math.max(p.x, a.left + r - ext), a.right - r + ext);
+      p.y = Math.min(Math.max(p.y, a.top + r), a.bottom - r);
+    }
   }
 
   // ---- Fokus-Modus: welchen Spieler steuert der Mensch? ----
@@ -230,7 +254,7 @@ export class Match {
     }
 
     if (shoot && atBall) {
-      const g = goalsForTeam(p.team);
+      const g = this._goalsForTeam(p.team);
       const power = KICK.shootPower * (0.6 + 0.4 * shoot.charge);
       const distGoal = Math.hypot(g.oppGoalX - p.x, g.goalY - p.y);
       if (distGoal < USER.shootRange * 1.8) {
@@ -264,7 +288,7 @@ export class Match {
       } else {
         // Gegner/loser Ball: nah dran grätschen, sonst wechseln (Team) bzw. hechten (Einzel).
         if (distBall < USER.tackleRange) {
-          const g = goalsForTeam(p.team);
+          const g = this._goalsForTeam(p.team);
           ball.kick(g.oppGoalX - p.x, g.goalY - p.y, KICK.passPower * 0.8, p.team, p);
         } else if (this.mode === "team") {
           this._switchPlayer();
@@ -284,7 +308,9 @@ export class Match {
     const teammates = p.team.players;
     const opponents = p.team === this.home ? this.away.players : this.home.players;
     const teamHasBall = this.ball.owner && this.ball.owner.team === p.team;
-    const profile = this._profileFor(p.team);
+    let profile = this._profileFor(p.team);
+    // Halle: kürzere Schussreichweite -> nicht aus jeder Lage ballern.
+    if (this.indoor) profile = { ...profile, shootRange: profile.shootRange * 0.45 };
     const ctx = {
       ball: this.ball,
       difficulty: profile,
@@ -293,6 +319,8 @@ export class Match {
       teammates,
       opponents,
       dt,
+      geo: { left: this.area.left, right: this.area.right, top: this.area.top, bottom: this.area.bottom,
+             cx: this.centerX, cy: this.centerY, goalH: this.goalH },
     };
     const out = computeAI(p, ctx);
     p.update(dt, out.dir, profile.speed);
@@ -358,11 +386,11 @@ export class Match {
 
   _checkGoal() {
     const b = this.ball;
-    if (Math.abs(b.y - GOAL.centerY) >= GOAL.height / 2) return false;
+    if (Math.abs(b.y - this.centerY) >= this.goalH / 2) return false;
 
     let scorer = null;
-    if (b.x <= GOAL.lineLeft) scorer = this._attackingLine("left");
-    else if (b.x >= GOAL.lineRight) scorer = this._attackingLine("right");
+    if (b.x <= this.area.left) scorer = this._attackingLine("left");
+    else if (b.x >= this.area.right) scorer = this._attackingLine("right");
     if (!scorer) return false;
 
     const conceder = scorer === this.home ? this.away : this.home;
@@ -392,14 +420,13 @@ export class Match {
 
   _checkBounds() {
     const b = this.ball;
-    const left = MARGIN, right = MARGIN + FIELD.width;
-    const top = MARGIN, bottom = MARGIN + FIELD.height;
 
     // Halle: Ball prallt an allen Banden ab (nur Tore zählen, kein Aus).
     if (this.indoor) {
       if (b.owner) return;
+      const left = this.area.left, right = this.area.right, top = this.area.top, bottom = this.area.bottom;
       const r = b.radius, rest = -0.72;
-      const inMouth = Math.abs(b.y - GOAL.centerY) < GOAL.height / 2;
+      const inMouth = Math.abs(b.y - this.centerY) < this.goalH / 2;
       if (b.y < top + r) { b.y = top + r; if (b.vy < 0) b.vy *= rest; }
       if (b.y > bottom - r) { b.y = bottom - r; if (b.vy > 0) b.vy *= rest; }
       // Linke/rechte Bande nur abseits des Tormauls (im Maul = Tor, s. _checkGoal).
@@ -409,6 +436,9 @@ export class Match {
       }
       return;
     }
+
+    const left = MARGIN, right = MARGIN + FIELD.width;
+    const top = MARGIN, bottom = MARGIN + FIELD.height;
 
     // Seitenaus -> Einwurf für das Team ohne letzten Ballkontakt.
     if (b.y < top || b.y > bottom) {
@@ -535,14 +565,16 @@ export class Match {
     this.message = `Schlusspfiff!   ${this.home.short} ${s.home} : ${s.away} ${this.away.short}\n${result}`;
   }
 
+  // Tor-Ziel eines Teams (Mitte des gegnerischen Tors) im aktuellen Bereich.
+  _goalsForTeam(team) {
+    return {
+      oppGoalX: team.attackRight ? this.area.right : this.area.left,
+      goalY: this.centerY,
+    };
+  }
+
   get cameraTarget() { return this.userPlayer; }
 }
 
-function goalsForTeam(team) {
-  return {
-    oppGoalX: team.attackRight ? GOAL.lineRight : GOAL.lineLeft,
-    goalY: GOAL.centerY,
-  };
-}
 
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }

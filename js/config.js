@@ -26,6 +26,19 @@ export const GOAL = {
   get centerY() { return MARGIN + FIELD.height / 2; },
 };
 
+// Hallenfeld: deutlich kleinerer, zentrierter Spielbereich innerhalb der Welt,
+// mit eigenen (kleineren) Toren. Banden begrenzen das Feld.
+const HALL_W = 46 * PX_PER_M;   // ~644 (kleiner als das normale Feld)
+const HALL_H = 30 * PX_PER_M;   // ~420
+export const HALL = {
+  left: (WORLD.width - HALL_W) / 2,
+  right: (WORLD.width + HALL_W) / 2,
+  top: (WORLD.height - HALL_H) / 2,
+  bottom: (WORLD.height + HALL_H) / 2,
+  goalHeight: 6 * PX_PER_M,       // Hallentor-Breite
+  get centerY() { return WORLD.height / 2; },
+};
+
 // Spieler-Eigenschaften
 export const PLAYER = {
   radius: 9,

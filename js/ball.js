@@ -1,7 +1,7 @@
 // Der Ball: rollt mit Reibung, prallt an den Banden ab, wird vom ballführenden
 // Spieler "geführt" (Dribbling) und kann geschossen/gepasst werden.
 
-import { BALL, WORLD } from "./config.js?v=c2";
+import { BALL, WORLD } from "./config.js?v=d2";
 
 export class Ball {
   constructor(x, y) {
@@ -62,7 +62,8 @@ export class Ball {
     this.x += this.vx * dt;
     this.y += this.vy * dt;
 
-    const f = Math.max(0, 1 - BALL.friction * dt);
+    const fr = this.friction ?? BALL.friction;
+    const f = Math.max(0, 1 - fr * dt);
     this.vx *= f;
     this.vy *= f;
 

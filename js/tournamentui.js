@@ -6,10 +6,10 @@
 // deps: { runIndoorMatch(homeDef, awayDef, {difficulty, knockout}) -> Promise<result>,
 //         showMenu() }
 
-import { allPlayers, teamById as teamDef } from "./teams.js?v=c2";
-import { DIFFICULTY } from "./config.js?v=c2";
-import * as T from "./tournament.js?v=c2";
-import { saveSeason, loadSeason } from "./storage.js?v=c2";
+import { allPlayers, teamById as teamDef } from "./teams.js?v=d2";
+import { DIFFICULTY } from "./config.js?v=d2";
+import * as T from "./tournament.js?v=d2";
+import { saveSeason, loadSeason } from "./storage.js?v=d2";
 
 let deps = null;
 let state = null;
@@ -41,24 +41,35 @@ export function resume() {
 function _toMenu() { hubEl().classList.add("hidden"); deps.showMenu(); }
 
 // ---------------- Spielerauswahl ----------------
+let searchTerm = "";
 function _renderSelect() {
   const pool = allPlayers().sort((a, b) => b.strength - a.strength);
   const chosen = new Set(selected.map((p) => p.uid));
 
-  let opts = pool.map((p) =>
-    `<option value="${p.uid}" ${chosen.has(p.uid) ? "disabled" : ""}>`
-    + `${p.name} (${p.teamShort}, ${p.role}, ⭐${Math.round(p.strength)})</option>`).join("");
-
   let chips = selected.map((p, i) =>
     `<span class="pick-chip">${p.name} <button data-rm="${i}">✕</button></span>`).join("");
 
-  contentEl().innerHTML =
+  let html =
     `<h2>Hallenturnier</h2>`
     + `<div class="hub-sub">Stelle dein Team zusammen: wähle 3 Spieler aus allen Vereinen.</div>`
-    + `<div class="picks">${chips || '<span style="opacity:.6">Noch keine Spieler gewählt</span>'}</div>`
-    + (selected.length < 3
-        ? `<label>Spieler hinzufügen<select id="sel-pool"><option value="">– wählen –</option>${opts}</select></label>`
-        : `<label>Teamname<input id="inp-teamname" type="text" maxlength="22" placeholder="z. B. Wilde Bullen" /></label>`);
+    + `<div class="picks">${chips || '<span style="opacity:.6">Noch keine Spieler gewählt</span>'}</div>`;
+
+  if (selected.length < 3) {
+    // Suchfeld + gefilterte Trefferliste (Name oder Team).
+    const term = searchTerm.trim().toLowerCase();
+    const matches = pool.filter((p) => !chosen.has(p.uid) &&
+      (!term || p.name.toLowerCase().includes(term) || p.teamShort.toLowerCase().includes(term)
+        || p.teamName.toLowerCase().includes(term)));
+    const list = matches.slice(0, 30).map((p) =>
+      `<div class="pl-row" data-uid="${p.uid}"><span>${p.name}</span>`
+      + `<span class="pl-meta">${p.teamShort} · ${p.role} · ⭐${Math.round(p.strength)}</span></div>`).join("");
+    html += `<label>Spieler suchen<input id="pl-search" type="text" placeholder="Name oder Verein…" value="${searchTerm}" /></label>`
+      + `<div class="pl-list">${list || '<div class="pl-empty">Keine Treffer</div>'}</div>`
+      + (matches.length > 30 ? `<div class="pl-more">… ${matches.length - 30} weitere – Suche eingrenzen</div>` : "");
+  } else {
+    html += `<label>Teamname<input id="inp-teamname" type="text" maxlength="22" placeholder="z. B. Wilde Bullen" /></label>`;
+  }
+  contentEl().innerHTML = html;
 
   // Buttons
   const btns = [];
@@ -66,12 +77,22 @@ function _renderSelect() {
   btns.push(_btn("Abbrechen", "ghost", _toMenu));
   _setButtons(btns);
 
-  // Events
-  const sel = document.getElementById("sel-pool");
-  if (sel) sel.addEventListener("change", () => {
-    const p = pool.find((x) => x.uid === sel.value);
-    if (p && selected.length < 3) { selected.push(p); _renderSelect(); }
-  });
+  // Events: Suche (Fokus + Cursor ans Ende halten)
+  const search = document.getElementById("pl-search");
+  if (search) {
+    search.addEventListener("input", () => {
+      searchTerm = search.value;
+      _renderSelect();
+      const s2 = document.getElementById("pl-search");
+      if (s2) { s2.focus(); const v = s2.value; s2.value = ""; s2.value = v; }
+    });
+    search.focus();
+  }
+  contentEl().querySelectorAll(".pl-row").forEach((row) =>
+    row.addEventListener("click", () => {
+      const p = pool.find((x) => x.uid === row.dataset.uid);
+      if (p && selected.length < 3) { selected.push(p); searchTerm = ""; _renderSelect(); }
+    }));
   contentEl().querySelectorAll("[data-rm]").forEach((b) =>
     b.addEventListener("click", () => { selected.splice(+b.dataset.rm, 1); _renderSelect(); }));
 }
