@@ -1,17 +1,17 @@
 // Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { DIFFICULTY, WORLD } from "./config.js?v=e2";
-import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js?v=e2";
-import { Input } from "./input.js?v=e2";
-import { Camera } from "./camera.js?v=e2";
-import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=e2";
-import { Match } from "./match.js?v=e2";
-import { render as render25 } from "./render2d5.js?v=e2";
-import * as season from "./seasonui.js?v=e2";
-import * as penalties from "./penalties.js?v=e2";
-import * as commentary from "./commentary.js?v=e2";
-import * as tournament from "./tournamentui.js?v=e2";
+import { DIFFICULTY, WORLD } from "./config.js?v=f2";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js?v=f2";
+import { Input } from "./input.js?v=f2";
+import { Camera } from "./camera.js?v=f2";
+import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=f2";
+import { Match } from "./match.js?v=f2";
+import { render as render25 } from "./render2d5.js?v=f2";
+import * as season from "./seasonui.js?v=f2";
+import * as penalties from "./penalties.js?v=f2";
+import * as commentary from "./commentary.js?v=f2";
+import * as tournament from "./tournamentui.js?v=f2";
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");

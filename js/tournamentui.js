@@ -6,10 +6,10 @@
 // deps: { runIndoorMatch(homeDef, awayDef, {difficulty, knockout}) -> Promise<result>,
 //         showMenu() }
 
-import { allPlayers, teamById as teamDef } from "./teams.js?v=e2";
-import { DIFFICULTY } from "./config.js?v=e2";
-import * as T from "./tournament.js?v=e2";
-import { saveSeason, loadSeason } from "./storage.js?v=e2";
+import { allPlayers, teamById as teamDef } from "./teams.js?v=f2";
+import { DIFFICULTY } from "./config.js?v=f2";
+import * as T from "./tournament.js?v=f2";
+import { saveSeason, loadSeason } from "./storage.js?v=f2";
 
 let deps = null;
 let state = null;
@@ -139,6 +139,7 @@ function _renderGroup() {
     html += `<div class="fixture">Deine Gruppenspiele sind durch. Simuliere die restlichen Gruppen.</div>`;
   }
 
+  html += _scorersHtml();
   html += _difficultyHtml();
   contentEl().innerHTML = html;
   _wireDifficulty();
@@ -162,7 +163,10 @@ async function _playUserGroup() {
   const oppId = fx.home === state.userTeam ? fx.away : fx.home;
   const userIsHome = fx.home === state.userTeam;
   const r = await deps.runIndoorMatch(_def(state.userTeam), _def(oppId), { difficulty, knockout: false });
-  T.setFixtureResult(fx, userIsHome ? r.home : r.away, userIsHome ? r.away : r.home);
+  // r.homeScorers gehört dem Nutzerteam (Heim im Match), r.awayScorers dem Gegner.
+  const us = r.homeScorers || [], os = r.awayScorers || [];
+  T.setFixtureResult(fx, userIsHome ? r.home : r.away, userIsHome ? r.away : r.home,
+    userIsHome ? us : os, userIsHome ? os : us);
   saveSeason(state);
   _renderGroup();
 }
@@ -200,6 +204,7 @@ function _renderKo() {
       : `<div class="fixture">Dein Team ist ausgeschieden.</div>`;
   }
   html += _bracketHtml();
+  html += _scorersHtml();
   if (!state.champion) html += _difficultyHtml();
   contentEl().innerHTML = html;
   if (!state.champion) _wireDifficulty();
@@ -224,7 +229,9 @@ async function _playUserKo() {
   const r = await deps.runIndoorMatch(_def(state.userTeam), _def(oppId), { difficulty, knockout: true });
   const hs = userIsHome ? r.home : r.away, as = userIsHome ? r.away : r.home;
   const winner = r.winner === "home" ? state.userTeam : oppId;
-  T.setTieResult(tie, hs, as, winner, r.decidedBy || "regulär");
+  const us = r.homeScorers || [], os = r.awayScorers || [];
+  T.setTieResult(tie, hs, as, winner, r.decidedBy || "regulär",
+    userIsHome ? us : os, userIsHome ? os : us);
   T.simulateRestKo(state, tie);
   T.advanceKo(state);
   saveSeason(state);
@@ -266,6 +273,20 @@ function _groupTableHtml(table) {
   });
   return `<table class="standings"><tr><th>#</th><th class="team">Team</th>`
     + `<th>Sp</th><th>S</th><th>U</th><th>N</th><th>Tore</th><th>Pkt</th></tr>${rows}</table>`;
+}
+
+// Turnier-Torschützenliste (Top 10).
+function _scorersHtml() {
+  const scorers = T.tournamentScorers(state);
+  if (!scorers.length) return "";
+  let rows = "";
+  scorers.slice(0, 10).forEach((s, i) => {
+    const cls = s.team === state.userTeam ? "me" : "";
+    rows += `<tr class="${cls}"><td>${i + 1}</td><td class="team">${s.name}</td>`
+      + `<td>${_short(s.team)}</td><td><b>${s.goals}</b></td></tr>`;
+  });
+  return `<h3 class="scorers-h">⚽ Torschützen</h3>`
+    + `<table class="standings"><tr><th>#</th><th class="team">Spieler</th><th>Team</th><th>Tore</th></tr>${rows}</table>`;
 }
 
 function _bracketHtml() {

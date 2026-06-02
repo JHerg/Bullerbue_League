@@ -2,7 +2,7 @@
 // (jeder gegen jeden), Top 2 je Gruppe -> Achtelfinale (K.o., bei Remis Elfmeter).
 // Reine Datenlogik ohne DOM (headless testbar).
 
-import { TEAMS, allPlayers } from "./teams.js?v=e2";
+import { TEAMS, allPlayers } from "./teams.js?v=f2";
 
 const HALL_ADJ = ["Wilde", "Flinke", "Eiserne", "Goldene", "Schnelle", "Coole", "Starke",
   "Bunte", "Kühne", "Freche", "Heiße", "Blaue", "Rote", "Grüne", "Dunkle", "Wirbel"];
@@ -127,15 +127,27 @@ function roundRobin(ids) {
 function poisson(l) { const L = Math.exp(-l); let k = 0, p = 1; do { k++; p *= Math.random(); } while (p > L); return k - 1; }
 function expGoals(att, def) { return Math.max(0.2, Math.min(6, 1.6 + (att - def) * 0.05)); }
 
-// Ein Hallen-Ergebnis simulieren (Stärke-basiert).
+// Wählt `count` Torschützen (Namen) eines Teams aus seinen 3 Spielern.
+export function pickScorers(state, teamId, count) {
+  const t = teamById(state, teamId);
+  const names = (t.picks || t.squad || []).map((p) => p.name);
+  if (!names.length || count <= 0) return [];
+  const out = [];
+  for (let i = 0; i < count; i++) out.push(names[Math.floor(Math.random() * names.length)]);
+  return out;
+}
+
+// Ein Hallen-Ergebnis simulieren (Stärke-basiert) inkl. Torschützen.
 export function simResult(state, homeId, awayId) {
   const h = teamById(state, homeId).strength, a = teamById(state, awayId).strength;
-  return { hs: poisson(expGoals(h, a)), as: poisson(expGoals(a, h)) };
+  const hs = poisson(expGoals(h, a)), as = poisson(expGoals(a, h));
+  return { hs, as, homeScorers: pickScorers(state, homeId, hs), awayScorers: pickScorers(state, awayId, as) };
 }
 
 // K.o.-Sieger (bei Remis nach Stärke gewichtet -> Elfmeter abstrahiert).
 export function simKo(state, homeId, awayId) {
-  let { hs, as } = simResult(state, homeId, awayId);
+  const r = simResult(state, homeId, awayId);
+  let { hs, as } = r;
   let winner, decided = "regulär";
   if (hs > as) winner = homeId;
   else if (as > hs) winner = awayId;
@@ -144,7 +156,7 @@ export function simKo(state, homeId, awayId) {
     const pHome = Math.max(0.2, Math.min(0.8, 0.5 + (h - a) * 0.02));
     winner = Math.random() < pHome ? homeId : awayId; decided = "i.E.";
   }
-  return { hs, as, winner, decided };
+  return { hs, as, winner, decided, homeScorers: r.homeScorers, awayScorers: r.awayScorers };
 }
 
 // Findet die nächste ungespielte Partie des Nutzers in seiner Gruppe.
@@ -154,9 +166,10 @@ export function userFixture(state) {
   return g.fixtures.find((f) => !f.played && (f.home === state.userTeam || f.away === state.userTeam)) || null;
 }
 
-// Ergebnis einer Gruppenpartie eintragen.
-export function setFixtureResult(fx, hs, as) {
+// Ergebnis einer Gruppenpartie eintragen (inkl. Torschützen).
+export function setFixtureResult(fx, hs, as, homeScorers = [], awayScorers = []) {
   fx.hs = hs; fx.as = as; fx.played = true;
+  fx.homeScorers = homeScorers; fx.awayScorers = awayScorers;
 }
 
 // Alle noch offenen Gruppenpartien simulieren (außer optional skipFx).
@@ -165,7 +178,7 @@ export function simulateGroups(state, skipFx = null) {
     for (const f of g.fixtures) {
       if (f.played || f === skipFx) continue;
       const r = simResult(state, f.home, f.away);
-      setFixtureResult(f, r.hs, r.as);
+      setFixtureResult(f, r.hs, r.as, r.homeScorers, r.awayScorers);
     }
   }
 }
@@ -220,13 +233,39 @@ export function userTie(state) {
   return state.ko.ties.find((t) => t.winner === null && (t.home === state.userTeam || t.away === state.userTeam)) || null;
 }
 
-export function setTieResult(tie, hs, as, winner, decided = "regulär") {
+export function setTieResult(tie, hs, as, winner, decided = "regulär", homeScorers = [], awayScorers = []) {
   tie.hs = hs; tie.as = as; tie.winner = winner; tie.decided = decided;
+  tie.homeScorers = homeScorers; tie.awayScorers = awayScorers;
 }
 
 export function simulateTie(state, tie) {
   const r = simKo(state, tie.home, tie.away);
-  setTieResult(tie, r.hs, r.as, r.winner, r.decided);
+  setTieResult(tie, r.hs, r.as, r.winner, r.decided, r.homeScorers, r.awayScorers);
+}
+
+// Torschützenliste über das ganze Turnier (Gruppen + alle K.o.-Runden):
+// [{ name, team, goals }] absteigend sortiert.
+export function tournamentScorers(state) {
+  const tally = {};
+  const add = (name, teamId) => {
+    if (!name) return;
+    const key = name + "@" + teamId;
+    (tally[key] || (tally[key] = { name, team: teamId, goals: 0 })).goals++;
+  };
+  for (const g of state.groups) {
+    for (const f of g.fixtures) {
+      (f.homeScorers || []).forEach((n) => add(n, f.home));
+      (f.awayScorers || []).forEach((n) => add(n, f.away));
+    }
+  }
+  // K.o.: alle bisher gespielten Runden. state.ko.ties enthält nur die aktuelle
+  // Runde -> wir sammeln über ein Verlaufsarchiv (state.koHistory) + aktuelle.
+  const koTies = [...(state.koHistory || []), ...((state.ko && state.ko.ties) || [])];
+  for (const t of koTies) {
+    (t.homeScorers || []).forEach((n) => add(n, t.home));
+    (t.awayScorers || []).forEach((n) => add(n, t.away));
+  }
+  return Object.values(tally).sort((a, b) => b.goals - a.goals || a.name.localeCompare(b.name));
 }
 
 export function simulateRestKo(state, skipTie = null) {
@@ -243,8 +282,10 @@ export function koRoundComplete(state) {
 // Nächste K.o.-Runde aus den Siegern bilden bzw. Champion ermitteln.
 export function advanceKo(state) {
   if (!koRoundComplete(state)) return;
+  // Abgeschlossene Runde fürs Torschützen-Archiv sichern.
+  state.koHistory = [...(state.koHistory || []), ...state.ko.ties.map((t) => ({ ...t }))];
   const winners = state.ko.ties.map((t) => t.winner);
-  if (winners.length === 1) { state.champion = winners[0]; return; }
+  if (winners.length === 1) { state.champion = winners[0]; state.ko.ties = []; return; }
   const ties = [];
   for (let i = 0; i < winners.length; i += 2) ties.push(makeTie(winners[i], winners[i + 1]));
   state.ko.ties = ties;
