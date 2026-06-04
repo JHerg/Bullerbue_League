@@ -8,8 +8,8 @@
 //       homeName, homeColors, awayName, awayColors, difficulty })
 //   -> Promise<{ home, away, winner:"home"|"away" }>
 
-import { HALL, PLAYER, BALL } from "./config.js?v=k2";
-import { drawIndoorPitch } from "./pitch.js?v=k2";
+import { HALL, PLAYER, BALL } from "./config.js?v=l2";
+import { drawIndoorPitch } from "./pitch.js?v=l2";
 
 const ROUND_TIME = 10;        // Sekunden pro Versuch
 const PREP = 1.0;             // kurze "Bereit"-Pause vor jedem Versuch
@@ -133,9 +133,13 @@ class Shootout {
       this._clamp(this.gk);
     }
 
+    // Zwischen-Hinweis ("Pariert!/Daneben!") kurz anzeigen.
+    if (this._flashT > 0) { this._flashT -= dt; this._flash = true; } else { this._flash = false; }
+
     this._physics(dt);
     this._checkOutcome();
-    if (this.phase === "live" && this.timer <= 0) this._endAttempt("miss"); // Zeit abgelaufen
+    // Zeit abgelaufen ohne Tor -> Versuch vorbei (für den Schützen erst JETZT).
+    if (this.phase === "live" && this.timer <= 0) this._endAttempt("miss");
   }
 
   _moveWithInput(e, input, dt, mul, isKeeper) {
@@ -224,16 +228,22 @@ class Shootout {
     } else {
       b.x += b.vx * dt; b.y += b.vy * dt;
       b.vx *= Math.max(0, 1 - 1.2 * dt); b.vy *= Math.max(0, 1 - 1.2 * dt);
+      // Nachschuss: Schütze kann den abgeprallten/liegen gebliebenen Ball wieder
+      // aufnehmen (nah genug & nicht zu schnell) -> erneut dribbeln/schießen.
+      const a = this.att;
+      if (Math.hypot(b.x - a.x, b.y - a.y) < a.r + b.r + 6 && Math.hypot(b.vx, b.vy) < 260) {
+        b.owner = "att"; b.shot = false;
+      }
     }
     // Banden oben/unten/links
     if (b.y < HALL.top + b.r) { b.y = HALL.top + b.r; b.vy *= -0.6; }
     if (b.y > HALL.bottom - b.r) { b.y = HALL.bottom - b.r; b.vy *= -0.6; }
     if (b.x < HALL.left + b.r) { b.x = HALL.left + b.r; b.vx *= -0.6; }
+    // Rechte Bande nur AUßERHALB des Tormauls -> Ball prallt zurück ins Feld
+    // (im Tormaul bleibt er durch -> _checkOutcome erkennt das Tor).
+    const inMouth = Math.abs(b.y - this.goalY) < this.goalH / 2;
+    if (!inMouth && b.x > HALL.right - b.r) { b.x = HALL.right - b.r; b.vx *= -0.6; }
 
-    // Spieler in Feldgrenzen
-    for (const e of [this.att, this.gk]) {
-      e.x += 0; // Bewegung erfolgt in den jeweiligen Update-Methoden / hier nur Klemmen
-    }
     this.att.x += this.att.vx * dt; this.att.y += this.att.vy * dt;
     this._clamp(this.att); this._clamp(this.gk);
   }
@@ -246,25 +256,41 @@ class Shootout {
   _checkOutcome() {
     const b = this.ball;
     const half = this.goalH / 2;
-    // Torwart fängt/pariert? Reichweite je nachdem, ob DU oder die KI im Tor steht.
-    let extra;
-    if (!this.userAttacks) {
-      // DU bist Torwart: im Stand kleiner Radius, beim Hechten groß -> aktiv halten.
-      extra = this.gk.dive > 0 ? GK.diveReach : GK.baseReach;
-    } else {
-      // KI-Torwart (du schießt): minimale Reichweite -> leicht zu überwinden.
-      extra = this.gk.dive > 0 ? 12 : 1;
-    }
-    const gkReach = this.gk.r + extra + b.r;
-    if (Math.hypot(b.x - this.gk.x, b.y - this.gk.y) < gkReach) {
-      this._endAttempt("save"); return;
-    }
-    // Tor? Wenn DU schießt, etwas großzügigere Torhöhe (leichter zu treffen).
+
+    // Tor? (großzügigere Torhöhe, wenn DU schießt)
     const goalHalf = this.userAttacks ? half + b.r * 2 : half;
     if (b.x >= this.goalX && Math.abs(b.y - this.goalY) < goalHalf) { this._endAttempt("goal"); return; }
-    // Ball am Tor vorbei / rechts raus, oder Schuss zu langsam
-    if (b.x > this.goalX + 20) { this._endAttempt("miss"); return; }
-    if (b.shot && Math.hypot(b.vx, b.vy) < 30) { this._endAttempt("miss"); return; }
+
+    // Torwart-Parade: Reichweite je nachdem, ob DU oder die KI im Tor steht.
+    const extra = !this.userAttacks
+      ? (this.gk.dive > 0 ? GK.diveReach : GK.baseReach)   // DU hältst
+      : (this.gk.dive > 0 ? 12 : 1);                        // KI hält (du schießt)
+    const gkReach = this.gk.r + extra + b.r;
+    const saved = b.shot && Math.hypot(b.x - this.gk.x, b.y - this.gk.y) < gkReach;
+
+    if (saved) {
+      if (this.userAttacks) {
+        // DU schießt: Parade beendet NICHT -> Torwart faustet ab, Nachschuss möglich.
+        if (!this._flash) { this.lastResult = "Pariert!"; this._flashT = 0.6; }
+        const nx = (b.x - this.gk.x) || -1, ny = (b.y - this.gk.y) || (Math.random() - 0.5);
+        const l = Math.hypot(nx, ny) || 1;
+        b.vx = nx / l * 300; b.vy = ny / l * 300; b.shot = false; b.owner = null;
+      } else {
+        // DU hältst: gehaltener Schuss beendet den Versuch (du hast pariert).
+        this._endAttempt("save"); return;
+      }
+    }
+
+    // Ball klar rechts über die Torlinie hinaus (Tor verfehlt) -> abprallen lassen,
+    // beendet nur, wenn DU der Torwart bist; sonst Nachschuss.
+    if (b.x > this.goalX + 24) {
+      if (this.userAttacks) {
+        if (!this._flash) { this.lastResult = "Daneben!"; this._flashT = 0.6; }
+        b.x = this.goalX + 24; b.vx = -Math.abs(b.vx) * 0.5 - 60; b.shot = false; b.owner = null;
+      } else {
+        this._endAttempt("miss"); return;
+      }
+    }
   }
 
   _endAttempt(outcome) {
@@ -343,6 +369,11 @@ class Shootout {
       ctx.fillStyle = this.timer < 3 ? "#ff5252" : "#fff";
       ctx.font = "bold 30px sans-serif";
       ctx.fillText(`${Math.ceil(this.timer)}`, w / 2, 92);
+      // kurzer Zwischen-Hinweis (Pariert!/Daneben!) – Nachschuss läuft weiter
+      if (this._flash && this.userAttacks) {
+        ctx.fillStyle = "#ffd54a"; ctx.font = "bold 18px sans-serif";
+        ctx.fillText(this.lastResult + " – Nachschuss!", w / 2, 118);
+      }
     }
     if (this.phase === "prep" || this.phase === "result") {
       ctx.fillStyle = "#fff"; ctx.font = "bold 20px sans-serif";
