@@ -8,8 +8,8 @@
 //       homeName, homeColors, awayName, awayColors, difficulty })
 //   -> Promise<{ home, away, winner:"home"|"away" }>
 
-import { HALL, PLAYER, BALL } from "./config.js?v=i2";
-import { drawIndoorPitch } from "./pitch.js?v=i2";
+import { HALL, PLAYER, BALL } from "./config.js?v=j2";
+import { drawIndoorPitch } from "./pitch.js?v=j2";
 
 const ROUND_TIME = 10;        // Sekunden pro Versuch
 const PREP = 1.0;             // kurze "Bereit"-Pause vor jedem Versuch
@@ -161,20 +161,25 @@ class Shootout {
   _aiKeeper(dt) {
     const k = this.gk, b = this.ball;
     const half = this.goalH / 2;
-    // zwischen Ball und Tor positionieren
-    let ty = Math.max(this.goalY - half, Math.min(this.goalY + half, b.y));
-    const reach = 0.5 + (1 - this.diff.reaction);
-    k.vy += ((ty - k.y) * 6 * reach - k.vy) * Math.min(1, 8 * dt);
+    // Verzögertes Mitgehen: Torwart folgt einem leicht "veralteten" Ballpunkt,
+    // bleibt eher zentral und reagiert träge -> du kannst ihn ausspielen.
+    k._lagY = k._lagY ?? this.goalY;
+    const follow = 0.10 + this.diff.reaction * 0.10; // klein = träge
+    k._lagY += (b.y - k._lagY) * follow;
+    // Zielposition nur zu ~70 % zum Ball (bleibt etwas in der Mitte hängen).
+    let ty = this.goalY + (k._lagY - this.goalY) * 0.7;
+    ty = Math.max(this.goalY - half, Math.min(this.goalY + half, ty));
+    k.vy += ((ty - k.y) * 4 - k.vy) * Math.min(1, 5 * dt);
     k.x += (this.goalX - 24 - k.x) * Math.min(1, 5 * dt);
-    // hechten wenn Schuss schnell nah am Tor
-    if (b.shot && Math.abs(b.x - this.goalX) < 90 && k.dive <= 0 && k.cd <= 0) {
-      const dy = (this.goalY + (b.vy > 0 ? half : -half)) - k.y;
-      k.vy = Math.sign(b.y - k.y) * 600 + b.vy * 0.4;
-      k.dive = 0.35; k.cd = 0.6;
+    // Hechtet nur spät und nicht immer (verschätzt sich auf Einfach oft).
+    const reactProb = 0.35 + this.diff.reaction * 0.5;
+    if (b.shot && Math.abs(b.x - this.goalX) < 60 && k.dive <= 0 && k.cd <= 0 && Math.random() < reactProb) {
+      k.vy = Math.sign(b.y - k.y) * 380 + b.vy * 0.25;
+      k.dive = 0.3; k.cd = 0.8;
     }
     if (k.dive > 0) k.dive -= dt; if (k.cd > 0) k.cd -= dt;
     k.y += k.vy * dt;
-    k.y = Math.max(this.goalY - half - 28, Math.min(this.goalY + half + 28, k.y));
+    k.y = Math.max(this.goalY - half - 22, Math.min(this.goalY + half + 22, k.y));
   }
 
   _aiAttacker(dt) {
@@ -245,15 +250,16 @@ class Shootout {
       // DU bist Torwart: im Stand kleiner Radius, beim Hechten groß -> aktiv halten.
       extra = this.gk.dive > 0 ? GK.diveReach : GK.baseReach;
     } else {
-      // KI-Torwart (du schießt): wie bisher.
-      extra = this.gk.dive > 0 ? 30 : 8;
+      // KI-Torwart (du schießt): kleinere Reichweite -> leichter zu überwinden.
+      extra = this.gk.dive > 0 ? 18 : 3;
     }
     const gkReach = this.gk.r + extra + b.r;
     if (Math.hypot(b.x - this.gk.x, b.y - this.gk.y) < gkReach) {
       this._endAttempt("save"); return;
     }
-    // Tor?
-    if (b.x >= this.goalX && Math.abs(b.y - this.goalY) < half) { this._endAttempt("goal"); return; }
+    // Tor? Wenn DU schießt, etwas großzügigere Torhöhe (leichter zu treffen).
+    const goalHalf = this.userAttacks ? half + b.r * 2 : half;
+    if (b.x >= this.goalX && Math.abs(b.y - this.goalY) < goalHalf) { this._endAttempt("goal"); return; }
     // Ball am Tor vorbei / rechts raus, oder Schuss zu langsam
     if (b.x > this.goalX + 20) { this._endAttempt("miss"); return; }
     if (b.shot && Math.hypot(b.vx, b.vy) < 30) { this._endAttempt("miss"); return; }
