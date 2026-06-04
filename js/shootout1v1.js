@@ -8,8 +8,8 @@
 //       homeName, homeColors, awayName, awayColors, difficulty })
 //   -> Promise<{ home, away, winner:"home"|"away" }>
 
-import { HALL, PLAYER, BALL } from "./config.js?v=l2";
-import { drawIndoorPitch } from "./pitch.js?v=l2";
+import { HALL, PLAYER, BALL } from "./config.js?v=m2";
+import { drawIndoorPitch } from "./pitch.js?v=m2";
 
 const ROUND_TIME = 10;        // Sekunden pro Versuch
 const PREP = 1.0;             // kurze "Bereit"-Pause vor jedem Versuch
@@ -65,7 +65,7 @@ class Shootout {
     const cx = (HALL.left + HALL.right) / 2, cy = (HALL.top + HALL.bottom) / 2;
     this.goalX = HALL.right;
     this.goalY = cy;
-    this.goalH = HALL.goalHeight;
+    this.goalH = HALL.shootoutGoalHeight || HALL.goalHeight; // großes Tor nur hier
 
     // Angreifer startet links der Mitte, Torwart auf der Linie.
     this.att = { x: HALL.left + (HALL.right - HALL.left) * 0.28, y: cy, vx: 0, vy: 0, r: PLAYER.radius, face: { x: 1, y: 0 } };
@@ -168,20 +168,19 @@ class Shootout {
     // Verzögertes Mitgehen: Torwart folgt einem leicht "veralteten" Ballpunkt,
     // bleibt eher zentral und reagiert träge -> du kannst ihn ausspielen.
     k._lagY = k._lagY ?? this.goalY;
-    const follow = 0.05 + this.diff.reaction * 0.07; // sehr träge
+    const follow = 0.07 + this.diff.reaction * 0.08; // reagiert, aber träge genug
     k._lagY += (b.y - k._lagY) * follow;
-    // Zielposition nur zu ~45 % zum Ball + bewusster Versatz, damit IMMER eine
-    // Torseite offen bleibt (zufällig pro Versuch festgelegt).
-    if (k._bias === undefined) k._bias = (Math.random() < 0.5 ? -1 : 1) * half * 0.5;
-    let ty = this.goalY + (k._lagY - this.goalY) * 0.45 + k._bias;
+    // Geht mit, lässt aber eine Seite tendenziell offen (Versatz pro Versuch).
+    if (k._bias === undefined) k._bias = (Math.random() < 0.5 ? -1 : 1) * half * 0.45;
+    let ty = this.goalY + (k._lagY - this.goalY) * 0.55 + k._bias;
     ty = Math.max(this.goalY - half, Math.min(this.goalY + half, ty));
-    k.vy += ((ty - k.y) * 2.5 - k.vy) * Math.min(1, 4 * dt);
+    k.vy += ((ty - k.y) * 3 - k.vy) * Math.min(1, 4.5 * dt);
     k.x += (this.goalX - 24 - k.x) * Math.min(1, 5 * dt);
-    // Hechtet nur selten (verschätzt sich oft) und zu kurz.
-    const reactProb = 0.12 + this.diff.reaction * 0.35;
-    if (b.shot && Math.abs(b.x - this.goalX) < 45 && k.dive <= 0 && k.cd <= 0 && Math.random() < reactProb) {
-      k.vy = Math.sign(b.y - k.y) * 260 + b.vy * 0.15;
-      k.dive = 0.28; k.cd = 1.0;
+    // Hechtet manchmal (nicht zu oft, sonst hält er alles).
+    const reactProb = 0.2 + this.diff.reaction * 0.4;
+    if (b.shot && Math.abs(b.x - this.goalX) < 60 && k.dive <= 0 && k.cd <= 0 && Math.random() < reactProb) {
+      k.vy = Math.sign(b.y - k.y) * 340 + b.vy * 0.2;
+      k.dive = 0.3; k.cd = 0.85;
     }
     if (k.dive > 0) k.dive -= dt; if (k.cd > 0) k.cd -= dt;
     k.y += k.vy * dt;
@@ -210,9 +209,10 @@ class Shootout {
     const dirX = (tx ?? (shooter.x + shooter.face.x * 100)) - b.x;
     const dirY = (ty ?? (shooter.y + shooter.face.y * 100)) - b.y;
     const l = Math.hypot(dirX, dirY) || 1;
-    const power = 520;
+    const power = 760;   // kräftig genug, um sicher das Tor zu erreichen
     b.vx = dirX / l * power; b.vy = dirY / l * power;
     b.owner = null; b.shot = true;
+    b.lock = 0.45; // kurze Sperre: Schütze kann den eigenen Schuss nicht sofort zurückholen
   }
 
   _physics(dt) {
@@ -226,12 +226,14 @@ class Shootout {
         b.vx = a.vx; b.vy = a.vy;
       } else { b.owner = null; }
     } else {
+      if (b.lock > 0) b.lock -= dt;
       b.x += b.vx * dt; b.y += b.vy * dt;
-      b.vx *= Math.max(0, 1 - 1.2 * dt); b.vy *= Math.max(0, 1 - 1.2 * dt);
+      b.vx *= Math.max(0, 1 - 0.7 * dt); b.vy *= Math.max(0, 1 - 0.7 * dt);
       // Nachschuss: Schütze kann den abgeprallten/liegen gebliebenen Ball wieder
-      // aufnehmen (nah genug & nicht zu schnell) -> erneut dribbeln/schießen.
+      // aufnehmen – aber NICHT direkt nach dem eigenen Schuss (lock) und nur,
+      // wenn der Ball langsam genug ist.
       const a = this.att;
-      if (Math.hypot(b.x - a.x, b.y - a.y) < a.r + b.r + 6 && Math.hypot(b.vx, b.vy) < 260) {
+      if (b.lock <= 0 && Math.hypot(b.x - a.x, b.y - a.y) < a.r + b.r + 6 && Math.hypot(b.vx, b.vy) < 200) {
         b.owner = "att"; b.shot = false;
       }
     }
@@ -264,7 +266,7 @@ class Shootout {
     // Torwart-Parade: Reichweite je nachdem, ob DU oder die KI im Tor steht.
     const extra = !this.userAttacks
       ? (this.gk.dive > 0 ? GK.diveReach : GK.baseReach)   // DU hältst
-      : (this.gk.dive > 0 ? 12 : 1);                        // KI hält (du schießt)
+      : (this.gk.dive > 0 ? 18 : 3);                        // KI hält (du schießt)
     const gkReach = this.gk.r + extra + b.r;
     const saved = b.shot && Math.hypot(b.x - this.gk.x, b.y - this.gk.y) < gkReach;
 
@@ -349,7 +351,7 @@ class Shootout {
     ctx.scale(s, s);
     ctx.translate(-(HALL.left + hw / 2), -(HALL.top + hh / 2));
 
-    drawIndoorPitch(ctx);
+    drawIndoorPitch(ctx, this.goalH);   // großes Tor im Elfmeterschießen
     this._drawBall(ctx);
     this._drawPlayer(ctx, this.att, this.info.homeColors[0], this.info.homeColors[1], this.userAttacks);
     this._drawPlayer(ctx, this.gk, "#00e676", "#063d20", !this.userAttacks);

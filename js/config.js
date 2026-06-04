@@ -35,7 +35,8 @@ export const HALL = {
   right: (WORLD.width + HALL_W) / 2,
   top: (WORLD.height - HALL_H) / 2,
   bottom: (WORLD.height + HALL_H) / 2,
-  goalHeight: 11 * PX_PER_M,      // Hallentor-Breite (breit -> mehr Tore)
+  goalHeight: 6 * PX_PER_M,       // Hallentor-Breite (normales Hallenspiel)
+  shootoutGoalHeight: 9 * PX_PER_M, // breiteres Tor NUR fürs Elfmeterschießen
   get centerY() { return WORLD.height / 2; },
 };
 

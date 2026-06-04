@@ -2,11 +2,11 @@
 // Mittelkreis, Strafräume, Torräume, Elfmeterpunkte und Tore.
 // Alles in Welt-Koordinaten; die Kamera-Translation passiert im Game-Loop.
 
-import { FIELD, MARGIN, WORLD, COLORS, PX_PER_M, GOAL, HALL } from "./config.js?v=l2";
+import { FIELD, MARGIN, WORLD, COLORS, PX_PER_M, GOAL, HALL } from "./config.js?v=m2";
 
 // Komplette Hallen-Darstellung (kleines Feld, Parkett, Banden, Tore) ohne
 // Zuschauer. Ersetzt drawPitch im Hallenmodus.
-export function drawIndoorPitch(ctx) {
+export function drawIndoorPitch(ctx, goalHeight = HALL.goalHeight) {
   const L = HALL.left, R = HALL.right, T = HALL.top, B = HALL.bottom;
   const w = R - L, h = B - T;
 
@@ -39,7 +39,7 @@ export function drawIndoorPitch(ctx) {
   ctx.beginPath(); ctx.arc(R - 3, cy, gr, Math.PI / 2, Math.PI * 1.5); ctx.stroke();
 
   // Tore (Netz) in der Bandenlücke
-  const gh = HALL.goalHeight, gy0 = cy - gh / 2, gy1 = cy + gh / 2, gd = 14;
+  const gh = goalHeight, gy0 = cy - gh / 2, gy1 = cy + gh / 2, gd = 14;
   ctx.save();
   ctx.strokeStyle = "rgba(255,255,255,0.95)"; ctx.lineWidth = 2;
   ctx.strokeRect(L - gd, gy0, gd, gh);
@@ -48,15 +48,15 @@ export function drawIndoorPitch(ctx) {
   for (let i = 1; i < 4; i++) { const yy = gy0 + (gh * i) / 4; line2(ctx, L - gd, yy, L, yy); line2(ctx, R, yy, R + gd, yy); }
   ctx.restore();
 
-  drawIndoorBoards(ctx);
+  drawIndoorBoards(ctx, goalHeight);
 }
 
 // Banden für den Hallenmodus: kräftiger Rahmen rings ums kleine Feld, mit
 // Lücke am Tormaul (links/rechts).
-export function drawIndoorBoards(ctx) {
+export function drawIndoorBoards(ctx, goalHeight = HALL.goalHeight) {
   const L = HALL.left, R = HALL.right, T = HALL.top, B = HALL.bottom;
   const w = R - L, h = B - T, th = 7;
-  const gh = HALL.goalHeight, cy = (T + B) / 2, gy0 = cy - gh / 2, gy1 = cy + gh / 2;
+  const gh = goalHeight, cy = (T + B) / 2, gy0 = cy - gh / 2, gy1 = cy + gh / 2;
   ctx.fillStyle = "#dfe4ea";          // helle Bande
   ctx.fillRect(L - th, T - th, w + th * 2, th);      // oben
   ctx.fillRect(L - th, B, w + th * 2, th);           // unten
