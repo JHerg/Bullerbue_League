@@ -8,8 +8,8 @@
 //       homeName, homeColors, awayName, awayColors, difficulty })
 //   -> Promise<{ home, away, winner:"home"|"away" }>
 
-import { HALL, PLAYER, BALL } from "./config.js?v=j2";
-import { drawIndoorPitch } from "./pitch.js?v=j2";
+import { HALL, PLAYER, BALL } from "./config.js?v=k2";
+import { drawIndoorPitch } from "./pitch.js?v=k2";
 
 const ROUND_TIME = 10;        // Sekunden pro Versuch
 const PREP = 1.0;             // kurze "Bereit"-Pause vor jedem Versuch
@@ -164,18 +164,20 @@ class Shootout {
     // Verzögertes Mitgehen: Torwart folgt einem leicht "veralteten" Ballpunkt,
     // bleibt eher zentral und reagiert träge -> du kannst ihn ausspielen.
     k._lagY = k._lagY ?? this.goalY;
-    const follow = 0.10 + this.diff.reaction * 0.10; // klein = träge
+    const follow = 0.05 + this.diff.reaction * 0.07; // sehr träge
     k._lagY += (b.y - k._lagY) * follow;
-    // Zielposition nur zu ~70 % zum Ball (bleibt etwas in der Mitte hängen).
-    let ty = this.goalY + (k._lagY - this.goalY) * 0.7;
+    // Zielposition nur zu ~45 % zum Ball + bewusster Versatz, damit IMMER eine
+    // Torseite offen bleibt (zufällig pro Versuch festgelegt).
+    if (k._bias === undefined) k._bias = (Math.random() < 0.5 ? -1 : 1) * half * 0.5;
+    let ty = this.goalY + (k._lagY - this.goalY) * 0.45 + k._bias;
     ty = Math.max(this.goalY - half, Math.min(this.goalY + half, ty));
-    k.vy += ((ty - k.y) * 4 - k.vy) * Math.min(1, 5 * dt);
+    k.vy += ((ty - k.y) * 2.5 - k.vy) * Math.min(1, 4 * dt);
     k.x += (this.goalX - 24 - k.x) * Math.min(1, 5 * dt);
-    // Hechtet nur spät und nicht immer (verschätzt sich auf Einfach oft).
-    const reactProb = 0.35 + this.diff.reaction * 0.5;
-    if (b.shot && Math.abs(b.x - this.goalX) < 60 && k.dive <= 0 && k.cd <= 0 && Math.random() < reactProb) {
-      k.vy = Math.sign(b.y - k.y) * 380 + b.vy * 0.25;
-      k.dive = 0.3; k.cd = 0.8;
+    // Hechtet nur selten (verschätzt sich oft) und zu kurz.
+    const reactProb = 0.12 + this.diff.reaction * 0.35;
+    if (b.shot && Math.abs(b.x - this.goalX) < 45 && k.dive <= 0 && k.cd <= 0 && Math.random() < reactProb) {
+      k.vy = Math.sign(b.y - k.y) * 260 + b.vy * 0.15;
+      k.dive = 0.28; k.cd = 1.0;
     }
     if (k.dive > 0) k.dive -= dt; if (k.cd > 0) k.cd -= dt;
     k.y += k.vy * dt;
@@ -250,8 +252,8 @@ class Shootout {
       // DU bist Torwart: im Stand kleiner Radius, beim Hechten groß -> aktiv halten.
       extra = this.gk.dive > 0 ? GK.diveReach : GK.baseReach;
     } else {
-      // KI-Torwart (du schießt): kleinere Reichweite -> leichter zu überwinden.
-      extra = this.gk.dive > 0 ? 18 : 3;
+      // KI-Torwart (du schießt): minimale Reichweite -> leicht zu überwinden.
+      extra = this.gk.dive > 0 ? 12 : 1;
     }
     const gkReach = this.gk.r + extra + b.r;
     if (Math.hypot(b.x - this.gk.x, b.y - this.gk.y) < gkReach) {

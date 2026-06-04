@@ -35,7 +35,7 @@ export const HALL = {
   right: (WORLD.width + HALL_W) / 2,
   top: (WORLD.height - HALL_H) / 2,
   bottom: (WORLD.height + HALL_H) / 2,
-  goalHeight: 6 * PX_PER_M,       // Hallentor-Breite
+  goalHeight: 11 * PX_PER_M,      // Hallentor-Breite (breit -> mehr Tore)
   get centerY() { return WORLD.height / 2; },
 };
 
