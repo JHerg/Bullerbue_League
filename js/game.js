@@ -1,17 +1,17 @@
 // Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { DIFFICULTY, WORLD } from "./config.js?v=h2";
-import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js?v=h2";
-import { Input } from "./input.js?v=h2";
-import { Camera } from "./camera.js?v=h2";
-import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=h2";
-import { Match } from "./match.js?v=h2";
-import { render as render25 } from "./render2d5.js?v=h2";
-import * as season from "./seasonui.js?v=h2";
-import * as shootout1v1 from "./shootout1v1.js?v=h2";
-import * as commentary from "./commentary.js?v=h2";
-import * as tournament from "./tournamentui.js?v=h2";
+import { DIFFICULTY, WORLD } from "./config.js?v=i2";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js?v=i2";
+import { Input } from "./input.js?v=i2";
+import { Camera } from "./camera.js?v=i2";
+import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=i2";
+import { Match } from "./match.js?v=i2";
+import { render as render25 } from "./render2d5.js?v=i2";
+import * as season from "./seasonui.js?v=i2";
+import * as shootout1v1 from "./shootout1v1.js?v=i2";
+import * as commentary from "./commentary.js?v=i2";
+import * as tournament from "./tournamentui.js?v=i2";
 
 // Startet das spielbare 1vs1-Elfmeterschießen mit Canvas/Input-Anbindung.
 function run1v1(homeDef, awayDef, difficulty) {
@@ -208,15 +208,17 @@ function runMatch(homeDef, awayDef, opts) {
 
 // Hallenturnier-Match: 3 gegen 3, kein Torwart, Banden, 3×30 s.
 // homeDef/awayDef tragen .squad (3 Spieler). knockout -> bei Remis Elfmeter.
-function runIndoorMatch(homeDef, awayDef, { difficulty, knockout }) {
+function runIndoorMatch(homeDef, awayDef, { difficulty, knockout, mode = "team", userPlayerIndex = 0 }) {
   return runMatch(homeDef, awayDef, {
-    mode: "team",
+    mode,                       // "team" = alle Spieler, "single" = fester Spieler
+    userPlayerIndex,            // im Einzelspieler-Modus: welcher Spieler
     difficulty,
     knockout,
     indoor: true,
     durationSec: 90,            // 3 × 30 Sek
     homeSquad: homeDef.squad,
     awaySquad: awayDef.squad,
+    keeperIndex: homeDef.keeperIndex,
   });
 }
 

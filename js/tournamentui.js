@@ -6,10 +6,10 @@
 // deps: { runIndoorMatch(homeDef, awayDef, {difficulty, knockout}) -> Promise<result>,
 //         showMenu() }
 
-import { allPlayers, teamById as teamDef } from "./teams.js?v=h2";
-import { DIFFICULTY } from "./config.js?v=h2";
-import * as T from "./tournament.js?v=h2";
-import { saveSeason, loadSeason } from "./storage.js?v=h2";
+import { allPlayers, teamById as teamDef } from "./teams.js?v=i2";
+import { DIFFICULTY } from "./config.js?v=i2";
+import * as T from "./tournament.js?v=i2";
+import { saveSeason, loadSeason } from "./storage.js?v=i2";
 
 let deps = null;
 let state = null;
@@ -17,6 +17,8 @@ let difficulty = DIFFICULTY.Mittel;
 let selected = [];   // ausgewählte Spielerobjekte (1..4)
 let searchTerm = "";
 let keeperIdx = 0;   // Index des markierten Torwarts in `selected`
+let playMode = "team";   // "team" = mit allen, "single" = nur ein Spieler
+let playerIdx = 0;       // im Einzelspieler-Modus: Index des gesteuerten Spielers
 const MAX_PICKS = 4;
 
 const hubEl = () => document.getElementById("hub");
@@ -156,6 +158,7 @@ function _renderGroup() {
   }
 
   html += _scorersHtml();
+  if (fx) html += _modeHtml();   // nur wenn du selbst gleich spielst
   html += _difficultyHtml();
   contentEl().innerHTML = html;
   _wireDifficulty();
@@ -178,7 +181,8 @@ async function _playUserGroup() {
   const fx = T.userFixture(state);
   const oppId = fx.home === state.userTeam ? fx.away : fx.home;
   const userIsHome = fx.home === state.userTeam;
-  const r = await deps.runIndoorMatch(_def(state.userTeam), _def(oppId), { difficulty, knockout: false });
+  const r = await deps.runIndoorMatch(_def(state.userTeam), _def(oppId),
+    { difficulty, knockout: false, mode: playMode, userPlayerIndex: playerIdx });
   // r.homeScorers gehört dem Nutzerteam (Heim im Match), r.awayScorers dem Gegner.
   const us = r.homeScorers || [], os = r.awayScorers || [];
   T.setFixtureResult(fx, userIsHome ? r.home : r.away, userIsHome ? r.away : r.home,
@@ -221,6 +225,7 @@ function _renderKo() {
   }
   html += _bracketHtml();
   html += _scorersHtml();
+  if (!state.champion && T.userTie(state)) html += _modeHtml();
   if (!state.champion) html += _difficultyHtml();
   contentEl().innerHTML = html;
   if (!state.champion) _wireDifficulty();
@@ -242,7 +247,8 @@ async function _playUserKo() {
   const tie = T.userTie(state);
   const oppId = tie.home === state.userTeam ? tie.away : tie.home;
   const userIsHome = tie.home === state.userTeam;
-  const r = await deps.runIndoorMatch(_def(state.userTeam), _def(oppId), { difficulty, knockout: true });
+  const r = await deps.runIndoorMatch(_def(state.userTeam), _def(oppId),
+    { difficulty, knockout: true, mode: playMode, userPlayerIndex: playerIdx });
   const hs = userIsHome ? r.home : r.away, as = userIsHome ? r.away : r.home;
   const winner = r.winner === "home" ? state.userTeam : oppId;
   const us = r.homeScorers || [], os = r.awayScorers || [];
@@ -330,6 +336,40 @@ function _difficultyHtml() {
 function _wireDifficulty() {
   const el = document.getElementById("t-diff");
   if (el) el.addEventListener("change", () => { difficulty = DIFFICULTY[el.value] || DIFFICULTY.Mittel; });
+
+  // Modus-Auswahl (mit allen / nur ein Spieler) verdrahten.
+  const m = document.getElementById("t-mode");
+  if (m) m.addEventListener("change", () => {
+    playMode = m.value === "team" ? "team" : "single";
+    playerIdx = m.value === "team" ? 0 : parseInt(m.value.slice(2), 10) || 0;
+    _wireDifficulty._refresh && _wireDifficulty._refresh();
+  });
+}
+
+// Auswahl, mit wem du spielst: ganzes Team oder ein bestimmter Spieler.
+function _modeHtml() {
+  const me = T.teamById(state, state.userTeam);
+  const roster = me.squad || [];
+  // Wert "team" = alle; "p<index>" = nur dieser Spieler (Index im Match-Kader).
+  // Match-Kader-Reihenfolge: [Torwart, Feldspieler...] (siehe team.js).
+  const order = _matchOrder(me);
+  let opts = `<option value="team" ${playMode === "team" ? "selected" : ""}>Mit allen (Team)</option>`;
+  order.forEach((p, i) => {
+    const sel = (playMode === "single" && playerIdx === i) ? "selected" : "";
+    const tw = p.isKeeper ? " 🧤" : "";
+    opts += `<option value="p:${i}" ${sel}>Nur ${p.name}${tw}</option>`;
+  });
+  return `<label class="diffsel">Spielen mit<select id="t-mode">${opts}</select></label>`;
+}
+
+// Reihenfolge der Spieler im Match-Kader (Torwart zuerst, dann Feldspieler),
+// damit der Einzelspieler-Index zum Match passt.
+function _matchOrder(team) {
+  const sq = (team.squad || []).slice();
+  const ki = Math.min(team.keeperIndex ?? 0, Math.max(0, sq.length - 1));
+  const keeper = { ...sq[ki], isKeeper: true };
+  const field = sq.filter((_, i) => i !== ki).slice(0, 3).map((p) => ({ ...p, isKeeper: false }));
+  return [keeper, ...field];
 }
 
 function _setButtons(btns) { const el = buttonsEl(); el.innerHTML = ""; for (const b of btns) el.appendChild(b); }
