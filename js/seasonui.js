@@ -5,10 +5,11 @@
 //   deps.runMatch(homeDef, awayDef, opts) -> Promise<{home, away}>  (Endstand)
 //   deps.showMenu()                       -> zurück ins Startmenü
 
-import { TEAMS, teamById } from "./teams.js?v=n2";
-import * as L from "./league.js?v=n2";
-import * as C from "./cup.js?v=n2";
-import { saveSeason, loadSeason } from "./storage.js?v=n2";
+import { TEAMS, teamById } from "./teams.js?v=o2";
+import * as L from "./league.js?v=o2";
+import * as C from "./cup.js?v=o2";
+import { saveSeason, loadSeason } from "./storage.js?v=o2";
+import * as achievements from "./achievements.js?v=o2";
 
 let deps = null;
 let state = null;
@@ -79,6 +80,7 @@ function _renderLeague() {
 
   if (over) {
     html += `<div class="fixture">🏆 Meister: ${name(table[0].id)}</div>`;
+    if (table[0].id === state.userTeam) achievements.unlock("league_champ");
   } else {
     const fx = L.userFixture(state, round);
     html += _fixtureHtml(fx.home, fx.away);
@@ -161,6 +163,7 @@ function _renderCup() {
   if (state.champion) {
     html += `<div class="hub-sub">Turnier beendet · Dein Team: ${name(state.userTeam)}</div>`;
     html += `<div class="fixture">🏆 Sieger: ${name(state.champion)}</div>`;
+    if (state.champion === state.userTeam) achievements.unlock("cup_win");
   } else {
     html += `<div class="hub-sub">${C.roundName(state)} · Dein Team: ${name(state.userTeam)}</div>`;
     const tie = C.userTie(state);

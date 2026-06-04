@@ -508,3 +508,53 @@ table.standings tr.cl td:first-child { color: #4caf50; }
   font-size: 18px;
   cursor: pointer;
 }
+
+/* ---------- Erfolge / Trophäen ---------- */
+#ach-toast {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 280px;
+  padding: 10px 14px;
+  background: rgba(20, 20, 20, 0.92);
+  border: 1px solid #ffca28;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 14px;
+  transform: translateX(120%);
+  transition: transform 0.35s cubic-bezier(.5,1.6,.5,1);
+}
+#ach-toast.show { transform: translateX(0); }
+#ach-toast .ach-ic { font-size: 28px; }
+
+#ach-overlay {
+  position: fixed; inset: 0; z-index: 70;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, 0.7); padding: 16px;
+}
+#ach-card {
+  width: min(560px, 100%); max-height: 100%; overflow-y: auto;
+  background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 16px; padding: 18px 20px; color: #fff;
+}
+#ach-card h2 { font-size: 20px; margin-bottom: 12px; }
+#ach-count { font-size: 13px; opacity: 0.7; font-weight: 400; }
+#ach-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ach-card {
+  background: rgba(255,255,255,0.08); border-radius: 10px; padding: 10px;
+  text-align: center;
+}
+.ach-card.locked { opacity: 0.45; }
+.ach-card .ach-ic { font-size: 30px; }
+.ach-card .ach-name { font-weight: 800; font-size: 14px; margin-top: 4px; }
+.ach-card .ach-desc { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+#btn-ach-close {
+  margin-top: 14px; width: 100%; padding: 12px; border: none; border-radius: 10px;
+  background: #ffca28; color: #1b3a1b; font-weight: 800; font-size: 16px; cursor: pointer;
+}
+#btn-ach { background: rgba(255,255,255,0.2); color: #fff; }
+@media (max-width: 420px) { #ach-grid { grid-template-columns: 1fr; } }

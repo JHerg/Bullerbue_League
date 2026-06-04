@@ -14,7 +14,7 @@ function ensureCtx() {
     if (!AC) return null;
     ctx = new AC();
     master = ctx.createGain();
-    master.gain.value = 0.5;
+    master.gain.value = 0.75;
     master.connect(ctx.destination);
   }
   if (ctx.state === "suspended") ctx.resume();

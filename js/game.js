@@ -1,18 +1,19 @@
 // Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { DIFFICULTY, WORLD } from "./config.js?v=n2";
-import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js?v=n2";
-import { Input } from "./input.js?v=n2";
-import { Camera } from "./camera.js?v=n2";
-import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=n2";
-import { Match } from "./match.js?v=n2";
-import { render as render25 } from "./render2d5.js?v=n2";
-import * as season from "./seasonui.js?v=n2";
-import * as shootout1v1 from "./shootout1v1.js?v=n2";
-import * as commentary from "./commentary.js?v=n2";
-import * as tournament from "./tournamentui.js?v=n2";
-import * as sound from "./sound.js?v=n2";
+import { DIFFICULTY, WORLD } from "./config.js?v=o2";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js?v=o2";
+import { Input } from "./input.js?v=o2";
+import { Camera } from "./camera.js?v=o2";
+import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=o2";
+import { Match } from "./match.js?v=o2";
+import { render as render25 } from "./render2d5.js?v=o2";
+import * as season from "./seasonui.js?v=o2";
+import * as shootout1v1 from "./shootout1v1.js?v=o2";
+import * as commentary from "./commentary.js?v=o2";
+import * as tournament from "./tournamentui.js?v=o2";
+import * as sound from "./sound.js?v=o2";
+import * as achievements from "./achievements.js?v=o2";
 
 // Startet das spielbare 1vs1-Elfmeterschießen mit Canvas/Input-Anbindung.
 function run1v1(homeDef, awayDef, difficulty) {
@@ -149,6 +150,32 @@ function applyCommentarySetting() {
 chkComm?.addEventListener("change", applyCommentarySetting);
 chkSound?.addEventListener("change", () => { sound.setEnabled(chkSound.checked); sound.unlock(); });
 
+// Erfolg-Toast: kurze Einblendung bei Freischaltung.
+achievements.onUnlock((a) => {
+  const el = document.getElementById("ach-toast");
+  if (!el) return;
+  el.innerHTML = `<span class="ach-ic">${a.icon}</span><span><b>Erfolg freigeschaltet</b><br>${a.name}</span>`;
+  el.classList.add("show");
+  sound.play("click");
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove("show"), 3200);
+});
+
+// Trophäen-Galerie öffnen/schließen.
+const btnAch = document.getElementById("btn-ach");
+const achOverlay = document.getElementById("ach-overlay");
+btnAch?.addEventListener("click", () => {
+  const grid = document.getElementById("ach-grid");
+  const items = achievements.allWithState();
+  grid.innerHTML = items.map((a) =>
+    `<div class="ach-card ${a.unlocked ? "" : "locked"}"><div class="ach-ic">${a.unlocked ? a.icon : "🔒"}</div>`
+    + `<div class="ach-name">${a.name}</div><div class="ach-desc">${a.desc}</div></div>`).join("");
+  document.getElementById("ach-count").textContent =
+    `${achievements.unlockedCount()} / ${items.length} freigeschaltet`;
+  achOverlay.classList.remove("hidden");
+});
+document.getElementById("btn-ach-close")?.addEventListener("click", () => achOverlay.classList.add("hidden"));
+
 btnStart.addEventListener("click", () => {
   sound.unlock();             // Audio bei erster Interaktion freischalten
   applyCommentarySetting();
@@ -176,7 +203,10 @@ btnStart.addEventListener("click", () => {
 // Reines Elfmeterschießen (eigene Spielart): 1vs1-Mini-Game direkt starten.
 function startPenaltyOnly(homeDef, awayDef) {
   menuEl.classList.add("hidden");
-  run1v1(homeDef, awayDef, DIFFICULTY[selDiff.value]).then(showMenu);
+  run1v1(homeDef, awayDef, DIFFICULTY[selDiff.value]).then((pen) => {
+    if (pen && pen.winner === "home") achievements.unlock("penalty_hero");
+    showMenu();
+  });
 }
 
 btnResume.addEventListener("click", () => {
@@ -232,6 +262,13 @@ function resolveRunMatch(score) {
   match = null;
   scoreboardEl.classList.add("hidden");
   resultEl.classList.add("hidden");
+  // Erfolge aus dem gespielten Spiel ableiten (home = immer das Nutzerteam).
+  if (score && (typeof score.home === "number")) {
+    const youGoals = score.home, oppGoals = score.away;
+    const won = score.winner ? score.winner === "home" : youGoals > oppGoals;
+    achievements.reportMatch({ youGoals, oppGoals, won });
+    if (score.penalties && score.winner === "home") achievements.unlock("penalty_hero");
+  }
   const r = matchResolve;
   matchResolve = null;
   if (r) r(score);

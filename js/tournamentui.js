@@ -6,10 +6,11 @@
 // deps: { runIndoorMatch(homeDef, awayDef, {difficulty, knockout}) -> Promise<result>,
 //         showMenu() }
 
-import { allPlayers, teamById as teamDef } from "./teams.js?v=n2";
-import { DIFFICULTY } from "./config.js?v=n2";
-import * as T from "./tournament.js?v=n2";
-import { saveSeason, loadSeason } from "./storage.js?v=n2";
+import { allPlayers, teamById as teamDef } from "./teams.js?v=o2";
+import { DIFFICULTY } from "./config.js?v=o2";
+import * as T from "./tournament.js?v=o2";
+import { saveSeason, loadSeason } from "./storage.js?v=o2";
+import * as achievements from "./achievements.js?v=o2";
 
 let deps = null;
 let state = null;
@@ -217,6 +218,7 @@ function _renderKo() {
   let html = `<h2>Hallenturnier – ${state.champion ? "Beendet" : T.koRoundName(state)}</h2>`;
   if (state.champion) {
     html += `<div class="fixture">🏆 Turniersieger: ${_name(state.champion)}</div>`;
+    if (state.champion === state.userTeam) achievements.unlock("hall_win");
   } else {
     const tie = T.userTie(state);
     html += tie

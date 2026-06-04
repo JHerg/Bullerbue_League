@@ -8,7 +8,7 @@
 </head>
 <body>
   <!-- Zurück zum Hauptspiel -->
-  <a id="back-link" href="index.html?v=n2">← klassische Ansicht</a>
+  <a id="back-link" href="index.html?v=o2">← klassische Ansicht</a>
 
   <!-- Anzeigetafel -->
   <div id="scoreboard" class="hidden">
@@ -133,12 +133,25 @@
 
       <button id="btn-start">Anpfiff!</button>
       <button id="btn-resume" class="hidden">Saison fortsetzen</button>
-      <a class="proto-link" href="index.html?v=n2">↩ zurück zur klassischen 2D-Ansicht</a>
+      <button id="btn-ach" class="secondary">🏆 Trophäen</button>
+      <a class="proto-link" href="index.html?v=o2">↩ zurück zur klassischen 2D-Ansicht</a>
       <p class="hint">2.5D-Ansicht mit Zuschauern · gleiche Steuerung wie im Hauptspiel<br>PC: WASD/Pfeile · Leertaste = Schuss · F = Pass/Grätsche/Wechsel</p>
-      <p class="version">Build 2026-05-30-n2 · Sound-Effekte</p>
+      <p class="version">Build 2026-05-30-o2 · Erfolge/Trophäen + lauterer Sound</p>
     </div>
   </div>
 
-  <script type="module" src="js/proto.js?v=n2"></script>
+  <!-- Erfolg-Toast -->
+  <div id="ach-toast"></div>
+
+  <!-- Trophäen-Galerie -->
+  <div id="ach-overlay" class="hidden">
+    <div id="ach-card">
+      <h2>🏆 Trophäen <span id="ach-count"></span></h2>
+      <div id="ach-grid"></div>
+      <button id="btn-ach-close">Schließen</button>
+    </div>
+  </div>
+
+  <script type="module" src="js/proto.js?v=o2"></script>
 </body>
 </html>
