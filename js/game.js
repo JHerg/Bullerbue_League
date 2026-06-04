@@ -1,17 +1,30 @@
 // Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { DIFFICULTY, WORLD } from "./config.js?v=f2";
-import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js?v=f2";
-import { Input } from "./input.js?v=f2";
-import { Camera } from "./camera.js?v=f2";
-import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=f2";
-import { Match } from "./match.js?v=f2";
-import { render as render25 } from "./render2d5.js?v=f2";
-import * as season from "./seasonui.js?v=f2";
-import * as penalties from "./penalties.js?v=f2";
-import * as commentary from "./commentary.js?v=f2";
-import * as tournament from "./tournamentui.js?v=f2";
+import { DIFFICULTY, WORLD } from "./config.js?v=g2";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js?v=g2";
+import { Input } from "./input.js?v=g2";
+import { Camera } from "./camera.js?v=g2";
+import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=g2";
+import { Match } from "./match.js?v=g2";
+import { render as render25 } from "./render2d5.js?v=g2";
+import * as season from "./seasonui.js?v=g2";
+import * as shootout1v1 from "./shootout1v1.js?v=g2";
+import * as commentary from "./commentary.js?v=g2";
+import * as tournament from "./tournamentui.js?v=g2";
+
+// Startet das spielbare 1vs1-Elfmeterschießen mit Canvas/Input-Anbindung.
+function run1v1(homeDef, awayDef, difficulty) {
+  scoreboardEl.classList.add("hidden");
+  return shootout1v1.run({
+    canvas, ctx, input, dpr: window.devicePixelRatio || 1,
+    view: () => ({ w: window.innerWidth, h: window.innerHeight }),
+    difficulty: difficulty || DIFFICULTY.Mittel,
+    homeShort: homeDef.short, homeName: homeDef.name, homeColors: homeDef.colors,
+    awayShort: awayDef.short, awayName: awayDef.name,
+    awayColors: ensureContrast(homeDef.colors, awayDef.colors),
+  });
+}
 
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
@@ -155,15 +168,10 @@ btnStart.addEventListener("click", () => {
   }
 });
 
-// Reines Elfmeterschießen (eigene Spielart): Mini-Game direkt starten.
+// Reines Elfmeterschießen (eigene Spielart): 1vs1-Mini-Game direkt starten.
 function startPenaltyOnly(homeDef, awayDef) {
   menuEl.classList.add("hidden");
-  penalties.run({
-    homeShort: homeDef.short, homeName: homeDef.name,
-    homeColors: homeDef.colors, homeRating: ratingOf(homeDef.id),
-    awayShort: awayDef.short, awayName: awayDef.name,
-    awayColors: ensureContrast(homeDef.colors, awayDef.colors), awayRating: ratingOf(awayDef.id),
-  }).then(showMenu);
+  run1v1(homeDef, awayDef, DIFFICULTY[selDiff.value]).then(showMenu);
 }
 
 btnResume.addEventListener("click", () => {
@@ -233,17 +241,20 @@ function showMenu() {
 // Elfmeterschießen starten (K.o.-Spiel blieb auch nach Verlängerung remis).
 function startPenalties() {
   const h = match.home, a = match.away;
-  scoreboardEl.classList.add("hidden");
+  const score = { home: match.score.home, away: match.score.away };
+  const scorers = matchScorers();
   msgEl.classList.remove("show");
-  penalties.run({
-    homeShort: h.short, homeName: h.name, homeColors: h.colors, homeRating: ratingOf(h.id),
-    awayShort: a.short, awayName: a.name, awayColors: a.colors, awayRating: ratingOf(a.id),
-  }).then((pen) => {
+  // Eigener Torwart skaliert mit Schwierigkeit -> nutze die Gegner-Schwierigkeit.
+  const homeDef = { short: h.short, name: h.name, colors: h.colors, id: h.id };
+  const awayDef = { short: a.short, name: a.name, colors: a.colors, id: a.id };
+  const diff = match.oppDifficulty;
+  match = null; // Haupt-Spielschleife pausieren, das 1vs1 rendert selbst
+  run1v1(homeDef, awayDef, diff).then((pen) => {
     resolveRunMatch({
-      home: match.score.home, away: match.score.away,
+      home: score.home, away: score.away,
       winner: pen.winner, decidedBy: "i.E.",
       penalties: { home: pen.home, away: pen.away },
-      ...matchScorers(),
+      ...scorers,
     });
   });
 }

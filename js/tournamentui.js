@@ -6,15 +6,18 @@
 // deps: { runIndoorMatch(homeDef, awayDef, {difficulty, knockout}) -> Promise<result>,
 //         showMenu() }
 
-import { allPlayers, teamById as teamDef } from "./teams.js?v=f2";
-import { DIFFICULTY } from "./config.js?v=f2";
-import * as T from "./tournament.js?v=f2";
-import { saveSeason, loadSeason } from "./storage.js?v=f2";
+import { allPlayers, teamById as teamDef } from "./teams.js?v=g2";
+import { DIFFICULTY } from "./config.js?v=g2";
+import * as T from "./tournament.js?v=g2";
+import { saveSeason, loadSeason } from "./storage.js?v=g2";
 
 let deps = null;
 let state = null;
 let difficulty = DIFFICULTY.Mittel;
-let selected = [];   // ausgewählte Spielerobjekte (max 3)
+let selected = [];   // ausgewählte Spielerobjekte (1..4)
+let searchTerm = "";
+let keeperIdx = 0;   // Index des markierten Torwarts in `selected`
+const MAX_PICKS = 4;
 
 const hubEl = () => document.getElementById("hub");
 const contentEl = () => document.getElementById("hub-content");
@@ -26,6 +29,8 @@ export function hasSave() { return !!loadSeason("tournament"); }
 // Einstieg aus dem Menü: erst Spielerauswahl.
 export function start() {
   selected = [];
+  keeperIdx = 0;
+  searchTerm = "";
   state = null;
   hubEl().classList.remove("hidden");
   _renderSelect();
@@ -41,21 +46,24 @@ export function resume() {
 function _toMenu() { hubEl().classList.add("hidden"); deps.showMenu(); }
 
 // ---------------- Spielerauswahl ----------------
-let searchTerm = "";
 function _renderSelect() {
   const pool = allPlayers().sort((a, b) => b.strength - a.strength);
   const chosen = new Set(selected.map((p) => p.uid));
+  if (keeperIdx >= selected.length) keeperIdx = 0;
 
-  let chips = selected.map((p, i) =>
-    `<span class="pick-chip">${p.name} <button data-rm="${i}">✕</button></span>`).join("");
+  // Gewählte Spieler als Chips, mit 🧤-Markierung für den Torwart.
+  let chips = selected.map((p, i) => {
+    const kp = i === keeperIdx ? " keeper" : "";
+    return `<span class="pick-chip${kp}"><button class="kbtn" data-kp="${i}" title="Als Torwart">${i === keeperIdx ? "🧤" : "🥅"}</button>`
+      + `${p.name} <button data-rm="${i}">✕</button></span>`;
+  }).join("");
 
   let html =
     `<h2>Hallenturnier</h2>`
-    + `<div class="hub-sub">Stelle dein Team zusammen: wähle 3 Spieler aus allen Vereinen.</div>`
+    + `<div class="hub-sub">Wähle <b>1 bis 4</b> Spieler. Tippe auf 🥅, um einen als <b>Torwart</b> zu markieren (🧤). Spielst du nur mit einem, ist das dein einziger Spieler.</div>`
     + `<div class="picks">${chips || '<span style="opacity:.6">Noch keine Spieler gewählt</span>'}</div>`;
 
-  if (selected.length < 3) {
-    // Suchfeld + gefilterte Trefferliste (Name oder Team).
+  if (selected.length < MAX_PICKS) {
     const term = searchTerm.trim().toLowerCase();
     const matches = pool.filter((p) => !chosen.has(p.uid) &&
       (!term || p.name.toLowerCase().includes(term) || p.teamShort.toLowerCase().includes(term)
@@ -66,14 +74,15 @@ function _renderSelect() {
     html += `<label>Spieler suchen<input id="pl-search" type="text" placeholder="Name oder Verein…" value="${searchTerm}" /></label>`
       + `<div class="pl-list">${list || '<div class="pl-empty">Keine Treffer</div>'}</div>`
       + (matches.length > 30 ? `<div class="pl-more">… ${matches.length - 30} weitere – Suche eingrenzen</div>` : "");
-  } else {
+  }
+  if (selected.length >= 1) {
     html += `<label>Teamname<input id="inp-teamname" type="text" maxlength="22" placeholder="z. B. Wilde Bullen" /></label>`;
   }
   contentEl().innerHTML = html;
 
   // Buttons
   const btns = [];
-  if (selected.length === 3) btns.push(_btn("Turnier starten", "", _confirmTeam));
+  if (selected.length >= 1) btns.push(_btn("Turnier starten", "", _confirmTeam));
   btns.push(_btn("Abbrechen", "ghost", _toMenu));
   _setButtons(btns);
 
@@ -91,16 +100,23 @@ function _renderSelect() {
   contentEl().querySelectorAll(".pl-row").forEach((row) =>
     row.addEventListener("click", () => {
       const p = pool.find((x) => x.uid === row.dataset.uid);
-      if (p && selected.length < 3) { selected.push(p); searchTerm = ""; _renderSelect(); }
+      if (p && selected.length < MAX_PICKS) { selected.push(p); searchTerm = ""; _renderSelect(); }
     }));
+  contentEl().querySelectorAll(".kbtn").forEach((b) =>
+    b.addEventListener("click", () => { keeperIdx = +b.dataset.kp; _renderSelect(); }));
   contentEl().querySelectorAll("[data-rm]").forEach((b) =>
-    b.addEventListener("click", () => { selected.splice(+b.dataset.rm, 1); _renderSelect(); }));
+    b.addEventListener("click", () => {
+      const i = +b.dataset.rm;
+      selected.splice(i, 1);
+      if (keeperIdx > i) keeperIdx--; else if (keeperIdx === i) keeperIdx = 0;
+      _renderSelect();
+    }));
 }
 
 function _confirmTeam() {
   const inp = document.getElementById("inp-teamname");
   const name = (inp && inp.value.trim()) || "Mein Team";
-  state = T.createTournament({ name, picks: selected.slice() });
+  state = T.createTournament({ name, picks: selected.slice(), keeperIndex: keeperIdx });
   saveSeason(state);
   _renderGroup();
 }
@@ -260,7 +276,9 @@ function _short(id) { return T.teamById(state, id).short; }
 // Team-Definition fürs Match (Match.Team erwartet {id,name,short,colors}).
 function _def(id) {
   const t = T.teamById(state, id);
-  return { id: t.id, name: t.name, short: t.short, colors: t.colors, formation: "4-2-3-1", squad: t.squad };
+  const d = { id: t.id, name: t.name, short: t.short, colors: t.colors, formation: "4-2-3-1", squad: t.squad };
+  if (t.user) d.keeperIndex = t.keeperIndex ?? 0; // Nutzerteam: markierter Torwart
+  return d;
 }
 
 function _groupTableHtml(table) {

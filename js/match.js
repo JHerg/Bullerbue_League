@@ -2,11 +2,11 @@
 // kontextabhängige Nutzer-Aktion (Leertaste), Aus-Erkennung
 // (Einwurf/Ecke/Abstoß), Tore, Spieluhr und Halbzeit mit Seitenwechsel.
 
-import { WORLD, FIELD, MARGIN, GOAL, HALL, BALL, KICK, PLAYER, USER, DIFFICULTY_TEAMMATE } from "./config.js?v=f2";
-import { Team } from "./team.js?v=f2";
-import { Ball } from "./ball.js?v=f2";
-import { computeAI } from "./ai.js?v=f2";
-import { ensureContrast } from "./teams.js?v=f2";
+import { WORLD, FIELD, MARGIN, GOAL, HALL, BALL, KICK, PLAYER, USER, DIFFICULTY_TEAMMATE } from "./config.js?v=g2";
+import { Team } from "./team.js?v=g2";
+import { Ball } from "./ball.js?v=g2";
+import { computeAI } from "./ai.js?v=g2";
+import { ensureContrast } from "./teams.js?v=g2";
 
 const EDGE = 8; // wie weit innerhalb der Linie der Ball bei Standards liegt
 
@@ -30,7 +30,8 @@ export class Match {
     this.centerY = (this.area.top + this.area.bottom) / 2;
 
     // Eigene Mitspieler: festes Profil. Gegner: gewählte Schwierigkeit.
-    this.home = new Team(homeDef, true, DIFFICULTY_TEAMMATE, { indoor, squad: homeSquad, area: this.area, keeperName: homeDef.keeperName });
+    // Nutzerteam (home) markiert seinen Torwart per keeperIndex; KI nutzt Auto-Torwart.
+    this.home = new Team(homeDef, true, DIFFICULTY_TEAMMATE, { indoor, squad: homeSquad, area: this.area, keeperIndex: homeDef.keeperIndex });
     this.away = new Team(awayDef, false, difficulty, { indoor, squad: awaySquad, area: this.area, keeperName: awayDef.keeperName });
     // Trikot-Kollision vermeiden: Auswärtsteam ggf. auf Ausweichtrikot setzen.
     this.away.colors = ensureContrast(this.home.colors, this.away.colors);
@@ -309,6 +310,9 @@ export class Match {
     const opponents = p.team === this.home ? this.away.players : this.home.players;
     const teamHasBall = this.ball.owner && this.ball.owner.team === p.team;
     let profile = this._profileFor(p.team);
+    // Eigener Torwart skaliert mit der gewählten Schwierigkeit (auf Einfach
+    // also schwächer), während die eigenen Feldspieler ihr festes Profil behalten.
+    if (p.team === this.home && p.isKeeper) profile = this.oppDifficulty;
     // Halle: kürzere Schussreichweite -> nicht aus jeder Lage ballern.
     if (this.indoor) profile = { ...profile, shootRange: profile.shootRange * 0.45 };
     const ctx = {

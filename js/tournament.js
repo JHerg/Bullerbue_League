@@ -2,7 +2,7 @@
 // (jeder gegen jeden), Top 2 je Gruppe -> Achtelfinale (K.o., bei Remis Elfmeter).
 // Reine Datenlogik ohne DOM (headless testbar).
 
-import { TEAMS, allPlayers } from "./teams.js?v=f2";
+import { TEAMS, allPlayers } from "./teams.js?v=g2";
 
 const HALL_ADJ = ["Wilde", "Flinke", "Eiserne", "Goldene", "Schnelle", "Coole", "Starke",
   "Bunte", "Kühne", "Freche", "Heiße", "Blaue", "Rote", "Grüne", "Dunkle", "Wirbel"];
@@ -65,7 +65,7 @@ function makeAiTeam(pool, usedNames) {
   };
 }
 
-// Turnier anlegen. userTeam = { name, picks:[3 Spielerobjekte] }
+// Turnier anlegen. userTeam = { name, picks:[1..4 Spielerobjekte], keeperIndex }
 export function createTournament(userTeam) {
   _hid = 0;
   const pool = allPlayers();
@@ -77,6 +77,7 @@ export function createTournament(userTeam) {
     colors: ["#d32f2f", "#ffffff"],
     picks: userTeam.picks,
     squad: squadToPlayers(userTeam.picks),
+    keeperIndex: userTeam.keeperIndex ?? 0,
     strength: squadStrength(userTeam.picks),
     user: true,
   };
