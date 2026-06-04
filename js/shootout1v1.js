@@ -8,8 +8,9 @@
 //       homeName, homeColors, awayName, awayColors, difficulty })
 //   -> Promise<{ home, away, winner:"home"|"away" }>
 
-import { HALL, PLAYER, BALL } from "./config.js?v=m2";
-import { drawIndoorPitch } from "./pitch.js?v=m2";
+import { HALL, PLAYER, BALL } from "./config.js?v=n2";
+import { drawIndoorPitch } from "./pitch.js?v=n2";
+import * as sound from "./sound.js?v=n2";
 
 const ROUND_TIME = 10;        // Sekunden pro Versuch
 const PREP = 1.0;             // kurze "Bereit"-Pause vor jedem Versuch
@@ -213,6 +214,7 @@ class Shootout {
     b.vx = dirX / l * power; b.vy = dirY / l * power;
     b.owner = null; b.shot = true;
     b.lock = 0.45; // kurze Sperre: Schütze kann den eigenen Schuss nicht sofort zurückholen
+    sound.play("shot");
   }
 
   _physics(dt) {
@@ -301,6 +303,7 @@ class Shootout {
     if (this.turn === "home") { this.homeTaken++; if (scored) this.home++; }
     else { this.awayTaken++; if (scored) this.away++; }
     this.lastResult = outcome === "goal" ? "TOR! ⚽" : outcome === "save" ? "Gehalten! 🧤" : "Vorbei! 😬";
+    sound.play(outcome === "goal" ? "goal" : outcome === "save" ? "save" : "miss");
     this.phase = "result"; this.timer = 1.4;
   }
 

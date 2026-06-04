@@ -1,17 +1,18 @@
 // Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { DIFFICULTY, WORLD } from "./config.js?v=m2";
-import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js?v=m2";
-import { Input } from "./input.js?v=m2";
-import { Camera } from "./camera.js?v=m2";
-import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=m2";
-import { Match } from "./match.js?v=m2";
-import { render as render25 } from "./render2d5.js?v=m2";
-import * as season from "./seasonui.js?v=m2";
-import * as shootout1v1 from "./shootout1v1.js?v=m2";
-import * as commentary from "./commentary.js?v=m2";
-import * as tournament from "./tournamentui.js?v=m2";
+import { DIFFICULTY, WORLD } from "./config.js?v=n2";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js?v=n2";
+import { Input } from "./input.js?v=n2";
+import { Camera } from "./camera.js?v=n2";
+import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=n2";
+import { Match } from "./match.js?v=n2";
+import { render as render25 } from "./render2d5.js?v=n2";
+import * as season from "./seasonui.js?v=n2";
+import * as shootout1v1 from "./shootout1v1.js?v=n2";
+import * as commentary from "./commentary.js?v=n2";
+import * as tournament from "./tournamentui.js?v=n2";
+import * as sound from "./sound.js?v=n2";
 
 // Startet das spielbare 1vs1-Elfmeterschießen mit Canvas/Input-Anbindung.
 function run1v1(homeDef, awayDef, difficulty) {
@@ -138,14 +139,18 @@ function getMatchOptions() {
   };
 }
 
-// Kommentator-Schalter aus dem Menü (Checkbox).
+// Kommentator-/Sound-Schalter aus dem Menü (Checkboxen).
 const chkComm = document.getElementById("chk-comm");
+const chkSound = document.getElementById("chk-sound");
 function applyCommentarySetting() {
   if (chkComm) commentary.setEnabled(chkComm.checked);
+  if (chkSound) sound.setEnabled(chkSound.checked);
 }
 chkComm?.addEventListener("change", applyCommentarySetting);
+chkSound?.addEventListener("change", () => { sound.setEnabled(chkSound.checked); sound.unlock(); });
 
 btnStart.addEventListener("click", () => {
+  sound.unlock();             // Audio bei erster Interaktion freischalten
   applyCommentarySetting();
   const type = selType.value;
   const opts = getMatchOptions();
@@ -197,6 +202,7 @@ function runMatch(homeDef, awayDef, opts) {
     penaltiesStarted = false;
     match = new Match(homeDef, awayDef, opts);
     commentary.reset();
+    resetSound();
     menuEl.classList.add("hidden");
     hubEl.classList.add("hidden");
     resultEl.classList.add("hidden");
@@ -349,6 +355,44 @@ function updateHUD() {
 // --------------------------------------------------------------------------
 let last = performance.now();
 
+// --- Sound-Watcher: erzeugt Effekte aus dem Match-Zustand ---
+let sndState = {};
+function resetSound() { sndState = { goals: 0, msg: "", started: false, owner: null, ballX: 0 }; }
+function soundWatch(m) {
+  if (m.pauseTimer > 0 && sndState.started && sndState.msg === m.message) { /* in Pause */ }
+  // Anpfiff
+  if (!sndState.started) { sndState.started = true; sndState.goals = m.goals.length; sndState.msg = m.message; sound.play("whistleStart"); }
+
+  // Tor
+  if (m.goals.length > sndState.goals) { sndState.goals = m.goals.length; sound.play("goal"); }
+
+  // Status-Meldungen (Halbzeit/Verlängerung/Elfmeter/Schluss)
+  if (m.message !== sndState.msg) {
+    sndState.msg = m.message;
+    if (m.message.startsWith("Halbzeit") || m.message.startsWith("Verlängerung")) sound.play("whistleHalf");
+    else if (m.message.startsWith("Elfmeterschießen")) sound.play("whistleHalf");
+    else if (m.message.startsWith("Schlusspfiff")) sound.play("whistleEnd");
+  }
+
+  // Schuss/Pass: Ball war geführt, ist jetzt frei und schnell.
+  const owner = m.ball.owner;
+  if (sndState.owner && !owner) {
+    const sp = Math.hypot(m.ball.vx, m.ball.vy);
+    if (sp > 430) sound.play("shot"); else if (sp > 120) sound.play("kick");
+  }
+  sndState.owner = owner;
+
+  // Bandentreffer (nur Halle): Ball-vx kehrt sich abrupt um.
+  if (m.indoor && !owner) {
+    const dx = m.ball.x - sndState.ballX;
+    if (sndState._lastDx !== undefined && Math.sign(dx) !== 0 && Math.sign(dx) !== Math.sign(sndState._lastDx) && Math.abs(sndState._lastDx) > 2) {
+      sound.play("post");
+    }
+    sndState._lastDx = dx;
+  }
+  sndState.ballX = m.ball.x;
+}
+
 function loop(now) {
   const dt = Math.min(0.033, (now - last) / 1000);
   last = now;
@@ -356,6 +400,7 @@ function loop(now) {
   if (match) {
     match.update(dt, input);
     commentary.update(match, now);
+    soundWatch(match);
     updateHUD();
     updatePowerBar();
 
