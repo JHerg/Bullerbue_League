@@ -8,11 +8,21 @@
 //       homeName, homeColors, awayName, awayColors, difficulty })
 //   -> Promise<{ home, away, winner:"home"|"away" }>
 
-import { HALL, PLAYER, BALL } from "./config.js?v=g2";
-import { drawIndoorPitch } from "./pitch.js?v=g2";
+import { HALL, PLAYER, BALL } from "./config.js?v=h2";
+import { drawIndoorPitch } from "./pitch.js?v=h2";
 
 const ROUND_TIME = 10;        // Sekunden pro Versuch
 const PREP = 1.0;             // kurze "Bereit"-Pause vor jedem Versuch
+
+// Torwart-Tuning (wenn DU der Torwart bist).
+const GK = {
+  speed: 1.35,        // Bewegungstempo (× Spielertempo) – direkter/flinker
+  diveSpeed: 980,     // Hecht-Geschwindigkeit
+  diveTime: 0.5,      // Dauer des Sprungs
+  diveReach: 46,      // zusätzlicher Fangradius WÄHREND des Sprungs
+  baseReach: 4,       // Fangradius im Stand (klein – man muss aktiv halten)
+  cooldown: 0.45,     // Pause bis zum nächsten Hechten
+};
 
 export function run(info) {
   return new Promise((resolve) => new Shootout(info, resolve).start());
@@ -99,22 +109,29 @@ class Shootout {
       const sh = input.consumeShoot && input.consumeShoot();
       if (sh && this.ball.owner === "att") this._shoot(this.att);
     } else {
-      this._moveWithInput(this.gk, input, dt, 1, true);
-      // Torwart-Hechten (Leertaste)
+      this._moveKeeper(this.gk, input, dt);
+      // Torwart-Hechten (Leertaste): kräftiger Sprung in Laufrichtung,
+      // sonst Richtung Ball. Während des Sprungs großer Fangradius.
       const sh = input.consumeShoot && input.consumeShoot();
-      if (sh && this.gk.cd <= 0) {
+      if (sh && this.gk.cd <= 0 && this.gk.dive <= 0) {
         const d = input.getDirection();
         const dx = (d.x || d.y) ? d.x : (this.ball.x - this.gk.x);
         const dy = (d.x || d.y) ? d.y : (this.ball.y - this.gk.y);
         const l = Math.hypot(dx, dy) || 1;
-        this.gk.vx = dx / l * 760; this.gk.vy = dy / l * 760;
-        this.gk.dive = 0.4; this.gk.cd = 1.0;
+        this.gk.vx = dx / l * GK.diveSpeed; this.gk.vy = dy / l * GK.diveSpeed;
+        this.gk.dive = GK.diveTime; this.gk.cd = GK.diveTime + GK.cooldown;
       }
       this._aiAttacker(dt);
     }
 
     if (this.gk.dive > 0) this.gk.dive -= dt;
     if (this.gk.cd > 0) this.gk.cd -= dt;
+    // Während des Hechtens trägt der Impuls und der Torwart bewegt sich frei.
+    if (this.gk.dive > 0 && !this.userAttacks) {
+      this.gk.x += this.gk.vx * dt; this.gk.y += this.gk.vy * dt;
+      this.gk.vx *= Math.max(0, 1 - 2.5 * dt); this.gk.vy *= Math.max(0, 1 - 2.5 * dt);
+      this._clamp(this.gk);
+    }
 
     this._physics(dt);
     this._checkOutcome();
@@ -127,6 +144,18 @@ class Shootout {
     e.vx += (d.x * max - e.vx) * Math.min(1, 1800 * dt / PLAYER.speed);
     e.vy += (d.y * max - e.vy) * Math.min(1, 1800 * dt / PLAYER.speed);
     if (d.x || d.y) { const l = Math.hypot(d.x, d.y); e.face = { x: d.x / l, y: d.y / l }; }
+  }
+
+  // Direktere Torwart-Steuerung: flink, kaum Trägheit (reagiert sofort).
+  _moveKeeper(e, input, dt) {
+    if (e.dive > 0) return; // während des Sprungs keine Eingabe-Steuerung
+    const d = input.getDirection();
+    const max = PLAYER.speed * GK.speed;
+    e.vx += (d.x * max - e.vx) * Math.min(1, 4200 * dt / PLAYER.speed);
+    e.vy += (d.y * max - e.vy) * Math.min(1, 4200 * dt / PLAYER.speed);
+    e.x += e.vx * dt; e.y += e.vy * dt;
+    if (d.x || d.y) { const l = Math.hypot(d.x, d.y); e.face = { x: d.x / l, y: d.y / l }; }
+    this._clamp(e);
   }
 
   _aiKeeper(dt) {
@@ -210,8 +239,16 @@ class Shootout {
   _checkOutcome() {
     const b = this.ball;
     const half = this.goalH / 2;
-    // Torwart fängt/pariert?
-    const gkReach = this.gk.r + (this.gk.dive > 0 ? 30 : 8) + b.r;
+    // Torwart fängt/pariert? Reichweite je nachdem, ob DU oder die KI im Tor steht.
+    let extra;
+    if (!this.userAttacks) {
+      // DU bist Torwart: im Stand kleiner Radius, beim Hechten groß -> aktiv halten.
+      extra = this.gk.dive > 0 ? GK.diveReach : GK.baseReach;
+    } else {
+      // KI-Torwart (du schießt): wie bisher.
+      extra = this.gk.dive > 0 ? 30 : 8;
+    }
+    const gkReach = this.gk.r + extra + b.r;
     if (Math.hypot(b.x - this.gk.x, b.y - this.gk.y) < gkReach) {
       this._endAttempt("save"); return;
     }
@@ -305,8 +342,10 @@ class Shootout {
     }
     if (this.phase !== "done") {
       ctx.fillStyle = "rgba(255,255,255,0.85)"; ctx.font = "13px sans-serif";
-      ctx.fillText(this.userAttacks ? "Bewegen + Leertaste/SCHUSS = schießen"
-        : "Bewegen + Leertaste/SCHUSS = hechten", w / 2, h - 18);
+      ctx.fillText(this.userAttacks
+        ? "Bewegen + Leertaste/SCHUSS = schießen"
+        : "Bewegen = im Tor stellen · Leertaste/SCHUSS = hechten (im richtigen Moment!)",
+        w / 2, h - 18);
     } else {
       ctx.fillStyle = "#fff"; ctx.font = "bold 26px sans-serif";
       ctx.fillText(this.message, w / 2, h / 2);

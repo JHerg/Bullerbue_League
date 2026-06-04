@@ -1,17 +1,17 @@
 // Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { DIFFICULTY, WORLD } from "./config.js?v=g2";
-import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js?v=g2";
-import { Input } from "./input.js?v=g2";
-import { Camera } from "./camera.js?v=g2";
-import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=g2";
-import { Match } from "./match.js?v=g2";
-import { render as render25 } from "./render2d5.js?v=g2";
-import * as season from "./seasonui.js?v=g2";
-import * as shootout1v1 from "./shootout1v1.js?v=g2";
-import * as commentary from "./commentary.js?v=g2";
-import * as tournament from "./tournamentui.js?v=g2";
+import { DIFFICULTY, WORLD } from "./config.js?v=h2";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js?v=h2";
+import { Input } from "./input.js?v=h2";
+import { Camera } from "./camera.js?v=h2";
+import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=h2";
+import { Match } from "./match.js?v=h2";
+import { render as render25 } from "./render2d5.js?v=h2";
+import * as season from "./seasonui.js?v=h2";
+import * as shootout1v1 from "./shootout1v1.js?v=h2";
+import * as commentary from "./commentary.js?v=h2";
+import * as tournament from "./tournamentui.js?v=h2";
 
 // Startet das spielbare 1vs1-Elfmeterschießen mit Canvas/Input-Anbindung.
 function run1v1(homeDef, awayDef, difficulty) {
