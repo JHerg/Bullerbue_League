@@ -249,6 +249,126 @@ export const NATION_OVERRIDES = {
     9:  { name: "Memphis Depay", number: 10 },
     10: { name: "Xavi Simons", number: 7 },
   },
+
+  // Italien (4-4-2)
+  n_ita: {
+    0:  { name: "Gianluigi Donnarumma", number: 1 },
+    1:  { name: "Federico Dimarco", number: 3 },
+    2:  { name: "Alessandro Bastoni", number: 23 },
+    3:  { name: "Riccardo Calafiori", number: 5 },
+    4:  { name: "Giovanni Di Lorenzo", number: 2 },
+    5:  { name: "Federico Chiesa", number: 14 },
+    6:  { name: "Nicolò Barella", number: 18 },
+    7:  { name: "Sandro Tonali", number: 8 },
+    8:  { name: "Davide Frattesi", number: 16 },
+    9:  { name: "Mateo Retegui", number: 9 },
+    10: { name: "Moise Kean", number: 19 },
+  },
+
+  // Belgien (4-2-3-1)
+  n_bel: {
+    0:  { name: "Koen Casteels", number: 1 },
+    1:  { name: "Maxim De Cuyper", number: 15 },
+    2:  { name: "Wout Faes", number: 4 },
+    3:  { name: "Zeno Debast", number: 3 },
+    4:  { name: "Timothy Castagne", number: 21 },
+    5:  { name: "Amadou Onana", number: 8 },
+    6:  { name: "Youri Tielemans", number: 17 },
+    7:  { name: "Jérémy Doku", number: 11 },
+    8:  { name: "Kevin De Bruyne", number: 7 },
+    9:  { name: "Leandro Trossard", number: 10 },
+    10: { name: "Romelu Lukaku", number: 9 },
+  },
+
+  // Kroatien (4-3-3)
+  n_cro: {
+    0:  { name: "Dominik Livaković", number: 1 },
+    1:  { name: "Borna Sosa", number: 19 },
+    2:  { name: "Joško Gvardiol", number: 20 },
+    3:  { name: "Josip Šutalo", number: 5 },
+    4:  { name: "Josip Stanišić", number: 2 },
+    5:  { name: "Luka Modrić", number: 10 },
+    6:  { name: "Marcelo Brozović", number: 11 },
+    7:  { name: "Mateo Kovačić", number: 8 },
+    8:  { name: "Ivan Perišić", number: 4 },
+    9:  { name: "Andrej Kramarić", number: 9 },
+    10: { name: "Mario Pašalić", number: 15 },
+  },
+
+  // Uruguay (4-4-2)
+  n_uru: {
+    0:  { name: "Sergio Rochet", number: 1 },
+    1:  { name: "Matías Viña", number: 17 },
+    2:  { name: "José María Giménez", number: 2 },
+    3:  { name: "Ronald Araújo", number: 4 },
+    4:  { name: "Nahitan Nández", number: 16 },
+    5:  { name: "Facundo Pellistri", number: 11 },
+    6:  { name: "Federico Valverde", number: 15 },
+    7:  { name: "Manuel Ugarte", number: 5 },
+    8:  { name: "Nicolás De La Cruz", number: 10 },
+    9:  { name: "Darwin Núñez", number: 19 },
+    10: { name: "Brian Rodríguez", number: 21 },
+  },
+
+  // USA (4-3-3)
+  n_usa: {
+    0:  { name: "Matt Turner", number: 1 },
+    1:  { name: "Antonee Robinson", number: 5 },
+    2:  { name: "Chris Richards", number: 3 },
+    3:  { name: "Tim Ream", number: 13 },
+    4:  { name: "Sergiño Dest", number: 2 },
+    5:  { name: "Tyler Adams", number: 4 },
+    6:  { name: "Weston McKennie", number: 8 },
+    7:  { name: "Yunus Musah", number: 6 },
+    8:  { name: "Christian Pulisic", number: 10 },
+    9:  { name: "Folarin Balogun", number: 20 },
+    10: { name: "Timothy Weah", number: 21 },
+  },
+
+  // Mexiko (4-3-3)
+  n_mex: {
+    0:  { name: "Luis Malagón", number: 1 },
+    1:  { name: "Jesús Gallardo", number: 23 },
+    2:  { name: "César Montes", number: 3 },
+    3:  { name: "Johan Vásquez", number: 15 },
+    4:  { name: "Jorge Sánchez", number: 19 },
+    5:  { name: "Edson Álvarez", number: 4 },
+    6:  { name: "Luis Chávez", number: 14 },
+    7:  { name: "Luis Romo", number: 6 },
+    8:  { name: "Hirving Lozano", number: 22 },
+    9:  { name: "Santiago Giménez", number: 9 },
+    10: { name: "Alexis Vega", number: 10 },
+  },
+
+  // Marokko (4-3-3)
+  n_mar: {
+    0:  { name: "Yassine Bounou", number: 1 },
+    1:  { name: "Adam Masina", number: 3 },
+    2:  { name: "Nayef Aguerd", number: 5 },
+    3:  { name: "Romain Saïss", number: 6 },
+    4:  { name: "Achraf Hakimi", number: 2 },
+    5:  { name: "Sofyan Amrabat", number: 4 },
+    6:  { name: "Azzedine Ounahi", number: 8 },
+    7:  { name: "Bilal El Khannouss", number: 15 },
+    8:  { name: "Sofiane Boufal", number: 10 },
+    9:  { name: "Youssef En-Nesyri", number: 19 },
+    10: { name: "Hakim Ziyech", number: 7 },
+  },
+
+  // Japan (4-2-3-1)
+  n_jpn: {
+    0:  { name: "Zion Suzuki", number: 1 },
+    1:  { name: "Hiroki Ito", number: 22 },
+    2:  { name: "Ko Itakura", number: 16 },
+    3:  { name: "Takehiro Tomiyasu", number: 5 },
+    4:  { name: "Yukinari Sugawara", number: 19 },
+    5:  { name: "Wataru Endo", number: 6 },
+    6:  { name: "Hidemasa Morita", number: 13 },
+    7:  { name: "Junya Ito", number: 14 },
+    8:  { name: "Takefusa Kubo", number: 11 },
+    9:  { name: "Kaoru Mitoma", number: 10 },
+    10: { name: "Ayase Ueda", number: 20 },
+  },
 };
 
 export const NATION_STARS = {
