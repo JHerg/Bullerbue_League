@@ -7,7 +7,7 @@
 //
 // ctx = { ball, difficulty, isChaser, isPossessor, teammates, opponents, dt }
 
-import { MARGIN, FIELD, GOAL, KICK } from "./config.js?v=w2";
+import { MARGIN, FIELD, GOAL, KICK } from "./config.js?v=x2";
 
 const FIELD_CX = MARGIN + FIELD.width / 2;
 const FIELD_CY = MARGIN + FIELD.height / 2;
@@ -106,8 +106,24 @@ export function computeAI(player, ctx) {
       return { dir: { x: 0, y: 0 }, kick: { dirX: aim.x, dirY: aim.y, power } };
     }
 
-    // Sonst Richtung Tor dribbeln (leicht zur Tormitte ziehen).
-    return { dir: steer(player, oppGoalX, goalY * 0.5 + player.y * 0.5), kick: null };
+    // Sonst Richtung Tor dribbeln (leicht zur Tormitte ziehen) und dabei dem
+    // nächsten Gegner ausweichen – so läuft der Ballführende nicht stur in die
+    // Deckung, sondern umkurvt sie.
+    let dir = steer(player, oppGoalX, goalY * 0.5 + player.y * 0.5);
+    let near = null, nd = Infinity;
+    for (const o of ctx.opponents) {
+      const d = Math.hypot(o.x - player.x, o.y - player.y);
+      if (d < nd) { nd = d; near = o; }
+    }
+    if (near && nd < 70) {
+      const ax = player.x - near.x, ay = player.y - near.y;
+      const al = Math.hypot(ax, ay) || 1;
+      const w = ((70 - nd) / 70) * 0.85;               // je näher, desto stärker ausweichen
+      dir = { x: dir.x + (ax / al) * w, y: dir.y + (ay / al) * w };
+      const dl = Math.hypot(dir.x, dir.y) || 1;
+      dir = { x: dir.x / dl, y: dir.y / dl };
+    }
+    return { dir, kick: null };
   }
 
   // -------- Ohne Ball: Ball erobern (designierter Jäger) --------

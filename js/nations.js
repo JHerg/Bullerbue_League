@@ -369,6 +369,128 @@ export const NATION_OVERRIDES = {
     9:  { name: "Kaoru Mitoma", number: 10 },
     10: { name: "Ayase Ueda", number: 20 },
   },
+
+  // --- Etappe 3: leicht "gefälschte" Namen (an echte angelehnt) ---
+
+  // Schweiz (4-2-3-1)
+  n_sui: {
+    0:  { name: "Yann Sommar", number: 1 },
+    1:  { name: "Ricardo Rodrigez", number: 13 },
+    2:  { name: "Manuel Akanjo", number: 5 },
+    3:  { name: "Nico Elvego", number: 4 },
+    4:  { name: "Silvan Widmar", number: 2 },
+    5:  { name: "Granit Xhalar", number: 10 },
+    6:  { name: "Remo Freular", number: 8 },
+    7:  { name: "Ruben Vargo", number: 17 },
+    8:  { name: "Xherdan Shaqiro", number: 23 },
+    9:  { name: "Dan Ndoy", number: 20 },
+    10: { name: "Breel Embolt", number: 7 },
+  },
+
+  // Dänemark (4-3-3)
+  n_den: {
+    0:  { name: "Kasper Schmeikel", number: 1 },
+    1:  { name: "Joakim Mähle", number: 5 },
+    2:  { name: "Andreas Christansen", number: 6 },
+    3:  { name: "Jannik Vestergard", number: 4 },
+    4:  { name: "Rasmus Kristensan", number: 2 },
+    5:  { name: "Pierre Höjberg", number: 23 },
+    6:  { name: "Morten Hjulmund", number: 7 },
+    7:  { name: "Christian Erikson", number: 10 },
+    8:  { name: "Mikkel Damsgard", number: 14 },
+    9:  { name: "Rasmus Highlund", number: 9 },
+    10: { name: "Andreas Skov Olson", number: 11 },
+  },
+
+  // Serbien (4-2-3-1)
+  n_ser: {
+    0:  { name: "Vanja Milinko", number: 1 },
+    1:  { name: "Filip Mladenov", number: 3 },
+    2:  { name: "Nikola Milenko", number: 15 },
+    3:  { name: "Strahinja Pavlov", number: 4 },
+    4:  { name: "Nemanja Stojic", number: 22 },
+    5:  { name: "Sergej Milinkov", number: 20 },
+    6:  { name: "Nemanja Gudel", number: 18 },
+    7:  { name: "Dusan Tadic", number: 10 },
+    8:  { name: "Filip Kostic", number: 11 },
+    9:  { name: "Lazar Samardzic", number: 16 },
+    10: { name: "Aleksandar Mitrov", number: 9 },
+  },
+
+  // Polen (4-4-2)
+  n_pol: {
+    0:  { name: "Wojciech Szczesny", number: 1 },
+    1:  { name: "Bartosz Bereszinski", number: 20 },
+    2:  { name: "Jan Bednarski", number: 5 },
+    3:  { name: "Jakub Kiwor", number: 15 },
+    4:  { name: "Tomasz Kendziora", number: 2 },
+    5:  { name: "Nicola Zalewki", number: 21 },
+    6:  { name: "Piotr Zielinsky", number: 10 },
+    7:  { name: "Sebastian Szymansky", number: 8 },
+    8:  { name: "Przemek Frankov", number: 11 },
+    9:  { name: "Robert Lewandov", number: 9 },
+    10: { name: "Krzysztof Piontek", number: 23 },
+  },
+
+  // Norwegen (4-3-3)
+  n_nor: {
+    0:  { name: "Örjan Nylan", number: 1 },
+    1:  { name: "Fredrik Bjorkan", number: 3 },
+    2:  { name: "Leo Ostigard", number: 6 },
+    3:  { name: "Kristoffer Ajar", number: 5 },
+    4:  { name: "Julian Ryarson", number: 2 },
+    5:  { name: "Martin Ödegard", number: 20 },
+    6:  { name: "Sander Berge", number: 15 },
+    7:  { name: "Patrick Bergmann", number: 18 },
+    8:  { name: "Antonio Nusca", number: 23 },
+    9:  { name: "Erling Holund", number: 9 },
+    10: { name: "Alexander Soerlot", number: 11 },
+  },
+
+  // Senegal (4-3-3)
+  n_sen: {
+    0:  { name: "Edouard Mendi", number: 16 },
+    1:  { name: "Ismail Jakob", number: 12 },
+    2:  { name: "Kalidou Kulibali", number: 3 },
+    3:  { name: "Abdou Diallon", number: 22 },
+    4:  { name: "Youssouf Sabali", number: 21 },
+    5:  { name: "Idrissa Guey", number: 5 },
+    6:  { name: "Pape Sarro", number: 17 },
+    7:  { name: "Lamine Camaro", number: 6 },
+    8:  { name: "Sadio Maneh", number: 10 },
+    9:  { name: "Nicolas Jacksen", number: 9 },
+    10: { name: "Ismaila Sarre", number: 18 },
+  },
+
+  // Südkorea (4-4-2)
+  n_kor: {
+    0:  { name: "Kim Sung-gyun", number: 1 },
+    1:  { name: "Kim Jin-soo", number: 3 },
+    2:  { name: "Kim Min-jee", number: 4 },
+    3:  { name: "Kim Young-gwan", number: 19 },
+    4:  { name: "Kim Moon-hwa", number: 13 },
+    5:  { name: "Son Heung-mun", number: 7 },
+    6:  { name: "Hwang In-bom", number: 6 },
+    7:  { name: "Lee Jae-song", number: 17 },
+    8:  { name: "Hwang Hee-chang", number: 11 },
+    9:  { name: "Cho Gue-song", number: 9 },
+    10: { name: "Oh Hyeon-gyun", number: 18 },
+  },
+
+  // Türkei (4-2-3-1)
+  n_tur: {
+    0:  { name: "Ugurcan Cakar", number: 1 },
+    1:  { name: "Ferdi Kadioglan", number: 14 },
+    2:  { name: "Merih Demir", number: 3 },
+    3:  { name: "Abdulkerim Bardak", number: 4 },
+    4:  { name: "Zeki Celiko", number: 2 },
+    5:  { name: "Hakan Calhan", number: 10 },
+    6:  { name: "Salih Ozcan", number: 6 },
+    7:  { name: "Arda Gülan", number: 8 },
+    8:  { name: "Kenan Yildez", number: 19 },
+    9:  { name: "Kerem Akturko", number: 7 },
+    10: { name: "Baris Alper", number: 17 },
+  },
 };
 
 export const NATION_STARS = {

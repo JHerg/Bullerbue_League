@@ -8,7 +8,7 @@
 </head>
 <body>
   <!-- Zurück zum Hauptspiel -->
-  <a id="back-link" href="index.html?v=w2">← klassische Ansicht</a>
+  <a id="back-link" href="index.html?v=x2">← klassische Ansicht</a>
 
   <!-- Rote Startseite: Begrüßung, Login/Gast/Neu, Wahl WM oder Bullileague -->
   <div id="start">
@@ -99,6 +99,20 @@
     </div>
   </div>
 
+  <!-- Mannschaftseinlauf / Aufstellung (vor dem Anpfiff) -->
+  <div id="lineup" class="hidden">
+    <div id="lineup-card">
+      <div id="lineup-stage"></div>
+      <div id="lineup-title">Mannschaftseinlauf</div>
+      <div id="lineup-teams">
+        <div class="lu-col" id="lu-home"></div>
+        <div class="lu-col" id="lu-away"></div>
+      </div>
+      <div id="lineup-refs"></div>
+      <button id="lineup-skip">Anpfiff! ▶</button>
+    </div>
+  </div>
+
   <!-- In-Match: Menü-Knopf + Pause-Menü -->
   <button id="ingame-btn" class="hidden">≡</button>
   <div id="ingame-menu" class="hidden">
@@ -172,9 +186,9 @@
         <button id="btn-switch" class="secondary">🔁 Wettbewerb wechseln</button>
         <button id="btn-home" class="secondary">🏠 Startseite</button>
       </div>
-      <a class="proto-link" href="index.html?v=w2">↩ zurück zur klassischen 2D-Ansicht</a>
+      <a class="proto-link" href="index.html?v=x2">↩ zurück zur klassischen 2D-Ansicht</a>
       <p class="hint">2.5D-Ansicht mit Zuschauern · gleiche Steuerung wie im Hauptspiel<br>PC: WASD/Pfeile · Leertaste = Schuss · F = Pass/Grätsche/Wechsel</p>
-      <p class="version">Build 2026-05-30-w2 · Echte Kader Etappe 2 (16 Nationen)</p>
+      <p class="version">Build 2026-05-30-x2 · Einlauf-Zeremonie + WM-Kommentator + Kader Etappe 3</p>
     </div>
   </div>
 
@@ -190,6 +204,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/proto.js?v=w2"></script>
+  <script type="module" src="js/proto.js?v=x2"></script>
 </body>
 </html>

@@ -57,11 +57,38 @@ let prevHalf = 1;
 let lastTalk = 0;       // Zeitstempel letzter Flavor-Kommentar
 let lastOwnerTalk = 0;
 let prevFinished = false;
+let introDone = false;  // Einlauf/Begrüßung schon gesprochen?
+
+// Kontext: WM-Modus + Phasen-Bezeichnung (z. B. "Gruppe B", "Achtelfinale").
+let ctxWM = false;
+let stageLabel = "";
+export function setContext({ wm = false, stage = "" } = {}) {
+  ctxWM = !!wm; stageLabel = stage || "";
+}
 
 export function reset() {
   started = false; prevGoals = 0; prevMessage = ""; prevOwner = null;
   prevHalf = 1; lastTalk = 0; lastOwnerTalk = 0; prevFinished = false;
+  introDone = false;
   if (typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
+}
+
+// Mannschaftseinlauf / Aufstellung: wird VOR dem Anpfiff gesprochen.
+export function entrance(home, away) {
+  if (!enabled) return;
+  introDone = true;
+  const stage = stageLabel ? ` ${stageLabel}` : "";
+  const line = ctxWM
+    ? pick([
+        `Weltmeisterschaft!${stage ? " " + stageLabel + "." : ""} Die Mannschaften betreten den Rasen: ${home.name} gegen ${away.name}. Hören Sie die Hymnen, spüren Sie die Spannung!`,
+        `Bühne frei bei der WM: ${home.name} empfängt ${away.name}.${stage} Die Teams laufen ein, das ganze Stadion ist auf den Beinen!`,
+        `Ein großer Tag bei der Weltmeisterschaft. ${home.name} und ${away.name} kommen aus dem Spielertunnel.${stage}`,
+      ])
+    : pick([
+        `Die Mannschaften laufen ein: ${home.name} gegen ${away.name}. Gleich geht es los!`,
+        `Willkommen! Die Teams ${home.name} und ${away.name} betreten den Platz.`,
+      ]);
+  say(line, { priority: true });
 }
 
 // Pro Frame aufrufen. now = performance.now() in ms.
@@ -74,7 +101,13 @@ export function update(match, now) {
     started = true;
     prevGoals = match.goals.length;
     prevMessage = match.message;
-    say(`Herzlich willkommen zum Spiel zwischen ${h.name} und ${a.name}! Der Ball rollt.`, { priority: true });
+    // Wurde der Einlauf schon kommentiert, hier nur kurzer Anpfiff-Satz.
+    const line = introDone
+      ? pick(["Anpfiff! Der Ball rollt.", "Es geht los — Anpfiff!", "Und der Schiedsrichter gibt das Spiel frei!"])
+      : (ctxWM
+          ? `Herzlich willkommen zur Weltmeisterschaft! ${h.name} gegen ${a.name}. Der Ball rollt.`
+          : `Herzlich willkommen zum Spiel zwischen ${h.name} und ${a.name}! Der Ball rollt.`);
+    say(line, { priority: true });
     lastTalk = now;
     return;
   }

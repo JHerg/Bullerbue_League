@@ -94,6 +94,18 @@ export function play(kind) {
     case "whistleEnd":   whistle(true); setTimeout(() => crowdCheer(true), 200); break;
     case "miss":   tone({ freq: 200, type: "sine", dur: 0.2, gain: 0.2, slideTo: 140 }); break;
     case "click":  tone({ freq: 660, type: "sine", dur: 0.05, gain: 0.2 }); break;
+    case "anthem": {  // kurze feierliche Fanfare beim Mannschaftseinlauf
+      const mel = [392, 523, 659, 784, 784, 659, 698, 784, 1047];
+      const durs = [0.30, 0.30, 0.30, 0.45, 0.30, 0.30, 0.30, 0.30, 0.70];
+      let d = 0;
+      for (let i = 0; i < mel.length; i++) {
+        tone({ freq: mel[i], type: "sawtooth", dur: durs[i] * 0.95, gain: 0.22, delay: d });
+        tone({ freq: mel[i] / 2, type: "triangle", dur: durs[i] * 0.95, gain: 0.10, delay: d });
+        d += durs[i];
+      }
+      crowdCheer(false);
+      break;
+    }
     default: break;
   }
 }

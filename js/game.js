@@ -1,20 +1,20 @@
 // Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { DIFFICULTY, WORLD } from "./config.js?v=w2";
-import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast, setCompetition, getCompetition } from "./teams.js?v=w2";
-import { Input } from "./input.js?v=w2";
-import { Camera } from "./camera.js?v=w2";
-import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=w2";
-import { Match } from "./match.js?v=w2";
-import { render as render25 } from "./render2d5.js?v=w2";
-import * as season from "./seasonui.js?v=w2";
-import * as shootout1v1 from "./shootout1v1.js?v=w2";
-import * as commentary from "./commentary.js?v=w2";
-import * as tournament from "./tournamentui.js?v=w2";
-import * as sound from "./sound.js?v=w2";
-import * as achievements from "./achievements.js?v=w2";
-import * as startpage from "./startpage.js?v=w2";
+import { DIFFICULTY, WORLD } from "./config.js?v=x2";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast, setCompetition, getCompetition } from "./teams.js?v=x2";
+import { Input } from "./input.js?v=x2";
+import { Camera } from "./camera.js?v=x2";
+import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=x2";
+import { Match } from "./match.js?v=x2";
+import { render as render25 } from "./render2d5.js?v=x2";
+import * as season from "./seasonui.js?v=x2";
+import * as shootout1v1 from "./shootout1v1.js?v=x2";
+import * as commentary from "./commentary.js?v=x2";
+import * as tournament from "./tournamentui.js?v=x2";
+import * as sound from "./sound.js?v=x2";
+import * as achievements from "./achievements.js?v=x2";
+import * as startpage from "./startpage.js?v=x2";
 
 // Startet das spielbare 1vs1-Elfmeterschießen mit Canvas/Input-Anbindung.
 function run1v1(homeDef, awayDef, difficulty) {
@@ -336,18 +336,85 @@ function runMatch(homeDef, awayDef, opts) {
     matchResolve = resolve;
     resultShown = false;
     penaltiesStarted = false;
-    match = new Match(homeDef, awayDef, opts);
-    commentary.reset();
-    resetSound();
     menuEl.classList.add("hidden");
     hubEl.classList.add("hidden");
     resultEl.classList.add("hidden");
-    scoreboardEl.classList.remove("hidden");
-    document.getElementById("sb-home").textContent = homeDef.short;
-    document.getElementById("sb-away").textContent = awayDef.short;
-    closeIngameMenu();                       // sicher: nicht pausiert starten
-    ingameBtn?.classList.remove("hidden");   // Pausen-/Menü-Knopf einblenden
+
+    commentary.reset();
+    commentary.setContext({ wm: getCompetition() === "wm" });
+    resetSound();
+
+    // Eigentlicher Anpfiff (nach der Einlauf-Zeremonie).
+    const begin = () => {
+      match = new Match(homeDef, awayDef, opts);
+      scoreboardEl.classList.remove("hidden");
+      document.getElementById("sb-home").textContent = homeDef.short;
+      document.getElementById("sb-away").textContent = awayDef.short;
+      closeIngameMenu();                       // sicher: nicht pausiert starten
+      ingameBtn?.classList.remove("hidden");   // Pausen-/Menü-Knopf einblenden
+    };
+
+    // Hallenspiele ohne Zeremonie; sonst Mannschaftseinlauf zeigen.
+    if (opts && opts.indoor) begin();
+    else runLineupCeremony(homeDef, awayDef, getCompetition() === "wm", begin);
   });
+}
+
+// --------------------------------------------------------------------------
+// Mannschaftseinlauf / Aufstellung vor dem Anpfiff (überspringbar).
+// Spieler erscheinen nacheinander, Schiri/Linienrichter, kurze Hymne, der
+// Kommentator sagt etwas dazu – dann geht's mit "Anpfiff!" aufs Feld.
+// --------------------------------------------------------------------------
+const REF_NAMES = ["Daniel Schwarz", "Marco Klein", "Jonas Roth", "Tim Berger", "Lukas Frei", "Pavel Horak", "Sven Adler"];
+let ceremonyTimer = null;
+
+function runLineupCeremony(homeDef, awayDef, isWM, onDone) {
+  const el = document.getElementById("lineup");
+  if (!el) { onDone(); return; }
+
+  const stageEl = document.getElementById("lineup-stage");
+  const homeCol = document.getElementById("lu-home");
+  const awayCol = document.getElementById("lu-away");
+  const refsEl = document.getElementById("lineup-refs");
+  const skipBtn = document.getElementById("lineup-skip");
+
+  stageEl.textContent = isWM ? "🌍 WM 2026" : "";
+
+  // Eine Mannschaftsspalte aus dem Kader bauen; Spieler erscheinen gestaffelt.
+  const buildCol = (def, startDelay) => {
+    const squad = buildSquad(def, true);
+    const items = squad.map((p, i) =>
+      `<li style="animation-delay:${(startDelay + i * 0.12).toFixed(2)}s">` +
+      `<span class="lu-num">#${p.number}</span>${p.name}</li>`).join("");
+    return `<div class="lu-team" style="border-left-color:${def.colors[0]}">` +
+      `<div class="lu-tn">${def.name}</div><div class="lu-form">${def.formation}</div></div>` +
+      `<ol class="lu-players">${items}</ol>`;
+  };
+  homeCol.innerHTML = buildCol(homeDef, 0.1);
+  awayCol.innerHTML = buildCol(awayDef, 0.2);
+
+  // Offizielle (erfunden), deterministisch aus den Teams gewählt.
+  const seed = (homeDef.short.charCodeAt(0) + awayDef.short.charCodeAt(0));
+  const ref = REF_NAMES[seed % REF_NAMES.length];
+  const lr1 = REF_NAMES[(seed + 2) % REF_NAMES.length];
+  const lr2 = REF_NAMES[(seed + 4) % REF_NAMES.length];
+  const fourth = REF_NAMES[(seed + 6) % REF_NAMES.length];
+  refsEl.innerHTML = `<b>Schiedsrichter:</b> ${ref}<br>` +
+    `<b>Linienrichter:</b> ${lr1} &amp; ${lr2} &nbsp;·&nbsp; <b>4. Offizieller:</b> ${fourth}`;
+  refsEl.style.animationDelay = "1.6s";
+
+  el.classList.remove("hidden");
+  sound.play("anthem");                 // kurze Hymne
+  commentary.entrance(homeDef, awayDef); // Kommentator zum Einlauf
+
+  const proceed = () => {
+    if (ceremonyTimer) { clearTimeout(ceremonyTimer); ceremonyTimer = null; }
+    skipBtn.onclick = null;
+    el.classList.add("hidden");
+    onDone();
+  };
+  skipBtn.onclick = proceed;
+  ceremonyTimer = setTimeout(proceed, 7000);  // läuft sonst automatisch los
 }
 
 // Hallenturnier-Match: 3 gegen 3, kein Torwart, Banden, 3×30 s.

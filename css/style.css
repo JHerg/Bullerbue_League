@@ -718,3 +718,64 @@ table.standings tr.cl td:first-child { color: #4caf50; }
   color: #fff;
   border: 1px solid rgba(255, 255, 255, 0.28);
 }
+
+/* --------------------------------------------------------------------------
+   Mannschaftseinlauf / Aufstellung vor dem Anpfiff
+   -------------------------------------------------------------------------- */
+#lineup {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 25%, #0b3d0b, #062406 75%);
+  padding: 16px;
+  overflow-y: auto;
+}
+#lineup-card {
+  width: min(560px, 100%);
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  padding: 18px 18px 16px;
+  color: #fff;
+  text-align: center;
+}
+#lineup-stage { font-size: 13px; font-weight: 700; letter-spacing: .06em; opacity: .85; min-height: 16px; }
+#lineup-title {
+  font-size: 22px; font-weight: 800; margin: 2px 0 12px;
+}
+#lineup-title::after { content: " 🎵"; }
+#lineup-teams { display: flex; gap: 12px; text-align: left; }
+.lu-col { flex: 1; min-width: 0; }
+.lu-team {
+  border-left: 5px solid #fff;
+  padding: 2px 0 4px 8px;
+  margin-bottom: 6px;
+}
+.lu-team .lu-tn { font-weight: 800; font-size: 15px; }
+.lu-team .lu-form { font-size: 11px; opacity: .7; }
+.lu-players { list-style: none; margin: 0; padding: 0; }
+.lu-players li {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12.5px; padding: 2px 0;
+  opacity: 0;
+  animation: luIn .35s ease forwards;
+}
+.lu-players .lu-num {
+  display: inline-block; min-width: 22px; text-align: center;
+  font-size: 11px; font-weight: 800; color: #ffca28;
+}
+#lineup-refs {
+  margin-top: 10px; font-size: 11.5px; opacity: .8; line-height: 1.5;
+  border-top: 1px solid rgba(255,255,255,.15); padding-top: 8px;
+  opacity: 0; animation: luIn .4s ease forwards;
+}
+#lineup-skip {
+  margin-top: 14px; width: 100%; padding: 13px; border: none; border-radius: 10px;
+  background: #ffca28; color: #1b3a1b; font-weight: 800; font-size: 16px; cursor: pointer;
+}
+#lineup-skip:active { transform: translateY(1px); }
+@keyframes luIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
+@media (max-width: 380px) { .lu-players li { font-size: 11.5px; } #lineup-title { font-size: 19px; } }
