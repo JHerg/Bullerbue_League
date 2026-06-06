@@ -5,7 +5,8 @@
 // 1 = gegnerisches Tor / y: 0 = oben, 1 = unten) und werden im Spiel auf
 // Welt-Koordinaten und Angriffsrichtung umgerechnet.
 
-import { MARGIN, FIELD } from "./config.js?v=o2";
+import { MARGIN, FIELD } from "./config.js?v=p2";
+import { NATION_TEAMS, NATION_RATINGS } from "./nations.js?v=p2";
 
 // ---------------------------------------------------------------------------
 // Formations-Vorlagen
@@ -56,7 +57,7 @@ export const FORMATIONS = {
 // Die 18 Teams (Fake-Namen, angelehnt an die Bundesliga inkl. Paderborn,
 // Elversberg und Schalke). Farben: [Trikot, Kontur].
 // ---------------------------------------------------------------------------
-export const TEAMS = [
+const BL_TEAMS = [
   { id: "bav", name: "Bavaria München",      short: "BAV", colors: ["#d32f2f", "#ffffff"], formation: "4-2-3-1" },
   { id: "dor", name: "Borussia Dortmunder",  short: "DOR", colors: ["#ffd600", "#111111"], formation: "4-3-3" },
   { id: "lai", name: "RB Laibzig",           short: "LAI", colors: ["#e53935", "#0b3d91"], formation: "4-2-3-1" },
@@ -79,11 +80,28 @@ export const TEAMS = [
 
 // Team-Stärke (für die Schnell-Simulation nicht gespielter Partien),
 // angelehnt an die reale Hierarchie.
-export const RATINGS = {
+const BL_RATINGS = {
   bav: 90, lev: 86, dor: 85, lai: 84, stu: 81, fra: 80, fre: 78, wob: 76,
   hof: 76, bmg: 75, wer: 75, uni: 74, mai: 73, aug: 72, koe: 71, sch: 70,
   pad: 68, elv: 67,
 };
+
+// ---------------------------------------------------------------------------
+// Wettbewerb umschalten: "bundesliga" (Vereine) oder "wm" (Nationen WM26).
+// TEAMS/RATINGS sind live bindings (let), damit alle Funktionen hier und
+// importierende Module nach dem Umschalten den aktiven Datensatz sehen.
+// ---------------------------------------------------------------------------
+export let TEAMS = BL_TEAMS;
+export let RATINGS = BL_RATINGS;
+let competition = "bundesliga";
+
+export function setCompetition(which) {
+  competition = which === "wm" ? "wm" : "bundesliga";
+  if (competition === "wm") { TEAMS = NATION_TEAMS; RATINGS = NATION_RATINGS; }
+  else { TEAMS = BL_TEAMS; RATINGS = BL_RATINGS; }
+  return competition;
+}
+export function getCompetition() { return competition; }
 
 export function ratingOf(id) {
   return RATINGS[id] ?? 74;
@@ -428,7 +446,9 @@ const SQUAD_OVERRIDES = {
 export function buildSquad(team, attackRight) {
   const formation = FORMATIONS[team.formation];
   const seed = hash(team.id);
-  const overrides = SQUAD_OVERRIDES[team.id] || {};
+  // Manuelle Kader-Overrides gibt es nur für die Bundesliga-Vereine; die
+  // WM-Nationen bekommen rein generierte Fake-Namen.
+  const overrides = competition === "bundesliga" ? (SQUAD_OVERRIDES[team.id] || {}) : {};
 
   return formation.map((slot, i) => {
     const fn = FIRST_NAMES[(seed + i * 7) % FIRST_NAMES.length];

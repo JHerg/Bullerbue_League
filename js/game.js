@@ -1,19 +1,20 @@
 // Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { DIFFICULTY, WORLD } from "./config.js?v=o2";
-import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast } from "./teams.js?v=o2";
-import { Input } from "./input.js?v=o2";
-import { Camera } from "./camera.js?v=o2";
-import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=o2";
-import { Match } from "./match.js?v=o2";
-import { render as render25 } from "./render2d5.js?v=o2";
-import * as season from "./seasonui.js?v=o2";
-import * as shootout1v1 from "./shootout1v1.js?v=o2";
-import * as commentary from "./commentary.js?v=o2";
-import * as tournament from "./tournamentui.js?v=o2";
-import * as sound from "./sound.js?v=o2";
-import * as achievements from "./achievements.js?v=o2";
+import { DIFFICULTY, WORLD } from "./config.js?v=p2";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast, setCompetition, getCompetition } from "./teams.js?v=p2";
+import { Input } from "./input.js?v=p2";
+import { Camera } from "./camera.js?v=p2";
+import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=p2";
+import { Match } from "./match.js?v=p2";
+import { render as render25 } from "./render2d5.js?v=p2";
+import * as season from "./seasonui.js?v=p2";
+import * as shootout1v1 from "./shootout1v1.js?v=p2";
+import * as commentary from "./commentary.js?v=p2";
+import * as tournament from "./tournamentui.js?v=p2";
+import * as sound from "./sound.js?v=p2";
+import * as achievements from "./achievements.js?v=p2";
+import * as startpage from "./startpage.js?v=p2";
 
 // Startet das spielbare 1vs1-Elfmeterschießen mit Canvas/Input-Anbindung.
 function run1v1(homeDef, awayDef, difficulty) {
@@ -77,23 +78,29 @@ const scoreboardEl = document.getElementById("scoreboard");
 const hubEl = document.getElementById("hub");
 const resultEl = document.getElementById("result");
 
-for (const t of TEAMS) {
-  selHome.add(new Option(t.name, t.id));
-  selAway.add(new Option(t.name, t.id));
+// Team-Auswahllisten aus dem aktiven Datensatz (Bundesliga oder WM) füllen.
+function populateTeamSelects() {
+  selHome.innerHTML = "";
+  selAway.innerHTML = "";
+  for (const t of TEAMS) {
+    selHome.add(new Option(t.name, t.id));
+    selAway.add(new Option(t.name, t.id));
+  }
+  selHome.value = TEAMS[0].id;
+  selAway.value = TEAMS[1].id;
+  refreshPlayerList();
 }
-selHome.value = "bav";
-selAway.value = "dor";
 
 // Spielerliste fürs Einzelspieler-Menü passend zum (Heim-/Dein) Team füllen.
 function refreshPlayerList() {
   const def = teamById(selHome.value);
   selPlayer.innerHTML = "";
+  if (!def) return;            // noch kein Team gewählt (vor der Startseite)
   buildSquad(def, true).forEach((p, i) => {
     selPlayer.add(new Option(`#${p.number} ${p.name} (${p.role})`, String(i)));
   });
   selPlayer.value = "9";
 }
-refreshPlayerList();
 selHome.addEventListener("change", refreshPlayerList);
 
 selMode.addEventListener("change", () => {
@@ -129,6 +136,34 @@ function updateTypeUI() {
 }
 selType.addEventListener("change", updateTypeUI);
 updateTypeUI();
+
+// --------------------------------------------------------------------------
+// Rote Startseite: Begrüßung -> Login/Gast/Neu -> Wahl WM oder Bullileague.
+// Das eigentliche Menü bleibt verborgen, bis ein Wettbewerb gewählt wurde.
+// --------------------------------------------------------------------------
+const menuTitle = menuEl.querySelector("h1");
+const menuTitleOrig = menuTitle ? menuTitle.innerHTML : "";
+const optLiga = selType.querySelector('option[value="liga"]');
+const optLigaOrig = optLiga ? optLiga.textContent : "";
+
+function applyCompetitionUI(comp) {
+  const isWM = comp === "wm";
+  if (menuTitle) menuTitle.innerHTML = isWM
+    ? 'WM 2026 🌍 <span style="font-size:14px;opacity:.7">Bullerbue League</span>'
+    : menuTitleOrig;
+  if (optLiga) optLiga.textContent = isWM ? `WM-Liga (${TEAMS.length} Teams)` : optLigaOrig;
+}
+
+menuEl.classList.add("hidden");
+startpage.init({
+  onChoose(comp) {
+    setCompetition(comp);
+    populateTeamSelects();
+    applyCompetitionUI(comp);
+    menuEl.classList.remove("hidden");
+    updateTypeUI();
+  },
+});
 
 function getMatchOptions() {
   const playerIdx = parseInt(selPlayer.value, 10);
