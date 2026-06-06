@@ -329,6 +329,17 @@ function drawPlayer(ctx, project, p, highlighted, dtMs) {
 
   ctx.lineCap = "round"; ctx.lineJoin = "round";
 
+  // [ANIM] Torwart-Hechten: Figur in Flugrichtung kippen
+  let restoreDive = false;
+  if (diving) {
+    const ang = (p.vx >= 0 ? 1 : -1) * Math.min(1, Math.abs(p.vx) / 500) * 1.0; // bis ~57°
+    ctx.save();
+    ctx.translate(sx, sy - H * 0.45);
+    ctx.rotate(ang * 0.6);
+    ctx.translate(-sx, -(sy - H * 0.45));
+    restoreDive = true;
+  }
+
   // Schatten + Auswahlring
   ctx.beginPath(); ctx.fillStyle = "rgba(0,0,0,0.28)";
   ctx.ellipse(sx, footY, H * 0.24, H * 0.09, 0, 0, Math.PI * 2); ctx.fill();
@@ -354,6 +365,8 @@ function drawPlayer(ctx, project, p, highlighted, dtMs) {
 
   // Kopf
   drawHead(ctx, headX, headY, H, a);
+
+  if (restoreDive) ctx.restore();   // [ANIM] Hecht-Rotation zurücknehmen
 }
 
 function legPose(hipX, hipY, dir, phase, amp, L1, L2) {
