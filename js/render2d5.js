@@ -20,6 +20,42 @@ const GK_KIT = ["#00e676", "#063d20"];
 const phases = new WeakMap();
 const attrs = new WeakMap();
 const spins = new WeakMap();
+const poses = new WeakMap();   // [ANIM] {state, t, prevSpeed, kickLeg} pro Spieler
+
+// [ANIM] Schwellen fürs Ableiten der Posen aus der Bewegung
+const ANIM = {
+  lungeSpeed: 360,     // ab diesem Tempo (px/s) = Grätsche/Lunge (USER.lunge≈540, Lauf≈235)
+  kickJerk:   900,     // Tempo-Änderung/s, die als "Tritt" zählt
+  kickDur:    0.30,    // Sekunden, wie lange die Kick-Pose sichtbar ist
+  tackleDur:  0.40,
+};
+
+function poseFor(p, dtMs) {
+  let q = poses.get(p);
+  if (!q) { q = { state: "none", t: 0, prevSpeed: 0, kickLeg: 0 }; poses.set(p, q); }
+  const dt = Math.max(0.001, dtMs / 1000);
+  const speed = Math.hypot(p.vx, p.vy);
+  const accel = (speed - q.prevSpeed) / dt;   // + = beschleunigt, - = bremst abrupt
+  q.prevSpeed = speed;
+
+  // laufende Pose herunterzählen
+  if (q.t > 0) { q.t -= dt; if (q.t <= 0) { q.t = 0; q.state = "none"; } }
+
+  // Torwart-Hechten hat Vorrang
+  if (p.isDiving) { q.state = "dive"; q.t = 0.001; return q; }
+
+  // Grätsche/Lunge: deutlich über Lauftempo
+  if (speed > ANIM.lungeSpeed) {
+    if (q.state !== "tackle") { q.state = "tackle"; q.t = ANIM.tackleDur; }
+    return q;
+  }
+
+  // Schuss/Tritt: starker Ruck (Ausholen→Treffen) bei nicht zu hohem Tempo
+  if (q.state === "none" && Math.abs(accel) > ANIM.kickJerk && speed < ANIM.lungeSpeed) {
+    q.state = "kick"; q.t = ANIM.kickDur; q.kickLeg = Math.random() < 0.5 ? 0 : 1;
+  }
+  return q;
+}
 
 function hash(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
 function shade(hex, f) {
