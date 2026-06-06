@@ -272,7 +272,7 @@ function drawPlayer(ctx, project, p, highlighted, dtMs) {
   const bobDamp = (kicking || tackling) ? 0.3 : 1;
   const bob = (-0.5 + 0.5 * Math.cos(2 * ph)) * stride * H * 0.06 * bobDamp;
   const breathe = Math.sin(ph * 0.6) * (1 - stride) * H * 0.012;
-  const lean = dir * stride * H * 0.12;
+  const lean = dir * stride * H * 0.12 + (kicking ? dir * H * 0.10 * Math.sin(kickP * Math.PI) : 0);
 
   const footY = sy;
   const hipX = sx, hipY = sy - H * 0.50 + bob + breathe;
@@ -343,6 +343,16 @@ function drawPlayer(ctx, project, p, highlighted, dtMs) {
   // Schatten + Auswahlring
   ctx.beginPath(); ctx.fillStyle = "rgba(0,0,0,0.28)";
   ctx.ellipse(sx, footY, H * 0.24, H * 0.09, 0, 0, Math.PI * 2); ctx.fill();
+
+  // [ANIM] Staubwölkchen bei der Grätsche
+  if (tackling) {
+    ctx.fillStyle = "rgba(220,220,200,0.35)";
+    for (let i = 0; i < 4; i++) {
+      const dx = dir * (8 + i * 5) * f, dy = -i * 2;
+      ctx.beginPath(); ctx.arc(sx + dx, footY + dy, (3 + i) * f, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+
   if (highlighted) {
     ctx.beginPath(); ctx.strokeStyle = "#ffeb3b"; ctx.lineWidth = Math.max(2, H * 0.06);
     ctx.ellipse(sx, footY, H * 0.30, H * 0.12, 0, 0, Math.PI * 2); ctx.stroke();
