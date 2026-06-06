@@ -5,8 +5,8 @@
 // 1 = gegnerisches Tor / y: 0 = oben, 1 = unten) und werden im Spiel auf
 // Welt-Koordinaten und Angriffsrichtung umgerechnet.
 
-import { MARGIN, FIELD } from "./config.js?v=p2";
-import { NATION_TEAMS, NATION_RATINGS } from "./nations.js?v=p2";
+import { MARGIN, FIELD } from "./config.js?v=q2";
+import { NATION_TEAMS, NATION_RATINGS, NAME_POOLS, NATION_STARS } from "./nations.js?v=q2";
 
 // ---------------------------------------------------------------------------
 // Formations-Vorlagen
@@ -446,13 +446,17 @@ const SQUAD_OVERRIDES = {
 export function buildSquad(team, attackRight) {
   const formation = FORMATIONS[team.formation];
   const seed = hash(team.id);
+  const isWM = competition === "wm";
   // Manuelle Kader-Overrides gibt es nur für die Bundesliga-Vereine; die
-  // WM-Nationen bekommen rein generierte Fake-Namen.
-  const overrides = competition === "bundesliga" ? (SQUAD_OVERRIDES[team.id] || {}) : {};
+  // WM-Nationen bekommen generierte Fake-Namen aus einem Regions-Pool.
+  const overrides = isWM ? {} : (SQUAD_OVERRIDES[team.id] || {});
+  const pool = (isWM && team.style && NAME_POOLS[team.style]) ? NAME_POOLS[team.style] : null;
+  const firsts = pool ? pool.first : FIRST_NAMES;
+  const lasts = pool ? pool.last : LAST_NAMES;
 
-  return formation.map((slot, i) => {
-    const fn = FIRST_NAMES[(seed + i * 7) % FIRST_NAMES.length];
-    const ln = LAST_NAMES[(seed + i * 13 + 5) % LAST_NAMES.length];
+  const squad = formation.map((slot, i) => {
+    const fn = firsts[(seed + i * 7) % firsts.length];
+    const ln = lasts[(seed + i * 13 + 5) % lasts.length];
 
     // Relative -> Welt-Koordinaten, je nach Angriffsrichtung gespiegelt.
     const fx = attackRight ? slot.x : 1 - slot.x;
@@ -470,6 +474,23 @@ export function buildSquad(team, attackRight) {
       homeY,
     };
   });
+
+  // WM: Star-Spieler auf den Stürmer (ersten ST) der Startelf legen.
+  if (isWM) {
+    const star = NATION_STARS[team.id];
+    const idx = formation.findIndex((s) => s.role === "ST");
+    if (star && idx >= 0) {
+      squad[idx] = {
+        ...squad[idx],
+        name: star.name,
+        number: star.number ?? squad[idx].number,
+        speed: star.speed ?? squad[idx].speed,
+        build: star.build ?? squad[idx].build,
+      };
+    }
+  }
+
+  return squad;
 }
 
 // Grobe Spielerstärke (für Hallenturnier-Simulation): Team-Rating + Rollenbonus.
