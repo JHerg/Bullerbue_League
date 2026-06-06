@@ -108,6 +108,18 @@
     </div>
   </div>
 
+  <!-- In-Match: Menü-Knopf + Pause-Menü -->
+  <button id="ingame-btn" class="hidden">≡</button>
+  <div id="ingame-menu" class="hidden">
+    <div id="ingame-card">
+      <div id="ingame-title">Pause</div>
+      <button id="ig-resume">▶ Weiter spielen</button>
+      <button id="ig-menu" class="secondary">🏆 Zum Menü</button>
+      <button id="ig-switch" class="secondary">🔁 Wettbewerb wechseln</button>
+      <button id="ig-logout" class="secondary">🚪 Abmelden</button>
+    </div>
+  </div>
+
   <!-- Startmenü -->
   <div id="menu">
     <div id="menu-card">
@@ -165,9 +177,13 @@
       <button id="btn-start">Anpfiff!</button>
       <button id="btn-resume" class="hidden">Saison fortsetzen</button>
       <button id="btn-ach" class="secondary">🏆 Trophäen</button>
-      <a class="proto-link" href="prototyp.html?v=q2">🧪 2.5D-Ansicht (mit Zuschauern) testen</a>
+      <div id="menu-nav">
+        <button id="btn-switch" class="secondary">🔁 Wettbewerb wechseln</button>
+        <button id="btn-logout" class="secondary">🚪 Abmelden</button>
+      </div>
+      <a class="proto-link" href="prototyp.html?v=r2">🧪 2.5D-Ansicht (mit Zuschauern) testen</a>
       <p class="hint">PC: WASD/Pfeile = laufen · <b>Leertaste = Schuss</b> (halten = härter) · <b>F = Pass / Grätsche / Spielerwechsel</b><br>Als Torwart: <b>Leertaste = Hechten/Springen</b> &nbsp;·&nbsp; Tablet: Joystick + Buttons „SCHUSS" und „PASS"</p>
-      <p class="version">Build 2026-05-30-q2 · WM-Kader: nationale Namen + Stars</p>
+      <p class="version">Build 2026-05-30-r2 · In-Match-Menü + Konten (Name mehrfach, Passwort eindeutig)</p>
     </div>
   </div>
 
@@ -183,6 +199,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/game.js?v=q2"></script>
+  <script type="module" src="js/game.js?v=r2"></script>
 </body>
 </html>

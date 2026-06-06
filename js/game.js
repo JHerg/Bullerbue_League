@@ -1,20 +1,21 @@
 // Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { DIFFICULTY, WORLD } from "./config.js?v=q2";
-import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast, setCompetition, getCompetition } from "./teams.js?v=q2";
-import { Input } from "./input.js?v=q2";
-import { Camera } from "./camera.js?v=q2";
-import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=q2";
-import { Match } from "./match.js?v=q2";
-import { render as render25 } from "./render2d5.js?v=q2";
-import * as season from "./seasonui.js?v=q2";
-import * as shootout1v1 from "./shootout1v1.js?v=q2";
-import * as commentary from "./commentary.js?v=q2";
-import * as tournament from "./tournamentui.js?v=q2";
-import * as sound from "./sound.js?v=q2";
-import * as achievements from "./achievements.js?v=q2";
-import * as startpage from "./startpage.js?v=q2";
+import { DIFFICULTY, WORLD } from "./config.js?v=r2";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast, setCompetition, getCompetition } from "./teams.js?v=r2";
+import { Input } from "./input.js?v=r2";
+import { Camera } from "./camera.js?v=r2";
+import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=r2";
+import { Match } from "./match.js?v=r2";
+import { render as render25 } from "./render2d5.js?v=r2";
+import * as season from "./seasonui.js?v=r2";
+import * as shootout1v1 from "./shootout1v1.js?v=r2";
+import * as commentary from "./commentary.js?v=r2";
+import * as tournament from "./tournamentui.js?v=r2";
+import * as sound from "./sound.js?v=r2";
+import * as achievements from "./achievements.js?v=r2";
+import * as startpage from "./startpage.js?v=r2";
+import * as auth from "./auth.js?v=r2";
 
 // Startet das spielbare 1vs1-Elfmeterschießen mit Canvas/Input-Anbindung.
 function run1v1(homeDef, awayDef, difficulty) {
@@ -165,6 +166,65 @@ startpage.init({
   },
 });
 
+// --------------------------------------------------------------------------
+// Navigation (Menü-Knöpfe + In-Match-Pausenmenü): Wettbewerb wechseln /
+// Abmelden, ohne dass laufende Spiele etwas kaputt machen.
+// --------------------------------------------------------------------------
+const ingameBtn = document.getElementById("ingame-btn");
+const ingameMenu = document.getElementById("ingame-menu");
+let paused = false;
+
+function openIngameMenu() {
+  if (!match) return;
+  paused = true;
+  ingameMenu.classList.remove("hidden");
+}
+function closeIngameMenu() {
+  paused = false;
+  ingameMenu?.classList.add("hidden");
+}
+
+// Laufendes Match sauber abbrechen (für Wettbewerb-Wechsel / Abmelden / Menü).
+function abortMatch() {
+  closeIngameMenu();
+  match = null;
+  matchResolve = null;
+  resultShown = false;
+  penaltiesStarted = false;
+  ingameBtn?.classList.add("hidden");
+  scoreboardEl.classList.add("hidden");
+  resultEl.classList.add("hidden");
+  hubEl.classList.add("hidden");
+}
+
+// Ziel 1: zurück zur (eingeloggten) Wettbewerbsseite – WM bzw. Liga-Menü.
+function navToMenu() {
+  abortMatch();
+  menuEl.classList.remove("hidden");
+  updateTypeUI();
+}
+// Ziel 2: zurück zur Wahl WM/Bullileague (bleibt angemeldet).
+function navToChoose() {
+  abortMatch();
+  menuEl.classList.add("hidden");
+  startpage.openChoose();
+}
+// Ziel 3: abmelden – zurück zur Begrüßung/Login.
+function navToLogout() {
+  abortMatch();
+  menuEl.classList.add("hidden");
+  auth.logout();
+  startpage.openWelcome();
+}
+
+ingameBtn?.addEventListener("click", () => (paused ? closeIngameMenu() : openIngameMenu()));
+document.getElementById("ig-resume")?.addEventListener("click", closeIngameMenu);
+document.getElementById("ig-menu")?.addEventListener("click", navToMenu);
+document.getElementById("ig-switch")?.addEventListener("click", navToChoose);
+document.getElementById("ig-logout")?.addEventListener("click", navToLogout);
+document.getElementById("btn-switch")?.addEventListener("click", navToChoose);
+document.getElementById("btn-logout")?.addEventListener("click", navToLogout);
+
 function getMatchOptions() {
   const playerIdx = parseInt(selPlayer.value, 10);
   return {
@@ -274,6 +334,8 @@ function runMatch(homeDef, awayDef, opts) {
     scoreboardEl.classList.remove("hidden");
     document.getElementById("sb-home").textContent = homeDef.short;
     document.getElementById("sb-away").textContent = awayDef.short;
+    closeIngameMenu();                       // sicher: nicht pausiert starten
+    ingameBtn?.classList.remove("hidden");   // Pausen-/Menü-Knopf einblenden
   });
 }
 
@@ -295,6 +357,8 @@ function runIndoorMatch(homeDef, awayDef, { difficulty, knockout, mode = "team",
 
 function resolveRunMatch(score) {
   match = null;
+  closeIngameMenu();
+  ingameBtn?.classList.add("hidden");
   scoreboardEl.classList.add("hidden");
   resultEl.classList.add("hidden");
   // Erfolge aus dem gespielten Spiel ableiten (home = immer das Nutzerteam).
@@ -311,6 +375,8 @@ function resolveRunMatch(score) {
 
 function showMenu() {
   match = null;
+  closeIngameMenu();
+  ingameBtn?.classList.add("hidden");
   scoreboardEl.classList.add("hidden");
   resultEl.classList.add("hidden");
   hubEl.classList.add("hidden");
@@ -470,31 +536,37 @@ function loop(now) {
   last = now;
 
   if (match) {
-    match.update(dt, input);
-    commentary.update(match, now);
-    soundWatch(match);
-    updateHUD();
-    updatePowerBar();
+    // Im Pausenmenü wird die Simulation eingefroren (kein Update), aber das
+    // letzte Bild weiter gezeichnet.
+    if (!paused) {
+      match.update(dt, input);
+      commentary.update(match, now);
+      soundWatch(match);
+      updateHUD();
+      updatePowerBar();
 
-    // Bei Spielende: entweder Elfmeterschießen starten oder Ergebnis zeigen.
-    if (match.finished) {
-      if (match.outcome === "penalties" && !penaltiesStarted) {
-        penaltiesStarted = true;
-        startPenalties();
-      } else if (match.outcome === "decided" && !resultShown) {
-        resultShown = true;
-        showReport();
-        resultEl.classList.remove("hidden");
+      // Bei Spielende: entweder Elfmeterschießen starten oder Ergebnis zeigen.
+      if (match.finished) {
+        if (match.outcome === "penalties" && !penaltiesStarted) {
+          penaltiesStarted = true;
+          startPenalties();
+        } else if (match.outcome === "decided" && !resultShown) {
+          resultShown = true;
+          showReport();
+          resultEl.classList.remove("hidden");
+        }
       }
     }
 
-    if (VIEW_MODE === "2.5d" && !match.indoor) {
+    // Rendern nur, solange ein Match aktiv ist (kann durch Elfmeter/Abbruch
+    // mitten im Frame auf null gesetzt werden).
+    if (match && VIEW_MODE === "2.5d" && !match.indoor) {
       // 2.5D-Schrägsicht: horizontale Kamera folgt dem gesteuerten Spieler.
       const target = match.cameraTarget;
       cam25X += (target.x - cam25X) * 0.1;
       cam25X = Math.max(WORLD.width * 0.22, Math.min(WORLD.width * 0.78, cam25X));
       render25(ctx, viewW, viewH, match, cam25X, dt * 1000);
-    } else {
+    } else if (match) {
       // Top-Down: Scrolling-Kamera.
       const target = match.cameraTarget;
       camera.follow(target.x, target.y);

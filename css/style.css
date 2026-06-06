@@ -642,3 +642,79 @@ table.standings tr.cl td:first-child { color: #4caf50; }
 #choose-actions button small { font-size: 12px; font-weight: 600; opacity: .8; }
 #ch-bl { background: #ffffff; color: #111; }
 #ch-logout { margin-top: 14px; }
+
+/* --------------------------------------------------------------------------
+   Navigation: Menü-Knöpfe (Wettbewerb wechseln / Abmelden) + In-Match-Menü
+   -------------------------------------------------------------------------- */
+#menu-nav { display: flex; gap: 8px; }
+#menu-nav button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* Kleiner Menü-/Pausen-Knopf während eines Spiels (oben links) */
+#ingame-btn {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 45;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  border: none;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+}
+#ingame-btn:active { transform: translateY(1px); }
+
+/* Pausen-Overlay mit Navigations-Optionen */
+#ingame-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 85;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  padding: 20px;
+}
+#ingame-card {
+  width: min(360px, 100%);
+  background: linear-gradient(180deg, #b71c1c, #7a0000);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 16px;
+  padding: 22px 22px 20px;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: center;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.4);
+}
+#ingame-title { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+#ingame-card button {
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  background: #ffca28;
+  color: #7a1010;
+  font-weight: 800;
+  font-size: 16px;
+  cursor: pointer;
+}
+#ingame-card button:active { transform: translateY(1px); }
+#ingame-card button.secondary {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}

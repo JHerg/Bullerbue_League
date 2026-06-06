@@ -1,8 +1,8 @@
 // Rote Startseite: Begrüßung, Login/Gast/Neu, danach Wahl WM oder Bullileague.
 // Ruft onChoose("wm" | "bundesliga") auf, sobald der Wettbewerb gewählt ist.
 
-import * as auth from "./auth.js?v=q2";
-import * as achievements from "./achievements.js?v=q2";
+import * as auth from "./auth.js?v=r2";
+import * as achievements from "./achievements.js?v=r2";
 
 const $ = (id) => document.getElementById(id);
 
@@ -95,6 +95,20 @@ function showChoose() {
   $("start-welcome").classList.add("hidden");
   $("start-form").classList.add("hidden");
   $("start-choose").classList.remove("hidden");
+}
+
+// Von außen (aus dem Spiel heraus) die Startseite wieder einblenden:
+//  openChoose()  -> zur Wettbewerbs-Auswahl (bleibt angemeldet)
+//  openWelcome() -> zur Begrüßung/Login (z. B. nach dem Abmelden)
+export function openChoose() {
+  const s = $("start");
+  if (s) s.classList.remove("hidden");
+  showChoose();
+}
+export function openWelcome() {
+  const s = $("start");
+  if (s) s.classList.remove("hidden");
+  showWelcome();
 }
 
 function choose(competition) {

@@ -2,8 +2,15 @@
 // Passwort im localStorage. Das ist KEINE echte Sicherheit – es geht nur
 // darum, dass sich Leo & Co. mit ihrem Namen "anmelden" und ihre Sachen
 // wiederfinden. Passwörter werden daher nur leicht verschleiert abgelegt.
+//
+// Regel (auf Wunsch): Der NAME darf mehrfach vergeben werden – das PASSWORT
+// muss eindeutig sein. Ein Konto wird also über sein Passwort identifiziert.
 
-const KEY = "bullerbue_profiles_v1";
+const KEY = "bullerbue_profiles_v2";
+const OLD_KEYS = ["bullerbue_profiles_v1"];
+
+// Alte Konten einmalig entfernen ("alle Konten löschen").
+try { for (const k of OLD_KEYS) localStorage.removeItem(k); } catch (e) { /* ignore */ }
 
 function read() {
   try { return JSON.parse(localStorage.getItem(KEY)) || { accounts: {}, current: null }; }
@@ -14,6 +21,7 @@ function write(d) {
 }
 
 // Sehr einfache Verschleierung (kein echtes Hashing – reicht fürs Spiel).
+// Dient gleichzeitig als eindeutiger Schlüssel des Kontos (Passwort = Schlüssel).
 function scramble(s) {
   let h = 2166136261;
   for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
@@ -32,32 +40,29 @@ export function current() {
 
 export function isGuest() { return read().current === null; }
 
-// Existiert schon ein Konto mit diesem Namen?
-export function exists(name) {
-  return !!read().accounts[norm(name)];
-}
-
-// Neues Konto anlegen. Fehler, wenn der Name schon vergeben ist.
+// Neues Konto anlegen. Name darf mehrfach vorkommen, das Passwort nicht.
 export function register(name, pass) {
-  const n = norm(name);
+  const n = String(name || "").trim();
   if (!n) return { ok: false, error: "Bitte gib einen Namen ein." };
   if (!pass) return { ok: false, error: "Bitte gib ein Passwort ein." };
   const d = read();
-  if (d.accounts[n]) return { ok: false, error: "Diesen Namen gibt es schon. Melde dich an." };
-  d.accounts[n] = { name: String(name).trim(), pass: scramble(pass), created: Date.now() };
-  d.current = n;
+  const h = scramble(pass);
+  if (d.accounts[h]) return { ok: false, error: "Dieses Passwort ist schon vergeben. Nimm ein anderes." };
+  d.accounts[h] = { name: n, created: Date.now() };
+  d.current = h;
   write(d);
-  return { ok: true, name: d.accounts[n].name };
+  return { ok: true, name: n };
 }
 
-// Anmelden mit Name + Passwort.
+// Anmelden mit Name + Passwort. Das Passwort findet das Konto; der Name
+// muss zu diesem Konto passen (da Namen mehrfach vorkommen können).
 export function login(name, pass) {
-  const n = norm(name);
   const d = read();
-  const acc = d.accounts[n];
-  if (!acc) return { ok: false, error: "Unbekannter Name. Lege ein neues Konto an." };
-  if (acc.pass !== scramble(pass)) return { ok: false, error: "Falsches Passwort." };
-  d.current = n;
+  const h = scramble(pass);
+  const acc = d.accounts[h];
+  if (!acc) return { ok: false, error: "Name oder Passwort stimmt nicht." };
+  if (norm(acc.name) !== norm(name)) return { ok: false, error: "Name oder Passwort stimmt nicht." };
+  d.current = h;
   write(d);
   return { ok: true, name: acc.name };
 }
