@@ -5,8 +5,8 @@
 // 1 = gegnerisches Tor / y: 0 = oben, 1 = unten) und werden im Spiel auf
 // Welt-Koordinaten und Angriffsrichtung umgerechnet.
 
-import { MARGIN, FIELD } from "./config.js?v=r2";
-import { NATION_TEAMS, NATION_RATINGS, NAME_POOLS, NATION_STARS } from "./nations.js?v=r2";
+import { MARGIN, FIELD } from "./config.js?v=s2";
+import { NATION_TEAMS, NATION_RATINGS, NAME_POOLS, NATION_STARS, NATION_OVERRIDES } from "./nations.js?v=s2";
 
 // ---------------------------------------------------------------------------
 // Formations-Vorlagen
@@ -447,9 +447,10 @@ export function buildSquad(team, attackRight) {
   const formation = FORMATIONS[team.formation];
   const seed = hash(team.id);
   const isWM = competition === "wm";
-  // Manuelle Kader-Overrides gibt es nur für die Bundesliga-Vereine; die
-  // WM-Nationen bekommen generierte Fake-Namen aus einem Regions-Pool.
-  const overrides = isWM ? {} : (SQUAD_OVERRIDES[team.id] || {});
+  // Kader-Overrides: Vereine nutzen SQUAD_OVERRIDES, WM-Nationen
+  // NATION_OVERRIDES (z. B. Jacob/Jürgi/Aleks bei Deutschland); der Rest des
+  // Kaders bekommt generierte Namen aus dem Regions-Pool.
+  const overrides = isWM ? (NATION_OVERRIDES[team.id] || {}) : (SQUAD_OVERRIDES[team.id] || {});
   const pool = (isWM && team.style && NAME_POOLS[team.style]) ? NAME_POOLS[team.style] : null;
   const firsts = pool ? pool.first : FIRST_NAMES;
   const lasts = pool ? pool.last : LAST_NAMES;

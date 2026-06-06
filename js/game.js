@@ -1,21 +1,20 @@
 // Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { DIFFICULTY, WORLD } from "./config.js?v=r2";
-import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast, setCompetition, getCompetition } from "./teams.js?v=r2";
-import { Input } from "./input.js?v=r2";
-import { Camera } from "./camera.js?v=r2";
-import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=r2";
-import { Match } from "./match.js?v=r2";
-import { render as render25 } from "./render2d5.js?v=r2";
-import * as season from "./seasonui.js?v=r2";
-import * as shootout1v1 from "./shootout1v1.js?v=r2";
-import * as commentary from "./commentary.js?v=r2";
-import * as tournament from "./tournamentui.js?v=r2";
-import * as sound from "./sound.js?v=r2";
-import * as achievements from "./achievements.js?v=r2";
-import * as startpage from "./startpage.js?v=r2";
-import * as auth from "./auth.js?v=r2";
+import { DIFFICULTY, WORLD } from "./config.js?v=s2";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast, setCompetition, getCompetition } from "./teams.js?v=s2";
+import { Input } from "./input.js?v=s2";
+import { Camera } from "./camera.js?v=s2";
+import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=s2";
+import { Match } from "./match.js?v=s2";
+import { render as render25 } from "./render2d5.js?v=s2";
+import * as season from "./seasonui.js?v=s2";
+import * as shootout1v1 from "./shootout1v1.js?v=s2";
+import * as commentary from "./commentary.js?v=s2";
+import * as tournament from "./tournamentui.js?v=s2";
+import * as sound from "./sound.js?v=s2";
+import * as achievements from "./achievements.js?v=s2";
+import * as startpage from "./startpage.js?v=s2";
 
 // Startet das spielbare 1vs1-Elfmeterschießen mit Canvas/Input-Anbindung.
 function run1v1(homeDef, awayDef, difficulty) {
@@ -168,7 +167,7 @@ startpage.init({
 
 // --------------------------------------------------------------------------
 // Navigation (Menü-Knöpfe + In-Match-Pausenmenü): Wettbewerb wechseln /
-// Abmelden, ohne dass laufende Spiele etwas kaputt machen.
+// Startseite, ohne dass laufende Spiele etwas kaputt machen.
 // --------------------------------------------------------------------------
 const ingameBtn = document.getElementById("ingame-btn");
 const ingameMenu = document.getElementById("ingame-menu");
@@ -197,23 +196,22 @@ function abortMatch() {
   hubEl.classList.add("hidden");
 }
 
-// Ziel 1: zurück zur (eingeloggten) Wettbewerbsseite – WM bzw. Liga-Menü.
+// Ziel 1: zurück zur Wettbewerbsseite – WM bzw. Liga-Menü.
 function navToMenu() {
   abortMatch();
   menuEl.classList.remove("hidden");
   updateTypeUI();
 }
-// Ziel 2: zurück zur Wahl WM/Bullileague (bleibt angemeldet).
+// Ziel 2: zurück zur Wahl WM/Bullileague.
 function navToChoose() {
   abortMatch();
   menuEl.classList.add("hidden");
   startpage.openChoose();
 }
-// Ziel 3: abmelden – zurück zur Begrüßung/Login.
-function navToLogout() {
+// Ziel 3: zurück zur Startseite (mit "Spielen").
+function navToStart() {
   abortMatch();
   menuEl.classList.add("hidden");
-  auth.logout();
   startpage.openWelcome();
 }
 
@@ -221,9 +219,9 @@ ingameBtn?.addEventListener("click", () => (paused ? closeIngameMenu() : openIng
 document.getElementById("ig-resume")?.addEventListener("click", closeIngameMenu);
 document.getElementById("ig-menu")?.addEventListener("click", navToMenu);
 document.getElementById("ig-switch")?.addEventListener("click", navToChoose);
-document.getElementById("ig-logout")?.addEventListener("click", navToLogout);
+document.getElementById("ig-home")?.addEventListener("click", navToStart);
 document.getElementById("btn-switch")?.addEventListener("click", navToChoose);
-document.getElementById("btn-logout")?.addEventListener("click", navToLogout);
+document.getElementById("btn-home")?.addEventListener("click", navToStart);
 
 function getMatchOptions() {
   const playerIdx = parseInt(selPlayer.value, 10);

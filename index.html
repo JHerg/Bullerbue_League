@@ -14,19 +14,7 @@
       <div id="start-welcome">
         <h1>Hallo bei<br>Bullerbue League ⚽</h1>
         <div id="start-stats"></div>
-        <div id="st-actions">
-          <button id="st-login">🔐 Einloggen</button>
-          <button id="st-guest" class="secondary">👤 Als Gast spielen</button>
-          <button id="st-new" class="secondary">✨ Neu starten</button>
-        </div>
-        <div id="start-form" class="hidden">
-          <div id="st-form-title">Anmelden</div>
-          <input id="st-name" type="text" placeholder="Dein Name" autocomplete="off" />
-          <input id="st-pass" type="password" placeholder="Passwort" autocomplete="off" />
-          <div id="st-error"></div>
-          <button id="st-submit">Anmelden</button>
-          <button id="st-cancel" class="secondary">Zurück</button>
-        </div>
+        <button id="st-play">▶ Spielen</button>
       </div>
       <!-- Stufe 2: Wettbewerb wählen -->
       <div id="start-choose" class="hidden">
@@ -36,7 +24,7 @@
           <button id="ch-wm">🌍 WM 2026<small>48 Nationen</small></button>
           <button id="ch-bl">🇩🇪 Bullileague<small>Bundesliga · 18 Vereine</small></button>
         </div>
-        <button id="ch-logout" class="secondary small">↩ Abmelden</button>
+        <button id="ch-back" class="secondary small">↩ Zurück</button>
       </div>
     </div>
   </div>
@@ -116,7 +104,7 @@
       <button id="ig-resume">▶ Weiter spielen</button>
       <button id="ig-menu" class="secondary">🏆 Zum Menü</button>
       <button id="ig-switch" class="secondary">🔁 Wettbewerb wechseln</button>
-      <button id="ig-logout" class="secondary">🚪 Abmelden</button>
+      <button id="ig-home" class="secondary">🏠 Startseite</button>
     </div>
   </div>
 
@@ -179,11 +167,11 @@
       <button id="btn-ach" class="secondary">🏆 Trophäen</button>
       <div id="menu-nav">
         <button id="btn-switch" class="secondary">🔁 Wettbewerb wechseln</button>
-        <button id="btn-logout" class="secondary">🚪 Abmelden</button>
+        <button id="btn-home" class="secondary">🏠 Startseite</button>
       </div>
-      <a class="proto-link" href="prototyp.html?v=r2">🧪 2.5D-Ansicht (mit Zuschauern) testen</a>
+      <a class="proto-link" href="prototyp.html?v=s2">🧪 2.5D-Ansicht (mit Zuschauern) testen</a>
       <p class="hint">PC: WASD/Pfeile = laufen · <b>Leertaste = Schuss</b> (halten = härter) · <b>F = Pass / Grätsche / Spielerwechsel</b><br>Als Torwart: <b>Leertaste = Hechten/Springen</b> &nbsp;·&nbsp; Tablet: Joystick + Buttons „SCHUSS" und „PASS"</p>
-      <p class="version">Build 2026-05-30-r2 · In-Match-Menü + Konten (Name mehrfach, Passwort eindeutig)</p>
+      <p class="version">Build 2026-05-30-s2 · Ohne Login (Spielen) + Jacob/Jürgi/Aleks im DFB-Kader</p>
     </div>
   </div>
 
@@ -199,6 +187,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/game.js?v=r2"></script>
+  <script type="module" src="js/game.js?v=s2"></script>
 </body>
 </html>

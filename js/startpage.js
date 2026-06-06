@@ -1,13 +1,12 @@
-// Rote Startseite: Begrüßung, Login/Gast/Neu, danach Wahl WM oder Bullileague.
+// Rote Startseite: Begrüßung + "Spielen", danach Wahl WM oder Bullileague.
+// Kein Login mehr – einfach auf Spielen drücken.
 // Ruft onChoose("wm" | "bundesliga") auf, sobald der Wettbewerb gewählt ist.
 
-import * as auth from "./auth.js?v=r2";
-import * as achievements from "./achievements.js?v=r2";
+import * as achievements from "./achievements.js?v=s2";
 
 const $ = (id) => document.getElementById(id);
 
 let onChoose = null;
-let formMode = "login"; // "login" oder "register"
 
 export function init(opts) {
   onChoose = opts.onChoose;
@@ -15,31 +14,12 @@ export function init(opts) {
   const startEl = $("start");
   if (!startEl) return; // Seite ohne Startseite (z. B. Tests)
 
-  // --- Stage 1: Aktionen -------------------------------------------------
-  $("st-login").addEventListener("click", () => showForm("login"));
-  $("st-new").addEventListener("click", () => showForm("register"));
-  $("st-guest").addEventListener("click", () => {
-    auth.playAsGuest();
-    showChoose();
-  });
-  $("st-cancel").addEventListener("click", hideForm);
-  $("st-submit").addEventListener("click", submitForm);
-  $("st-pass").addEventListener("keydown", (e) => { if (e.key === "Enter") submitForm(); });
-
-  // --- Stage 2: Wettbewerb ----------------------------------------------
+  $("st-play").addEventListener("click", showChoose);
   $("ch-wm").addEventListener("click", () => choose("wm"));
   $("ch-bl").addEventListener("click", () => choose("bundesliga"));
-  $("ch-logout").addEventListener("click", () => {
-    auth.logout();
-    showWelcome();
-  });
+  $("ch-back").addEventListener("click", showWelcome);
 
-  renderStats();
   showWelcome();
-
-  // Komfort: Namen des zuletzt angemeldeten Profils vorbefüllen.
-  const cur = auth.current();
-  if (cur) $("st-name").value = cur.name;
 }
 
 // --------------------------------------------------------------------------
@@ -60,46 +40,23 @@ function renderStats() {
 function showWelcome() {
   $("start-choose").classList.add("hidden");
   $("start-welcome").classList.remove("hidden");
-  hideForm();
   renderStats();
 }
 
-function showForm(mode) {
-  formMode = mode;
-  $("st-error").textContent = "";
-  $("start-form").classList.remove("hidden");
-  $("st-actions").classList.add("hidden");
-  $("st-submit").textContent = mode === "register" ? "Konto anlegen" : "Anmelden";
-  $("st-form-title").textContent = mode === "register" ? "Neues Konto" : "Anmelden";
-  $("st-name").focus();
-}
-
-function hideForm() {
-  $("start-form").classList.add("hidden");
-  $("st-actions").classList.remove("hidden");
-  $("st-error").textContent = "";
-}
-
-function submitForm() {
-  const name = $("st-name").value;
-  const pass = $("st-pass").value;
-  const res = formMode === "register" ? auth.register(name, pass) : auth.login(name, pass);
-  if (!res.ok) { $("st-error").textContent = res.error; return; }
-  $("st-pass").value = "";
-  showChoose();
-}
-
 function showChoose() {
-  const cur = auth.current();
-  $("st-greet").textContent = cur ? `Hallo ${cur.name}! 👋` : "Hallo! 👋";
   $("start-welcome").classList.add("hidden");
-  $("start-form").classList.add("hidden");
   $("start-choose").classList.remove("hidden");
 }
 
+function choose(competition) {
+  const startEl = $("start");
+  if (startEl) startEl.classList.add("hidden");
+  if (onChoose) onChoose(competition);
+}
+
 // Von außen (aus dem Spiel heraus) die Startseite wieder einblenden:
-//  openChoose()  -> zur Wettbewerbs-Auswahl (bleibt angemeldet)
-//  openWelcome() -> zur Begrüßung/Login (z. B. nach dem Abmelden)
+//  openChoose()  -> direkt zur Wettbewerbs-Auswahl
+//  openWelcome() -> zur Startseite mit "Spielen"
 export function openChoose() {
   const s = $("start");
   if (s) s.classList.remove("hidden");
@@ -109,10 +66,4 @@ export function openWelcome() {
   const s = $("start");
   if (s) s.classList.remove("hidden");
   showWelcome();
-}
-
-function choose(competition) {
-  const startEl = $("start");
-  if (startEl) startEl.classList.add("hidden");
-  if (onChoose) onChoose(competition);
 }

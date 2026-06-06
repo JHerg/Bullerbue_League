@@ -2,11 +2,11 @@
 // kontextabhängige Nutzer-Aktion (Leertaste), Aus-Erkennung
 // (Einwurf/Ecke/Abstoß), Tore, Spieluhr und Halbzeit mit Seitenwechsel.
 
-import { WORLD, FIELD, MARGIN, GOAL, HALL, BALL, KICK, PLAYER, USER, DIFFICULTY_TEAMMATE } from "./config.js?v=r2";
-import { Team } from "./team.js?v=r2";
-import { Ball } from "./ball.js?v=r2";
-import { computeAI } from "./ai.js?v=r2";
-import { ensureContrast } from "./teams.js?v=r2";
+import { WORLD, FIELD, MARGIN, GOAL, HALL, BALL, KICK, PLAYER, USER, DIFFICULTY_TEAMMATE } from "./config.js?v=s2";
+import { Team } from "./team.js?v=s2";
+import { Ball } from "./ball.js?v=s2";
+import { computeAI } from "./ai.js?v=s2";
+import { ensureContrast } from "./teams.js?v=s2";
 
 const EDGE = 8; // wie weit innerhalb der Linie der Ball bei Standards liegt
 

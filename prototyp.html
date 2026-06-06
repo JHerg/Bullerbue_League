@@ -8,7 +8,7 @@
 </head>
 <body>
   <!-- Zurück zum Hauptspiel -->
-  <a id="back-link" href="index.html?v=r2">← klassische Ansicht</a>
+  <a id="back-link" href="index.html?v=s2">← klassische Ansicht</a>
 
   <!-- Rote Startseite: Begrüßung, Login/Gast/Neu, Wahl WM oder Bullileague -->
   <div id="start">
@@ -17,19 +17,7 @@
       <div id="start-welcome">
         <h1>Hallo bei<br>Bullerbue League ⚽</h1>
         <div id="start-stats"></div>
-        <div id="st-actions">
-          <button id="st-login">🔐 Einloggen</button>
-          <button id="st-guest" class="secondary">👤 Als Gast spielen</button>
-          <button id="st-new" class="secondary">✨ Neu starten</button>
-        </div>
-        <div id="start-form" class="hidden">
-          <div id="st-form-title">Anmelden</div>
-          <input id="st-name" type="text" placeholder="Dein Name" autocomplete="off" />
-          <input id="st-pass" type="password" placeholder="Passwort" autocomplete="off" />
-          <div id="st-error"></div>
-          <button id="st-submit">Anmelden</button>
-          <button id="st-cancel" class="secondary">Zurück</button>
-        </div>
+        <button id="st-play">▶ Spielen</button>
       </div>
       <!-- Stufe 2: Wettbewerb wählen -->
       <div id="start-choose" class="hidden">
@@ -39,7 +27,7 @@
           <button id="ch-wm">🌍 WM 2026<small>48 Nationen</small></button>
           <button id="ch-bl">🇩🇪 Bullileague<small>Bundesliga · 18 Vereine</small></button>
         </div>
-        <button id="ch-logout" class="secondary small">↩ Abmelden</button>
+        <button id="ch-back" class="secondary small">↩ Zurück</button>
       </div>
     </div>
   </div>
@@ -119,7 +107,7 @@
       <button id="ig-resume">▶ Weiter spielen</button>
       <button id="ig-menu" class="secondary">🏆 Zum Menü</button>
       <button id="ig-switch" class="secondary">🔁 Wettbewerb wechseln</button>
-      <button id="ig-logout" class="secondary">🚪 Abmelden</button>
+      <button id="ig-home" class="secondary">🏠 Startseite</button>
     </div>
   </div>
 
@@ -182,11 +170,11 @@
       <button id="btn-ach" class="secondary">🏆 Trophäen</button>
       <div id="menu-nav">
         <button id="btn-switch" class="secondary">🔁 Wettbewerb wechseln</button>
-        <button id="btn-logout" class="secondary">🚪 Abmelden</button>
+        <button id="btn-home" class="secondary">🏠 Startseite</button>
       </div>
-      <a class="proto-link" href="index.html?v=r2">↩ zurück zur klassischen 2D-Ansicht</a>
+      <a class="proto-link" href="index.html?v=s2">↩ zurück zur klassischen 2D-Ansicht</a>
       <p class="hint">2.5D-Ansicht mit Zuschauern · gleiche Steuerung wie im Hauptspiel<br>PC: WASD/Pfeile · Leertaste = Schuss · F = Pass/Grätsche/Wechsel</p>
-      <p class="version">Build 2026-05-30-r2 · In-Match-Menü + Konten (Name mehrfach, Passwort eindeutig)</p>
+      <p class="version">Build 2026-05-30-s2 · Ohne Login (Spielen) + Jacob/Jürgi/Aleks im DFB-Kader</p>
     </div>
   </div>
 
@@ -202,6 +190,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/proto.js?v=r2"></script>
+  <script type="module" src="js/proto.js?v=s2"></script>
 </body>
 </html>

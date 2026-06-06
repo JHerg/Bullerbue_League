@@ -126,8 +126,18 @@ export const NAME_POOLS = {
 // Star-Spieler je Nation (erfunden). Wird in teams.js auf den Stürmer (ST)
 // der Startelf gelegt – mit Nummer und optionalem Tempo-/Statur-Faktor.
 // ---------------------------------------------------------------------------
+// Feste Kader-Plätze je Nation (nach Aufstellungs-Index, wie bei den Vereinen).
+// Deutschland: die bekannten Charaktere Jacob, Jürgi und Aleks.
+export const NATION_OVERRIDES = {
+  n_ger: {
+    2: { name: "Jürgi Bluti", number: 99, build: 1.8 },  // IV — stämmig
+    5: { name: "Jacob Jajo",  number: 6,  speed: 1.3 },  // DM — schnell
+    6: { name: "Aleks Pavlo", number: 45 },              // DM
+  },
+};
+
 export const NATION_STARS = {
-  n_ger: { name: "Tobias Brandl",    number: 9,  speed: 1.15 },
+  n_ger: { name: "Tobias Brandl",    number: 11, speed: 1.15 },
   n_bra: { name: "Caio Ferreira",    number: 10, speed: 1.28 },
   n_fra: { name: "Karl Mbenga",      number: 10, speed: 1.30 },
   n_arg: { name: "Mateo Vega",       number: 10, speed: 1.20 },
