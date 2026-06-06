@@ -1,20 +1,20 @@
 // Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { DIFFICULTY, WORLD } from "./config.js?v=s2";
-import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast, setCompetition, getCompetition } from "./teams.js?v=s2";
-import { Input } from "./input.js?v=s2";
-import { Camera } from "./camera.js?v=s2";
-import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=s2";
-import { Match } from "./match.js?v=s2";
-import { render as render25 } from "./render2d5.js?v=s2";
-import * as season from "./seasonui.js?v=s2";
-import * as shootout1v1 from "./shootout1v1.js?v=s2";
-import * as commentary from "./commentary.js?v=s2";
-import * as tournament from "./tournamentui.js?v=s2";
-import * as sound from "./sound.js?v=s2";
-import * as achievements from "./achievements.js?v=s2";
-import * as startpage from "./startpage.js?v=s2";
+import { DIFFICULTY, WORLD } from "./config.js?v=t2";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast, setCompetition, getCompetition } from "./teams.js?v=t2";
+import { Input } from "./input.js?v=t2";
+import { Camera } from "./camera.js?v=t2";
+import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=t2";
+import { Match } from "./match.js?v=t2";
+import { render as render25 } from "./render2d5.js?v=t2";
+import * as season from "./seasonui.js?v=t2";
+import * as shootout1v1 from "./shootout1v1.js?v=t2";
+import * as commentary from "./commentary.js?v=t2";
+import * as tournament from "./tournamentui.js?v=t2";
+import * as sound from "./sound.js?v=t2";
+import * as achievements from "./achievements.js?v=t2";
+import * as startpage from "./startpage.js?v=t2";
 
 // Startet das spielbare 1vs1-Elfmeterschießen mit Canvas/Input-Anbindung.
 function run1v1(homeDef, awayDef, difficulty) {
@@ -127,11 +127,14 @@ function updateTypeUI() {
   selHalf.parentElement.classList.toggle("hidden", hideOpts);
   lblPlayer.classList.toggle("hidden", hideOpts || selMode.value !== "single");
 
+  const isWMgroups = type === "liga" && getCompetition() === "wm";
   btnStart.textContent = isElfer ? "Elfmeterschießen"
     : isHalle ? "Hallenturnier starten"
-    : isAnstoss ? "Anpfiff!" : "Saison starten";
+    : isAnstoss ? "Anpfiff!"
+    : isWMgroups ? "WM starten" : "Saison starten";
 
-  const canResume = (isSeason && season.hasSave(type)) || (isHalle && tournament.hasSave());
+  const saveType = isWMgroups ? "wm" : type;
+  const canResume = (isSeason && season.hasSave(saveType)) || (isHalle && tournament.hasSave());
   btnResume.classList.toggle("hidden", !canResume);
 }
 selType.addEventListener("change", updateTypeUI);
@@ -151,7 +154,7 @@ function applyCompetitionUI(comp) {
   if (menuTitle) menuTitle.innerHTML = isWM
     ? 'WM 2026 🌍 <span style="font-size:14px;opacity:.7">Bullerbue League</span>'
     : menuTitleOrig;
-  if (optLiga) optLiga.textContent = isWM ? `WM-Liga (${TEAMS.length} Teams)` : optLigaOrig;
+  if (optLiga) optLiga.textContent = isWM ? "WM-Gruppen (12×4) + K.o." : optLigaOrig;
 }
 
 menuEl.classList.add("hidden");
@@ -288,8 +291,11 @@ btnStart.addEventListener("click", () => {
     tournament.start();
   } else {
     menuEl.classList.add("hidden");
-    if (type === "liga") season.startLeague(selHome.value, opts);
-    else season.startCup(selHome.value, opts);
+    if (type === "liga") {
+      // Im WM-Modus ist "Liga" die Gruppenphase (12×4) mit anschließendem K.o.
+      if (getCompetition() === "wm") season.startWM(selHome.value, opts);
+      else season.startLeague(selHome.value, opts);
+    } else season.startCup(selHome.value, opts);
   }
 });
 
@@ -305,6 +311,7 @@ function startPenaltyOnly(homeDef, awayDef) {
 btnResume.addEventListener("click", () => {
   menuEl.classList.add("hidden");
   if (selType.value === "halle") tournament.resume();
+  else if (selType.value === "liga" && getCompetition() === "wm") season.resume("wm", getMatchOptions());
   else season.resume(selType.value, getMatchOptions());
 });
 

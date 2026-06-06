@@ -5,11 +5,12 @@
 //   deps.runMatch(homeDef, awayDef, opts) -> Promise<{home, away}>  (Endstand)
 //   deps.showMenu()                       -> zurück ins Startmenü
 
-import { TEAMS, teamById } from "./teams.js?v=s2";
-import * as L from "./league.js?v=s2";
-import * as C from "./cup.js?v=s2";
-import { saveSeason, loadSeason } from "./storage.js?v=s2";
-import * as achievements from "./achievements.js?v=s2";
+import { TEAMS, teamById } from "./teams.js?v=t2";
+import * as L from "./league.js?v=t2";
+import * as C from "./cup.js?v=t2";
+import * as W from "./wm.js?v=t2";
+import { saveSeason, loadSeason } from "./storage.js?v=t2";
+import * as achievements from "./achievements.js?v=t2";
 
 let deps = null;
 let state = null;
@@ -36,6 +37,13 @@ export function startCup(userTeam, o) {
   _openHub();
 }
 
+export function startWM(userTeam, o) {
+  opts = o;
+  state = W.createWM(TEAMS.map((t) => t.id), userTeam);
+  saveSeason(state);
+  _openHub();
+}
+
 export function resume(type, o) {
   opts = o;
   state = loadSeason(type);
@@ -56,6 +64,7 @@ function _toMenu() {
 
 function _render() {
   if (state.type === "league") _renderLeague();
+  else if (state.type === "wm") _renderWM();
   else _renderCup();
 }
 
@@ -218,12 +227,12 @@ function _simCup() {
   _render();
 }
 
-function _bracketHtml() {
+function _bracketHtml(rounds = state.rounds, names = C.ROUND_NAMES, userTeam = state.userTeam) {
   let html = "";
-  state.rounds.forEach((round, i) => {
-    html += `<div class="bracket-round"><h4>${C.ROUND_NAMES[i] || `Runde ${i + 1}`}</h4>`;
+  rounds.forEach((round, i) => {
+    html += `<div class="bracket-round"><h4>${names[i] || `Runde ${i + 1}`}</h4>`;
     for (const t of round) {
-      const meCls = (t.home === state.userTeam || t.away === state.userTeam) ? "me" : "";
+      const meCls = (t.home === userTeam || t.away === userTeam) ? "me" : "";
       const dlabel = t.decided === "i.E." ? " i.E." : t.decided === "n.V." ? " n.V." : "";
       const res = t.winner === null ? "–" : `${t.hs}:${t.as}${dlabel}`;
       const hl = t.winner === t.home ? "<b>" : "";
@@ -235,6 +244,139 @@ function _bracketHtml() {
     html += `</div>`;
   });
   return html;
+}
+
+// ============================ WM (Gruppen + K.o.) ============================
+function _renderWM() {
+  if (state.phase === "groups") _renderWMGroups();
+  else _renderWMko();
+}
+
+function _renderWMGroups() {
+  const g = W.userGroupIndex(state);
+  const round = state.groupRound;
+  let html = `<h2>WM 2026 🌍 – Gruppenphase</h2>`;
+  html += `<div class="hub-sub">Spieltag ${round + 1} / 3 · Dein Team: ${name(state.userTeam)} · Gruppe ${W.GROUP_LETTERS[g]}</div>`;
+
+  const fx = W.userGroupFixture(state, round);
+  if (fx) html += _fixtureHtml(fx.home, fx.away);
+  html += `<h3 class="scorers-h">Gruppe ${W.GROUP_LETTERS[g]}</h3>`;
+  html += _groupStandingsTable(W.computeGroupTable(state, g));
+  html += _scorersTable(W.computeScorers(state));
+  contentEl().innerHTML = html;
+
+  _setButtons([
+    _btn("Spielen", "", _playWMGroup),
+    _btn("Simulieren", "secondary", _simWMGroup),
+    _btn("Menü", "ghost", _toMenu),
+  ]);
+}
+
+function _renderWMko() {
+  const ko = state.ko;
+  let html = `<h2>WM 2026 🌍 – K.o.-Runde</h2>`;
+  if (ko.champion) {
+    html += `<div class="hub-sub">Turnier beendet · Dein Team: ${name(state.userTeam)}</div>`;
+    html += `<div class="fixture">🏆 Weltmeister: ${name(ko.champion)}</div>`;
+    if (ko.champion === state.userTeam) achievements.unlock("cup_win");
+  } else {
+    html += `<div class="hub-sub">${W.koRoundName(state)} · Dein Team: ${name(state.userTeam)}</div>`;
+    const tie = C.userTie(ko);
+    html += tie ? _fixtureHtml(tie.home, tie.away) : `<div class="fixture">Dein Team ist ausgeschieden</div>`;
+  }
+  html += _bracketHtml(ko.rounds, W.WM_ROUND_NAMES, state.userTeam);
+  html += _scorersTable(W.computeScorers(state));
+  contentEl().innerHTML = html;
+
+  if (ko.champion) {
+    _setButtons([_btn("Zum Menü", "ghost", _toMenu)]);
+  } else if (C.userTie(ko)) {
+    _setButtons([
+      _btn("Spielen", "", _playWMko),
+      _btn("Simulieren", "secondary", _simWMko),
+      _btn("Menü", "ghost", _toMenu),
+    ]);
+  } else {
+    _setButtons([
+      _btn("Weiter simulieren", "secondary", _simWMko),
+      _btn("Menü", "ghost", _toMenu),
+    ]);
+  }
+}
+
+async function _playWMGroup() {
+  const round = state.groupRound;
+  const fx = W.userGroupFixture(state, round);
+  const opp = fx.home === state.userTeam ? fx.away : fx.home;
+
+  const r = await _playUserMatch(opp, false);
+  const userIsHome = fx.home === state.userTeam;
+  const userResult = {
+    home: fx.home, away: fx.away,
+    hs: userIsHome ? r.home : r.away,
+    as: userIsHome ? r.away : r.home,
+    homeScorers: userIsHome ? r.homeScorers : r.awayScorers,
+    awayScorers: userIsHome ? r.awayScorers : r.homeScorers,
+  };
+  const results = [userResult, ...W.simulateGroupRound(state, round, fx)];
+  W.recordGroupRound(state, round, results);
+  state.groupRound++;
+  if (W.groupsComplete(state)) W.buildKnockout(state);
+  saveSeason(state);
+  _openHub();
+}
+
+function _simWMGroup() {
+  const round = state.groupRound;
+  W.recordGroupRound(state, round, W.simulateGroupRound(state, round, null));
+  state.groupRound++;
+  if (W.groupsComplete(state)) W.buildKnockout(state);
+  saveSeason(state);
+  _render();
+}
+
+async function _playWMko() {
+  const ko = state.ko;
+  const tie = C.userTie(ko);
+  const opp = tie.home === state.userTeam ? tie.away : tie.home;
+
+  const r = await _playUserMatch(opp, true);
+  const userIsHome = tie.home === state.userTeam;
+  const hs = userIsHome ? r.home : r.away;
+  const as = userIsHome ? r.away : r.home;
+  const winner = r.winner === "home" ? state.userTeam : opp;
+  C.setTieResult(tie, hs, as, winner, r.decidedBy || "regulär",
+    userIsHome ? r.homeScorers : r.awayScorers,
+    userIsHome ? r.awayScorers : r.homeScorers);
+  C.simulateRest(ko, tie);
+  C.advance(ko);
+  if (ko.champion) state.champion = ko.champion;
+  saveSeason(state);
+  _openHub();
+}
+
+function _simWMko() {
+  const ko = state.ko;
+  const tie = C.userTie(ko);
+  if (tie) C.simulateTie(tie);
+  C.simulateRest(ko);
+  C.advance(ko);
+  if (ko.champion) state.champion = ko.champion;
+  saveSeason(state);
+  _render();
+}
+
+// Gruppentabelle: oberste zwei Plätze (Qualifikation) hervorheben.
+function _groupStandingsTable(table) {
+  let rows = "";
+  table.forEach((r, i) => {
+    const cls = r.id === state.userTeam ? "me" : (i < 2 ? "cl" : "");
+    rows += `<tr class="${cls}"><td>${i + 1}</td><td class="team">${short(r.id)}</td>` +
+      `<td>${r.pld}</td><td>${r.w}</td><td>${r.d}</td><td>${r.l}</td>` +
+      `<td>${r.gf}:${r.ga}</td><td>${r.gd > 0 ? "+" : ""}${r.gd}</td><td><b>${r.pts}</b></td></tr>`;
+  });
+  return `<table class="standings"><tr><th>#</th><th class="team">Team</th>` +
+    `<th>Sp</th><th>S</th><th>U</th><th>N</th><th>Tore</th><th>Dif</th><th>Pkt</th></tr>${rows}</table>`;
 }
 
 // ---- gemeinsame Helfer ----
