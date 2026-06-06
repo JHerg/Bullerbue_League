@@ -289,8 +289,35 @@ function drawPlayer(ctx, project, p, highlighted, dtMs) {
   const wUA = Math.max(2.5, H * 0.10 * a.build), wFA = Math.max(2, H * 0.085 * a.build);
 
   // Posen berechnen
-  const legF = legPose(hipX, hipY, dir, ph, amp, L1, L2);
-  const legB = legPose(hipX, hipY, dir, ph + Math.PI, amp, L1, L2);
+  let legF = legPose(hipX, hipY, dir, ph, amp, L1, L2);
+  let legB = legPose(hipX, hipY, dir, ph + Math.PI, amp, L1, L2);
+
+  // [ANIM] Schuss: ein Bein holt aus und tritt nach vorn durch
+  if (kicking) {
+    const e = Math.sin(kickP * Math.PI);                 // 0 -> 1 -> 0
+    const kp = { hipX, hipY, dir };
+    kp.kneeX = hipX + dir * L1 * (0.30 + 0.55 * e);
+    kp.kneeY = hipY + L1 * 0.75;
+    kp.footX = hipX + dir * (L1 + L2) * (0.35 + 0.95 * e);
+    kp.footY = hipY + (L1 + L2) * (0.70 - 0.55 * e);     // Fuß hebt sich beim Treffen
+    if (q.kickLeg === 0) legF = kp; else legB = kp;
+  }
+
+  // [ANIM] Grätsche: vorderes Bein lang & flach nach vorn, hinteres angewinkelt
+  if (tackling) {
+    const e = Math.sin(tackP * Math.PI);
+    legF = {
+      hipX, hipY, dir,
+      kneeX: hipX + dir * L1 * 0.9, kneeY: hipY + L1 * 0.4,
+      footX: hipX + dir * (L1 + L2) * (1.0 + 0.45 * e),
+      footY: hipY + (L1 + L2) * 0.28,
+    };
+    legB = {
+      hipX, hipY, dir,
+      kneeX: hipX - dir * L1 * 0.2, kneeY: hipY + L1 * 0.6,
+      footX: hipX - dir * L1 * 0.35, footY: hipY + (L1 + L2) * 0.55,
+    };
+  }
   const armF = armPose(shX, shY, dir, ph + Math.PI, amp, UA, FA);
   const armB = armPose(shX, shY, dir, ph, amp, UA, FA);
   // hinten = Glied weiter "zurück" (kleinere lokale x in Blickrichtung)
