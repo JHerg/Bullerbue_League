@@ -269,7 +269,8 @@ function drawPlayer(ctx, project, p, highlighted, dtMs) {
   const H = VIEW.figure * f * a.height;
   const dir = p.facing.x < 0 ? -1 : 1;
   const amp = Math.max(0.06, stride);                       // Idle = minimal
-  const bob = (-0.5 + 0.5 * Math.cos(2 * ph)) * stride * H * 0.06;
+  const bobDamp = (kicking || tackling) ? 0.3 : 1;
+  const bob = (-0.5 + 0.5 * Math.cos(2 * ph)) * stride * H * 0.06 * bobDamp;
   const breathe = Math.sin(ph * 0.6) * (1 - stride) * H * 0.012;
   const lean = dir * stride * H * 0.12;
 
