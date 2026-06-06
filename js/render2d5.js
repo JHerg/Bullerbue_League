@@ -254,6 +254,14 @@ function drawPlayer(ctx, project, p, highlighted, dtMs) {
   const speed = Math.hypot(p.vx, p.vy);
   const stride = Math.min(1, speed / PLAYER.speed);
 
+  // [ANIM] aktuelle abgeleitete Pose
+  const q = poseFor(p, dtMs);
+  const diving = q.state === "dive";
+  const kicking = q.state === "kick";
+  const tackling = q.state === "tackle";
+  const kickP = kicking ? 1 - (q.t / ANIM.kickDur) : 0;   // 0..1
+  const tackP = tackling ? 1 - (q.t / ANIM.tackleDur) : 0;
+
   let ph = phases.get(p); if (ph === undefined) ph = a.legPhase;
   ph += (0.004 + stride * 0.032) * dtMs;
   phases.set(p, ph);
