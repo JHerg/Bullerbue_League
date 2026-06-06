@@ -8,9 +8,9 @@
 //       homeName, homeColors, awayName, awayColors, difficulty })
 //   -> Promise<{ home, away, winner:"home"|"away" }>
 
-import { HALL, PLAYER, BALL } from "./config.js?v=t2";
-import { drawIndoorPitch } from "./pitch.js?v=t2";
-import * as sound from "./sound.js?v=t2";
+import { HALL, PLAYER, BALL } from "./config.js?v=u2";
+import { drawIndoorPitch } from "./pitch.js?v=u2";
+import * as sound from "./sound.js?v=u2";
 
 const ROUND_TIME = 10;        // Sekunden pro Versuch
 const PREP = 1.0;             // kurze "Bereit"-Pause vor jedem Versuch

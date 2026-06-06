@@ -5,8 +5,8 @@
 // 1 = gegnerisches Tor / y: 0 = oben, 1 = unten) und werden im Spiel auf
 // Welt-Koordinaten und Angriffsrichtung umgerechnet.
 
-import { MARGIN, FIELD } from "./config.js?v=t2";
-import { NATION_TEAMS, NATION_RATINGS, NAME_POOLS, NATION_STARS, NATION_OVERRIDES } from "./nations.js?v=t2";
+import { MARGIN, FIELD } from "./config.js?v=u2";
+import { NATION_TEAMS, NATION_RATINGS, NAME_POOLS, NATION_STARS, NATION_OVERRIDES } from "./nations.js?v=u2";
 
 // ---------------------------------------------------------------------------
 // Formations-Vorlagen
@@ -476,11 +476,12 @@ export function buildSquad(team, attackRight) {
     };
   });
 
-  // WM: Star-Spieler auf den Stürmer (ersten ST) der Startelf legen.
+  // WM: Star-Spieler auf den Stürmer (ersten ST) legen – aber nur, wenn dieser
+  // Platz nicht ohnehin durch eine echte Aufstellung (Override) belegt ist.
   if (isWM) {
     const star = NATION_STARS[team.id];
     const idx = formation.findIndex((s) => s.role === "ST");
-    if (star && idx >= 0) {
+    if (star && idx >= 0 && !overrides[idx]) {
       squad[idx] = {
         ...squad[idx],
         name: star.name,

@@ -9,7 +9,7 @@ export const NATIONS = [
   { id: "n_ger", name: "Deutschland",   short: "GER", colors: ["#ffffff", "#111111"], style: "de",     formation: "4-2-3-1", rating: 88 },
   { id: "n_bra", name: "Brasilien",     short: "BRA", colors: ["#ffd600", "#1b5e20"], style: "luso",   formation: "4-3-3",   rating: 89 },
   { id: "n_fra", name: "Frankreich",    short: "FRA", colors: ["#1565c0", "#ffffff"], style: "fr",     formation: "4-3-3",   rating: 90 },
-  { id: "n_arg", name: "Argentinien",   short: "ARG", colors: ["#6ec6ff", "#ffffff"], style: "latam",  formation: "4-4-2",   rating: 90 },
+  { id: "n_arg", name: "Argentinien",   short: "ARG", colors: ["#6ec6ff", "#ffffff"], style: "latam",  formation: "4-3-3",   rating: 90 },
   { id: "n_esp", name: "Spanien",       short: "ESP", colors: ["#c62828", "#ffd600"], style: "es",     formation: "4-3-3",   rating: 89 },
   { id: "n_eng", name: "England",       short: "ENG", colors: ["#ffffff", "#c62828"], style: "en",     formation: "4-2-3-1", rating: 88 },
   { id: "n_por", name: "Portugal",      short: "POR", colors: ["#b71c1c", "#1b5e20"], style: "luso",   formation: "4-3-3",   rating: 87 },
@@ -126,13 +126,128 @@ export const NAME_POOLS = {
 // Star-Spieler je Nation (erfunden). Wird in teams.js auf den Stürmer (ST)
 // der Startelf gelegt – mit Nummer und optionalem Tempo-/Statur-Faktor.
 // ---------------------------------------------------------------------------
-// Feste Kader-Plätze je Nation (nach Aufstellungs-Index, wie bei den Vereinen).
-// Deutschland: die bekannten Charaktere Jacob, Jürgi und Aleks.
+// Feste, möglichst echte Startelfs je Nation (nach Aufstellungs-Index passend
+// zur Formation). Wird im WM-Modus statt der generierten Namen genutzt.
+// Etappe 1: Top-Favoriten. Deutschland behält Jacob/Jürgi/Aleks.
 export const NATION_OVERRIDES = {
+  // Deutschland (4-2-3-1) — echte Namen + die drei Charaktere im Mittelfeld.
   n_ger: {
-    2: { name: "Jürgi Bluti", number: 99, build: 1.8 },  // IV — stämmig
-    5: { name: "Jacob Jajo",  number: 6,  speed: 1.3 },  // DM — schnell
-    6: { name: "Aleks Pavlo", number: 45 },              // DM
+    0:  { name: "Marc-André ter Stegen", number: 1 },
+    1:  { name: "David Raum", number: 20 },
+    2:  { name: "Jürgi Bluti", number: 99, build: 1.8 },   // IV — stämmig (Charakter)
+    3:  { name: "Antonio Rüdiger", number: 2 },
+    4:  { name: "Joshua Kimmich", number: 5 },
+    5:  { name: "Jacob Jajo", number: 6, speed: 1.3 },     // DM — schnell (Charakter)
+    6:  { name: "Aleks Pavlo", number: 45 },               // DM (Charakter)
+    7:  { name: "Florian Wirtz", number: 17 },
+    8:  { name: "Jamal Musiala", number: 10 },
+    9:  { name: "Leroy Sané", number: 19 },
+    10: { name: "Niclas Füllkrug", number: 9 },
+  },
+
+  // Frankreich (4-3-3)
+  n_fra: {
+    0:  { name: "Mike Maignan", number: 16 },
+    1:  { name: "Théo Hernández", number: 22 },
+    2:  { name: "Dayot Upamecano", number: 4 },
+    3:  { name: "William Saliba", number: 17 },
+    4:  { name: "Jules Koundé", number: 5 },
+    5:  { name: "Aurélien Tchouaméni", number: 8 },
+    6:  { name: "Eduardo Camavinga", number: 6 },
+    7:  { name: "Adrien Rabiot", number: 14 },
+    8:  { name: "Kylian Mbappé", number: 10 },
+    9:  { name: "Marcus Thuram", number: 9 },
+    10: { name: "Ousmane Dembélé", number: 11 },
+  },
+
+  // Brasilien (4-3-3)
+  n_bra: {
+    0:  { name: "Alisson", number: 1 },
+    1:  { name: "Wendell", number: 6 },
+    2:  { name: "Marquinhos", number: 4 },
+    3:  { name: "Gabriel Magalhães", number: 3 },
+    4:  { name: "Danilo", number: 2 },
+    5:  { name: "Bruno Guimarães", number: 8 },
+    6:  { name: "Lucas Paquetá", number: 10 },
+    7:  { name: "André", number: 5 },
+    8:  { name: "Vinícius Júnior", number: 7 },
+    9:  { name: "Endrick", number: 9 },
+    10: { name: "Rodrygo", number: 11 },
+  },
+
+  // Argentinien (4-3-3)
+  n_arg: {
+    0:  { name: "Emiliano Martínez", number: 23 },
+    1:  { name: "Nicolás Tagliafico", number: 3 },
+    2:  { name: "Cristian Romero", number: 13 },
+    3:  { name: "Nicolás Otamendi", number: 19 },
+    4:  { name: "Nahuel Molina", number: 26 },
+    5:  { name: "Enzo Fernández", number: 24 },
+    6:  { name: "Alexis Mac Allister", number: 20 },
+    7:  { name: "Rodrigo De Paul", number: 7 },
+    8:  { name: "Lionel Messi", number: 10 },
+    9:  { name: "Julián Álvarez", number: 9 },
+    10: { name: "Lautaro Martínez", number: 22 },
+  },
+
+  // Spanien (4-3-3)
+  n_esp: {
+    0:  { name: "Unai Simón", number: 23 },
+    1:  { name: "Marc Cucurella", number: 24 },
+    2:  { name: "Robin Le Normand", number: 3 },
+    3:  { name: "Aymeric Laporte", number: 14 },
+    4:  { name: "Dani Carvajal", number: 2 },
+    5:  { name: "Rodri", number: 16 },
+    6:  { name: "Pedri", number: 8 },
+    7:  { name: "Fabián Ruiz", number: 12 },
+    8:  { name: "Nico Williams", number: 17 },
+    9:  { name: "Álvaro Morata", number: 7 },
+    10: { name: "Lamine Yamal", number: 19 },
+  },
+
+  // England (4-2-3-1)
+  n_eng: {
+    0:  { name: "Jordan Pickford", number: 1 },
+    1:  { name: "Luke Shaw", number: 3 },
+    2:  { name: "John Stones", number: 5 },
+    3:  { name: "Marc Guéhi", number: 6 },
+    4:  { name: "Kyle Walker", number: 2 },
+    5:  { name: "Declan Rice", number: 4 },
+    6:  { name: "Jude Bellingham", number: 10 },
+    7:  { name: "Bukayo Saka", number: 7 },
+    8:  { name: "Phil Foden", number: 11 },
+    9:  { name: "Cole Palmer", number: 24 },
+    10: { name: "Harry Kane", number: 9 },
+  },
+
+  // Portugal (4-3-3)
+  n_por: {
+    0:  { name: "Diogo Costa", number: 22 },
+    1:  { name: "Nuno Mendes", number: 19 },
+    2:  { name: "Rúben Dias", number: 3 },
+    3:  { name: "António Silva", number: 14 },
+    4:  { name: "João Cancelo", number: 20 },
+    5:  { name: "Vitinha", number: 6 },
+    6:  { name: "Bruno Fernandes", number: 8 },
+    7:  { name: "João Palhinha", number: 26 },
+    8:  { name: "Rafael Leão", number: 15 },
+    9:  { name: "Gonçalo Ramos", number: 21 },
+    10: { name: "Bernardo Silva", number: 10 },
+  },
+
+  // Niederlande (4-3-3)
+  n_ned: {
+    0:  { name: "Bart Verbruggen", number: 1 },
+    1:  { name: "Nathan Aké", number: 5 },
+    2:  { name: "Virgil van Dijk", number: 4 },
+    3:  { name: "Matthijs de Ligt", number: 3 },
+    4:  { name: "Denzel Dumfries", number: 22 },
+    5:  { name: "Frenkie de Jong", number: 21 },
+    6:  { name: "Tijjani Reijnders", number: 14 },
+    7:  { name: "Ryan Gravenberch", number: 18 },
+    8:  { name: "Cody Gakpo", number: 11 },
+    9:  { name: "Memphis Depay", number: 10 },
+    10: { name: "Xavi Simons", number: 7 },
   },
 };
 
