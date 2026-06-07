@@ -132,18 +132,20 @@ export const NAME_POOLS = {
 // Etappe 1: Top-Favoriten. Deutschland behält Jacob/Jürgi/Aleks.
 export const NATION_OVERRIDES = {
   // Deutschland (4-2-3-1) — echte Namen + die drei Charaktere im Mittelfeld.
+  // Echter WM26-Kader (nominiert 21.05.2026, Nagelsmann): Füllkrug NICHT dabei,
+  // Neuer kehrt zurück, Havertz als Mittelstürmer. Plus die drei Charaktere.
   n_ger: {
-    0:  { name: "Marc-André ter Stegen", number: 1 },
+    0:  { name: "Manuel Neuer", number: 1 },
     1:  { name: "David Raum", number: 20 },
     2:  { name: "Jürgi Bluti", number: 99, build: 1.8 },   // IV — stämmig (Charakter)
-    3:  { name: "Antonio Rüdiger", number: 2 },
-    4:  { name: "Joshua Kimmich", number: 5 },
+    3:  { name: "Jonathan Tah", number: 4 },
+    4:  { name: "Joshua Kimmich", number: 18 },
     5:  { name: "Jacob Jajo", number: 6, speed: 1.3 },     // DM — schnell (Charakter)
     6:  { name: "Aleks Pavlo", number: 45 },               // DM (Charakter)
-    7:  { name: "Florian Wirtz", number: 17 },
+    7:  { name: "Leroy Sané", number: 19 },
     8:  { name: "Jamal Musiala", number: 10 },
-    9:  { name: "Leroy Sané", number: 19 },
-    10: { name: "Niclas Füllkrug", number: 9 },
+    9:  { name: "Florian Wirtz", number: 17 },
+    10: { name: "Kai Havertz", number: 7 },
   },
 
   // Frankreich (4-3-3)

@@ -1,7 +1,7 @@
 // Schnell-Simulation eines Spielergebnisses aus den Team-Stärken.
 // Wird für nicht selbst gespielte Partien (Liga & Pokal) verwendet.
 
-import { ratingOf, teamById, buildSquad } from "./teams.js?v=y2";
+import { ratingOf, teamById, buildSquad } from "./teams.js?v=z2";
 
 // Torwahrscheinlichkeit je Position (Stürmer treffen am häufigsten).
 const SCORE_WEIGHT = { ST: 6, LA: 4, RA: 4, OM: 4, LM: 2.5, RM: 2.5, ZM: 2, DM: 1, IV: 0.8, LV: 0.6, RV: 0.6, TW: 0 };
