@@ -14,7 +14,6 @@ export const NATIONS = [
   { id: "n_eng", name: "England",       short: "ENG", colors: ["#ffffff", "#c62828"], style: "en",     formation: "4-2-3-1", rating: 88 },
   { id: "n_por", name: "Portugal",      short: "POR", colors: ["#b71c1c", "#1b5e20"], style: "luso",   formation: "4-3-3",   rating: 87 },
   { id: "n_ned", name: "Niederlande",   short: "NED", colors: ["#ef6c00", "#ffffff"], style: "nl",     formation: "4-3-3",   rating: 86 },
-  { id: "n_ita", name: "Italien",       short: "ITA", colors: ["#1565c0", "#ffffff"], style: "it",     formation: "4-4-2",   rating: 85 },
   { id: "n_bel", name: "Belgien",       short: "BEL", colors: ["#c62828", "#ffd600"], style: "fr",     formation: "4-2-3-1", rating: 85 },
   { id: "n_cro", name: "Kroatien",      short: "CRO", colors: ["#d32f2f", "#ffffff"], style: "east",   formation: "4-3-3",   rating: 84 },
   { id: "n_uru", name: "Uruguay",       short: "URU", colors: ["#4fc3f7", "#111111"], style: "latam",  formation: "4-4-2",   rating: 83 },
@@ -25,24 +24,16 @@ export const NATIONS = [
   { id: "n_jpn", name: "Japan",         short: "JPN", colors: ["#0d47a1", "#ffffff"], style: "jp",     formation: "4-2-3-1", rating: 81 },
   { id: "n_sen", name: "Senegal",       short: "SEN", colors: ["#1b5e20", "#ffd600"], style: "africa", formation: "4-3-3",   rating: 81 },
   { id: "n_sui", name: "Schweiz",       short: "SUI", colors: ["#c62828", "#ffffff"], style: "de",     formation: "4-2-3-1", rating: 80 },
-  { id: "n_den", name: "Dänemark",      short: "DEN", colors: ["#c62828", "#ffffff"], style: "scandi", formation: "4-3-3",   rating: 81 },
   { id: "n_kor", name: "Südkorea",      short: "KOR", colors: ["#c62828", "#0d47a1"], style: "kr",     formation: "4-4-2",   rating: 78 },
   { id: "n_ecu", name: "Ecuador",       short: "ECU", colors: ["#ffd600", "#1565c0"], style: "latam",  formation: "4-4-2",   rating: 77 },
   { id: "n_aut", name: "Österreich",    short: "AUT", colors: ["#d32f2f", "#ffffff"], style: "de",     formation: "4-2-3-1", rating: 80 },
-  { id: "n_pol", name: "Polen",         short: "POL", colors: ["#ffffff", "#c62828"], style: "east",   formation: "4-4-2",   rating: 78 },
-  { id: "n_ser", name: "Serbien",       short: "SRB", colors: ["#c62828", "#1565c0"], style: "east",   formation: "4-2-3-1", rating: 79 },
-  { id: "n_wal", name: "Wales",         short: "WAL", colors: ["#c62828", "#1b5e20"], style: "en",     formation: "4-4-2",   rating: 76 },
   { id: "n_aus", name: "Australien",    short: "AUS", colors: ["#ffd600", "#1b5e20"], style: "en",     formation: "4-4-2",   rating: 76 },
   { id: "n_can", name: "Kanada",        short: "CAN", colors: ["#c62828", "#ffffff"], style: "en",     formation: "4-3-3",   rating: 77 },
   { id: "n_nor", name: "Norwegen",      short: "NOR", colors: ["#c62828", "#0d47a1"], style: "scandi", formation: "4-3-3",   rating: 80 },
   { id: "n_tur", name: "Türkei",        short: "TUR", colors: ["#c62828", "#ffffff"], style: "mena",   formation: "4-2-3-1", rating: 78 },
-  { id: "n_nga", name: "Nigeria",       short: "NGA", colors: ["#1b5e20", "#ffffff"], style: "africa", formation: "4-3-3",   rating: 79 },
   { id: "n_civ", name: "Elfenbeinküste",short: "CIV", colors: ["#ef6c00", "#1b5e20"], style: "africa", formation: "4-3-3",   rating: 78 },
   { id: "n_egy", name: "Ägypten",       short: "EGY", colors: ["#c62828", "#111111"], style: "africa", formation: "4-2-3-1", rating: 78 },
   { id: "n_gha", name: "Ghana",         short: "GHA", colors: ["#c62828", "#ffd600"], style: "africa", formation: "4-3-3",   rating: 76 },
-  { id: "n_cmr", name: "Kamerun",       short: "CMR", colors: ["#1b5e20", "#c62828"], style: "africa", formation: "4-4-2",   rating: 76 },
-  { id: "n_per", name: "Peru",          short: "PER", colors: ["#c62828", "#ffffff"], style: "latam",  formation: "4-4-2",   rating: 74 },
-  { id: "n_chi", name: "Chile",         short: "CHI", colors: ["#c62828", "#1565c0"], style: "latam",  formation: "4-3-3",   rating: 75 },
   { id: "n_par", name: "Paraguay",      short: "PAR", colors: ["#c62828", "#1565c0"], style: "latam",  formation: "4-4-2",   rating: 73 },
   { id: "n_sco", name: "Schottland",    short: "SCO", colors: ["#1565c0", "#ffffff"], style: "en",     formation: "4-4-2",   rating: 76 },
   { id: "n_cze", name: "Tschechien",    short: "CZE", colors: ["#c62828", "#1565c0"], style: "east",   formation: "4-2-3-1", rating: 76 },
@@ -52,8 +43,18 @@ export const NATIONS = [
   { id: "n_irn", name: "Iran",          short: "IRN", colors: ["#ffffff", "#1b5e20"], style: "mena",   formation: "4-4-2",   rating: 74 },
   { id: "n_tun", name: "Tunesien",      short: "TUN", colors: ["#c62828", "#ffffff"], style: "africa", formation: "4-4-2",   rating: 73 },
   { id: "n_alg", name: "Algerien",      short: "ALG", colors: ["#1b5e20", "#ffffff"], style: "africa", formation: "4-3-3",   rating: 76 },
-  { id: "n_cri", name: "Costa Rica",    short: "CRC", colors: ["#c62828", "#1565c0"], style: "latam",  formation: "4-4-2",   rating: 72 },
   { id: "n_nzl", name: "Neuseeland",    short: "NZL", colors: ["#111111", "#ffffff"], style: "en",     formation: "4-4-2",   rating: 70 },
+  // Weitere echte WM26-Qualifikanten
+  { id: "n_cod", name: "DR Kongo",      short: "COD", colors: ["#1565c0", "#ffd600"], style: "africa", formation: "4-3-3",   rating: 74 },
+  { id: "n_bih", name: "Bosnien-Herz.", short: "BIH", colors: ["#1565c0", "#ffd600"], style: "east",   formation: "4-2-3-1", rating: 73 },
+  { id: "n_rsa", name: "Südafrika",     short: "RSA", colors: ["#1b7a3d", "#ffd600"], style: "africa", formation: "4-3-3",   rating: 72 },
+  { id: "n_uzb", name: "Usbekistan",    short: "UZB", colors: ["#1565c0", "#ffffff"], style: "mena",   formation: "4-3-3",   rating: 71 },
+  { id: "n_cpv", name: "Kap Verde",     short: "CPV", colors: ["#1565c0", "#ffffff"], style: "luso",   formation: "4-3-3",   rating: 70 },
+  { id: "n_irq", name: "Irak",          short: "IRQ", colors: ["#1b7a3d", "#ffffff"], style: "mena",   formation: "4-2-3-1", rating: 69 },
+  { id: "n_pan", name: "Panama",        short: "PAN", colors: ["#c62828", "#1565c0"], style: "latam",  formation: "4-4-2",   rating: 68 },
+  { id: "n_jor", name: "Jordanien",     short: "JOR", colors: ["#c62828", "#111111"], style: "mena",   formation: "4-3-3",   rating: 67 },
+  { id: "n_hai", name: "Haiti",         short: "HAI", colors: ["#1565c0", "#c62828"], style: "fr",     formation: "4-4-2",   rating: 66 },
+  { id: "n_cuw", name: "Curaçao",       short: "CUW", colors: ["#0d47a1", "#ffd600"], style: "nl",     formation: "4-3-3",   rating: 65 },
 ];
 
 // Team-Objekte (ohne rating-Feld) und Rating-Map fürs teams.js-Umschalten.
@@ -250,21 +251,6 @@ export const NATION_OVERRIDES = {
     10: { name: "Xavi Simons", number: 7 },
   },
 
-  // Italien (4-4-2)
-  n_ita: {
-    0:  { name: "Gianluigi Donnarumma", number: 1 },
-    1:  { name: "Federico Dimarco", number: 3 },
-    2:  { name: "Alessandro Bastoni", number: 23 },
-    3:  { name: "Riccardo Calafiori", number: 5 },
-    4:  { name: "Giovanni Di Lorenzo", number: 2 },
-    5:  { name: "Federico Chiesa", number: 14 },
-    6:  { name: "Nicolò Barella", number: 18 },
-    7:  { name: "Sandro Tonali", number: 8 },
-    8:  { name: "Davide Frattesi", number: 16 },
-    9:  { name: "Mateo Retegui", number: 9 },
-    10: { name: "Moise Kean", number: 19 },
-  },
-
   // Belgien (4-2-3-1)
   n_bel: {
     0:  { name: "Koen Casteels", number: 1 },
@@ -385,51 +371,6 @@ export const NATION_OVERRIDES = {
     8:  { name: "Xherdan Shaqiro", number: 23 },
     9:  { name: "Dan Ndoy", number: 20 },
     10: { name: "Breel Embolt", number: 7 },
-  },
-
-  // Dänemark (4-3-3)
-  n_den: {
-    0:  { name: "Kasper Schmeikel", number: 1 },
-    1:  { name: "Joakim Mähle", number: 5 },
-    2:  { name: "Andreas Christansen", number: 6 },
-    3:  { name: "Jannik Vestergard", number: 4 },
-    4:  { name: "Rasmus Kristensan", number: 2 },
-    5:  { name: "Pierre Höjberg", number: 23 },
-    6:  { name: "Morten Hjulmund", number: 7 },
-    7:  { name: "Christian Erikson", number: 10 },
-    8:  { name: "Mikkel Damsgard", number: 14 },
-    9:  { name: "Rasmus Highlund", number: 9 },
-    10: { name: "Andreas Skov Olson", number: 11 },
-  },
-
-  // Serbien (4-2-3-1)
-  n_ser: {
-    0:  { name: "Vanja Milinko", number: 1 },
-    1:  { name: "Filip Mladenov", number: 3 },
-    2:  { name: "Nikola Milenko", number: 15 },
-    3:  { name: "Strahinja Pavlov", number: 4 },
-    4:  { name: "Nemanja Stojic", number: 22 },
-    5:  { name: "Sergej Milinkov", number: 20 },
-    6:  { name: "Nemanja Gudel", number: 18 },
-    7:  { name: "Dusan Tadic", number: 10 },
-    8:  { name: "Filip Kostic", number: 11 },
-    9:  { name: "Lazar Samardzic", number: 16 },
-    10: { name: "Aleksandar Mitrov", number: 9 },
-  },
-
-  // Polen (4-4-2)
-  n_pol: {
-    0:  { name: "Wojciech Szczesny", number: 1 },
-    1:  { name: "Bartosz Bereszinski", number: 20 },
-    2:  { name: "Jan Bednarski", number: 5 },
-    3:  { name: "Jakub Kiwor", number: 15 },
-    4:  { name: "Tomasz Kendziora", number: 2 },
-    5:  { name: "Nicola Zalewki", number: 21 },
-    6:  { name: "Piotr Zielinsky", number: 10 },
-    7:  { name: "Sebastian Szymansky", number: 8 },
-    8:  { name: "Przemek Frankov", number: 11 },
-    9:  { name: "Robert Lewandov", number: 9 },
-    10: { name: "Krzysztof Piontek", number: 23 },
   },
 
   // Norwegen (4-3-3)

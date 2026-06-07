@@ -1,9 +1,9 @@
 // Eine Mannschaft: 11 Spieler aus der Startelf-Datenbasis, Farben, Angriffs-
 // richtung und Schwierigkeitsprofil für die KI.
 
-import { buildSquad } from "./teams.js?v=x2";
-import { Player } from "./player.js?v=x2";
-import { MARGIN, FIELD } from "./config.js?v=x2";
+import { buildSquad } from "./teams.js?v=y2";
+import { Player } from "./player.js?v=y2";
+import { MARGIN, FIELD } from "./config.js?v=y2";
 
 // Hallen-Aufstellung: Torwart + 3 Feldspieler (relativ zum Spielbereich;
 // x 0=eigenes Tor..1=Gegnertor, y 0=oben..1=unten).

@@ -7,9 +7,9 @@
 // Die Gruppen werden – wie bei der echten Auslosung – nach Lostöpfen
 // (Stärke) gebildet, mit fester Mischung, damit die Auslosung stabil bleibt.
 
-import { simulateMatch } from "./sim.js?v=x2";
-import { ratingOf } from "./teams.js?v=x2";
-import * as C from "./cup.js?v=x2";
+import { simulateMatch } from "./sim.js?v=y2";
+import { ratingOf } from "./teams.js?v=y2";
+import * as C from "./cup.js?v=y2";
 
 export const GROUP_LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
 export const WM_ROUND_NAMES = ["Sechzehntelfinale", "Achtelfinale", "Viertelfinale", "Halbfinale", "Finale"];
@@ -34,12 +34,25 @@ const GROUP_PAIRS = [
   [[0, 3], [1, 2]],
 ];
 
-// Neue WM anlegen: 48 Teams nach Stärke in 4 Lostöpfe, je einer pro Gruppe.
+// Offizielle Auslosung der WM 2026 (Gruppen A–L), Stand Final Draw 05.12.2025.
+const OFFICIAL_GROUPS = [
+  ["n_mex", "n_rsa", "n_kor", "n_cze"],   // A
+  ["n_can", "n_bih", "n_qat", "n_sui"],   // B
+  ["n_bra", "n_mar", "n_hai", "n_sco"],   // C
+  ["n_usa", "n_par", "n_aus", "n_tur"],   // D
+  ["n_ger", "n_cuw", "n_civ", "n_ecu"],   // E
+  ["n_ned", "n_jpn", "n_swe", "n_tun"],   // F
+  ["n_bel", "n_egy", "n_irn", "n_nzl"],   // G
+  ["n_esp", "n_cpv", "n_ksa", "n_uru"],   // H
+  ["n_fra", "n_sen", "n_irq", "n_nor"],   // I
+  ["n_arg", "n_alg", "n_aut", "n_jor"],   // J
+  ["n_por", "n_cod", "n_uzb", "n_col"],   // K
+  ["n_eng", "n_cro", "n_gha", "n_pan"],   // L
+];
+
+// Neue WM anlegen: echte WM26-Gruppen (12 × 4), Nutzerteam ist frei wählbar.
 export function createWM(allTeamIds, userTeam) {
-  const sorted = allTeamIds.slice().sort((a, b) => ratingOf(b) - ratingOf(a)).slice(0, 48);
-  const pots = [0, 1, 2, 3].map((p) => seededShuffle(sorted.slice(p * 12, p * 12 + 12), 9173 + p * 31));
-  const groups = [];
-  for (let g = 0; g < 12; g++) groups.push([pots[0][g], pots[1][g], pots[2][g], pots[3][g]]);
+  const groups = OFFICIAL_GROUPS.map((g) => g.slice());
 
   return {
     type: "wm",
