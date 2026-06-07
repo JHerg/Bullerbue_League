@@ -31,9 +31,11 @@ function poisson(lambda) {
 }
 
 // Erwartete Tore je Team aus Stärke-Differenz; Heimvorteil berücksichtigt.
+// Stärkere Kopplung an die Gesamtstärke (GS): klare Favoriten gewinnen meist,
+// Außenseiter treffen selten -> Überraschungen sind rar und knapp (oft 1:0).
 function expectedGoals(att, def, homeAdv) {
-  const base = 1.3 + (att - def) * 0.045 + homeAdv;
-  return Math.max(0.2, Math.min(5.5, base));
+  const base = 1.2 + (att - def) * 0.062 + homeAdv;
+  return Math.max(0.14, Math.min(5.5, base));
 }
 
 // Ergebnis einer Partie inkl. Torschützen. homeId/awayId sind Team-IDs.

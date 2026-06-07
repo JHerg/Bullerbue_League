@@ -43,18 +43,18 @@ export const NATIONS = [
   { id: "n_irn", name: "Iran",          short: "IRN", colors: ["#ffffff", "#1b5e20"], style: "mena",   formation: "4-4-2",   rating: 74 },
   { id: "n_tun", name: "Tunesien",      short: "TUN", colors: ["#c62828", "#ffffff"], style: "africa", formation: "4-4-2",   rating: 73 },
   { id: "n_alg", name: "Algerien",      short: "ALG", colors: ["#1b5e20", "#ffffff"], style: "africa", formation: "4-3-3",   rating: 76 },
-  { id: "n_nzl", name: "Neuseeland",    short: "NZL", colors: ["#111111", "#ffffff"], style: "en",     formation: "4-4-2",   rating: 70 },
+  { id: "n_nzl", name: "Neuseeland",    short: "NZL", colors: ["#111111", "#ffffff"], style: "en",     formation: "4-4-2",   rating: 66 },
   // Weitere echte WM26-Qualifikanten
   { id: "n_cod", name: "DR Kongo",      short: "COD", colors: ["#1565c0", "#ffd600"], style: "africa", formation: "4-3-3",   rating: 74 },
   { id: "n_bih", name: "Bosnien-Herz.", short: "BIH", colors: ["#1565c0", "#ffd600"], style: "east",   formation: "4-2-3-1", rating: 73 },
   { id: "n_rsa", name: "Südafrika",     short: "RSA", colors: ["#1b7a3d", "#ffd600"], style: "africa", formation: "4-3-3",   rating: 72 },
   { id: "n_uzb", name: "Usbekistan",    short: "UZB", colors: ["#1565c0", "#ffffff"], style: "mena",   formation: "4-3-3",   rating: 71 },
   { id: "n_cpv", name: "Kap Verde",     short: "CPV", colors: ["#1565c0", "#ffffff"], style: "luso",   formation: "4-3-3",   rating: 70 },
-  { id: "n_irq", name: "Irak",          short: "IRQ", colors: ["#1b7a3d", "#ffffff"], style: "mena",   formation: "4-2-3-1", rating: 69 },
-  { id: "n_pan", name: "Panama",        short: "PAN", colors: ["#c62828", "#1565c0"], style: "latam",  formation: "4-4-2",   rating: 68 },
-  { id: "n_jor", name: "Jordanien",     short: "JOR", colors: ["#c62828", "#111111"], style: "mena",   formation: "4-3-3",   rating: 67 },
-  { id: "n_hai", name: "Haiti",         short: "HAI", colors: ["#1565c0", "#c62828"], style: "fr",     formation: "4-4-2",   rating: 66 },
-  { id: "n_cuw", name: "Curaçao",       short: "CUW", colors: ["#0d47a1", "#ffd600"], style: "nl",     formation: "4-3-3",   rating: 65 },
+  { id: "n_irq", name: "Irak",          short: "IRQ", colors: ["#1b7a3d", "#ffffff"], style: "mena",   formation: "4-2-3-1", rating: 67 },
+  { id: "n_pan", name: "Panama",        short: "PAN", colors: ["#c62828", "#1565c0"], style: "latam",  formation: "4-4-2",   rating: 66 },
+  { id: "n_jor", name: "Jordanien",     short: "JOR", colors: ["#c62828", "#111111"], style: "mena",   formation: "4-3-3",   rating: 64 },
+  { id: "n_hai", name: "Haiti",         short: "HAI", colors: ["#1565c0", "#c62828"], style: "fr",     formation: "4-4-2",   rating: 61 },
+  { id: "n_cuw", name: "Curaçao",       short: "CUW", colors: ["#0d47a1", "#ffd600"], style: "nl",     formation: "4-3-3",   rating: 58 },
 ];
 
 // Team-Objekte (ohne rating-Feld) und Rating-Map fürs teams.js-Umschalten.
