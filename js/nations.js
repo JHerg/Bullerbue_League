@@ -434,6 +434,98 @@ export const NATION_OVERRIDES = {
     9:  { name: "Kerem Akturko", number: 7 },
     10: { name: "Baris Alper", number: 17 },
   },
+
+  // --- Etappe 4: weitere leicht "gefälschte" Namen ---
+
+  // Österreich (4-2-3-1)
+  n_aut: {
+    0:  { name: "Patrik Penz", number: 1 },
+    1:  { name: "Philipp Mwena", number: 3 },
+    2:  { name: "David Alabo", number: 8 },
+    3:  { name: "Kevin Danzo", number: 15 },
+    4:  { name: "Stefan Posh", number: 2 },
+    5:  { name: "Niki Seiwold", number: 6 },
+    6:  { name: "Konrad Laimar", number: 14 },
+    7:  { name: "Marcel Sabitzar", number: 9 },
+    8:  { name: "Chris Baumgarten", number: 19 },
+    9:  { name: "Patrik Wimber", number: 11 },
+    10: { name: "Marko Arnauto", number: 7 },
+  },
+
+  // Ecuador (4-4-2)
+  n_ecu: {
+    0:  { name: "Hernan Galindo", number: 1 },
+    1:  { name: "Pervis Estupin", number: 7 },
+    2:  { name: "Piero Hincap", number: 3 },
+    3:  { name: "Willian Pachon", number: 5 },
+    4:  { name: "Angelo Preciad", number: 2 },
+    5:  { name: "Gonzalo Platos", number: 19 },
+    6:  { name: "Moises Caiced", number: 23 },
+    7:  { name: "Alan Franko", number: 13 },
+    8:  { name: "Kendry Paes", number: 20 },
+    9:  { name: "Enner Valenza", number: 11 },
+    10: { name: "Leo Campano", number: 9 },
+  },
+
+  // Australien (4-4-2)
+  n_aus: {
+    0:  { name: "Mat Ryen", number: 1 },
+    1:  { name: "Aziz Behik", number: 3 },
+    2:  { name: "Harry Souttah", number: 19 },
+    3:  { name: "Kye Rowels", number: 4 },
+    4:  { name: "Nat Atkins", number: 2 },
+    5:  { name: "Martin Boyles", number: 7 },
+    6:  { name: "Aiden O'Neil", number: 13 },
+    7:  { name: "Connor Metcalf", number: 8 },
+    8:  { name: "Riley McGrew", number: 15 },
+    9:  { name: "Mitch Dukes", number: 9 },
+    10: { name: "Jackson Irving", number: 22 },
+  },
+
+  // Kanada (4-3-3)
+  n_can: {
+    0:  { name: "Dayne St. Clare", number: 1 },
+    1:  { name: "Alphonso Davis", number: 19 },
+    2:  { name: "Moise Bombit", number: 5 },
+    3:  { name: "Derek Cornel", number: 2 },
+    4:  { name: "Ali Johnston", number: 4 },
+    5:  { name: "Stephen Eustaq", number: 7 },
+    6:  { name: "Ismael Kone", number: 6 },
+    7:  { name: "Jon Osorio", number: 21 },
+    8:  { name: "Tajon Buchan", number: 11 },
+    9:  { name: "Jonathan Davo", number: 20 },
+    10: { name: "Cyle Larini", number: 17 },
+  },
+
+  // Schottland (4-4-2)
+  n_sco: {
+    0:  { name: "Angus Gunne", number: 1 },
+    1:  { name: "Andy Robertsen", number: 3 },
+    2:  { name: "Jack Hendrie", number: 5 },
+    3:  { name: "Grant Hanlon", number: 4 },
+    4:  { name: "Aaron Hickie", number: 2 },
+    5:  { name: "Ryan Christen", number: 11 },
+    6:  { name: "Billy Gilmoor", number: 8 },
+    7:  { name: "Scott McTomay", number: 6 },
+    8:  { name: "John McGinly", number: 7 },
+    9:  { name: "Che Adamson", number: 9 },
+    10: { name: "Lyndon Dyke", number: 20 },
+  },
+
+  // Ägypten (4-2-3-1)
+  n_egy: {
+    0:  { name: "Mohamed Shenawy", number: 1 },
+    1:  { name: "Mohamed Hany", number: 3 },
+    2:  { name: "Mohamed Abdel", number: 6 },
+    3:  { name: "Rami Rabea", number: 4 },
+    4:  { name: "Ahmed Fattou", number: 2 },
+    5:  { name: "Mohamed Elnen", number: 17 },
+    6:  { name: "Tarek Hamad", number: 8 },
+    7:  { name: "Mahmoud Trezegue", number: 14 },
+    8:  { name: "Mohamed Salar", number: 10 },
+    9:  { name: "Omar Marmush", number: 21 },
+    10: { name: "Mostafa Mohamad", number: 9 },
+  },
 };
 
 export const NATION_STARS = {
