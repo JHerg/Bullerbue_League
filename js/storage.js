@@ -1,12 +1,19 @@
-// Speichern/Laden des Saison-Fortschritts (Liga oder Pokal) via localStorage.
-// Es gibt jeweils einen Slot pro Saisontyp.
+// Speichern/Laden des Saison-Fortschritts (Liga, Pokal, WM, Hallenturnier)
+// via localStorage. Es gibt je Wettbewerb UND Saisontyp einen eigenen Slot,
+// damit sich z. B. ein Bundesliga-Pokal und ein WM-Pokal nicht überschreiben
+// (sie nutzen andere Team-IDs und würden sonst beim Fortsetzen abstürzen).
+
+import { getCompetition } from "./teams.js?v=a4";
 
 const KEY = "bullerbue_season_v1";
+
+// Slot-Schlüssel: "<wettbewerb>:<typ>" (z. B. "wm:cup", "bundesliga:league").
+function slot(type) { return getCompetition() + ":" + type; }
 
 export function saveSeason(state) {
   try {
     const all = _readAll();
-    all[state.type] = state;
+    all[slot(state.type)] = state;
     localStorage.setItem(KEY, JSON.stringify(all));
   } catch (e) {
     console.warn("Speichern fehlgeschlagen:", e);
@@ -14,7 +21,7 @@ export function saveSeason(state) {
 }
 
 export function loadSeason(type) {
-  return _readAll()[type] || null;
+  return _readAll()[slot(type)] || null;
 }
 
 export function hasSeason(type) {
@@ -23,7 +30,7 @@ export function hasSeason(type) {
 
 export function clearSeason(type) {
   const all = _readAll();
-  delete all[type];
+  delete all[slot(type)];
   try { localStorage.setItem(KEY, JSON.stringify(all)); } catch (e) { /* ignore */ }
 }
 

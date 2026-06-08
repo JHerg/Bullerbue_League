@@ -5,8 +5,8 @@
 // 1 = gegnerisches Tor / y: 0 = oben, 1 = unten) und werden im Spiel auf
 // Welt-Koordinaten und Angriffsrichtung umgerechnet.
 
-import { MARGIN, FIELD } from "./config.js?v=a3";
-import { NATION_TEAMS, NATION_RATINGS, NAME_POOLS, NATION_STARS, NATION_OVERRIDES } from "./nations.js?v=a3";
+import { MARGIN, FIELD } from "./config.js?v=a4";
+import { NATION_TEAMS, NATION_RATINGS, NAME_POOLS, NATION_STARS, NATION_OVERRIDES } from "./nations.js?v=a4";
 
 // ---------------------------------------------------------------------------
 // Formations-Vorlagen
@@ -482,10 +482,18 @@ export function buildSquad(team, attackRight) {
     const star = NATION_STARS[team.id];
     const idx = formation.findIndex((s) => s.role === "ST");
     if (star && idx >= 0 && !overrides[idx]) {
+      const oldNum = squad[idx].number;
+      const newNum = star.number ?? oldNum;
+      // Nummern-Kollision vermeiden: trägt ein anderer Spieler schon die
+      // Star-Nummer, bekommt er die alte Nummer des Stürmers (Tausch).
+      if (newNum !== oldNum) {
+        const clash = squad.find((p, i) => i !== idx && p.number === newNum);
+        if (clash) clash.number = oldNum;
+      }
       squad[idx] = {
         ...squad[idx],
         name: star.name,
-        number: star.number ?? squad[idx].number,
+        number: newNum,
         speed: star.speed ?? squad[idx].speed,
         build: star.build ?? squad[idx].build,
       };

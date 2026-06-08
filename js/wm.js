@@ -7,25 +7,11 @@
 // Die Gruppen werden – wie bei der echten Auslosung – nach Lostöpfen
 // (Stärke) gebildet, mit fester Mischung, damit die Auslosung stabil bleibt.
 
-import { simulateMatch } from "./sim.js?v=a3";
-import { ratingOf } from "./teams.js?v=a3";
-import * as C from "./cup.js?v=a3";
+import { simulateMatch } from "./sim.js?v=a4";
+import * as C from "./cup.js?v=a4";
 
 export const GROUP_LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
 export const WM_ROUND_NAMES = ["Sechzehntelfinale", "Achtelfinale", "Viertelfinale", "Halbfinale", "Finale"];
-
-// Deterministischer Shuffle (LCG), damit die Auslosung bei gleichem Seed
-// immer gleich aussieht.
-function seededShuffle(arr, seed) {
-  const a = arr.slice();
-  let s = seed >>> 0;
-  const rnd = () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; };
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(rnd() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
 
 // Paarungen je Spieltag in einer Vierergruppe (Indizes 0..3).
 const GROUP_PAIRS = [
