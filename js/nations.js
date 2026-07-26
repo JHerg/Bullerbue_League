@@ -526,6 +526,128 @@ export const NATION_OVERRIDES = {
     9:  { name: "Omar Marmush", number: 21 },
     10: { name: "Mostafa Mohamad", number: 9 },
   },
+
+  // --- Etappe 5: weitere leicht "gefälschte" Namen ---
+
+  // Ghana (4-3-3)
+  n_gha: {
+    0:  { name: "Lawrence Zigo", number: 1 },
+    1:  { name: "Gideon Mensa", number: 3 },
+    2:  { name: "Alex Djiko", number: 15 },
+    3:  { name: "Mohammed Salis", number: 4 },
+    4:  { name: "Tariq Lampten", number: 2 },
+    5:  { name: "Thomas Parten", number: 5 },
+    6:  { name: "Mohammed Kudos", number: 20 },
+    7:  { name: "Elisha Owus", number: 8 },
+    8:  { name: "Jordan Ayen", number: 10 },
+    9:  { name: "Inaki Willems", number: 19 },
+    10: { name: "Antoine Semeno", number: 7 },
+  },
+
+  // Paraguay (4-4-2)
+  n_par: {
+    0:  { name: "Antony Silvo", number: 1 },
+    1:  { name: "Juan Alfar", number: 6 },
+    2:  { name: "Gustavo Gomes", number: 15 },
+    3:  { name: "Fabian Balbon", number: 2 },
+    4:  { name: "Robert Rojo", number: 4 },
+    5:  { name: "Julio Ensiso", number: 10 },
+    6:  { name: "Andres Cubos", number: 5 },
+    7:  { name: "Mathias Villasan", number: 8 },
+    8:  { name: "Miguel Almir", number: 24 },
+    9:  { name: "Antonio Sanabra", number: 9 },
+    10: { name: "Adam Bareir", number: 19 },
+  },
+
+  // Tschechien (4-2-3-1)
+  n_cze: {
+    0:  { name: "Jindrich Stanko", number: 1 },
+    1:  { name: "David Jurasan", number: 3 },
+    2:  { name: "Robin Hranak", number: 4 },
+    3:  { name: "David Zimo", number: 5 },
+    4:  { name: "Vladimir Coufel", number: 2 },
+    5:  { name: "Tomas Soucko", number: 15 },
+    6:  { name: "Lukas Provo", number: 14 },
+    7:  { name: "Antonin Barok", number: 17 },
+    8:  { name: "Adam Hlozko", number: 10 },
+    9:  { name: "Vaclav Cern", number: 21 },
+    10: { name: "Patrik Schik", number: 9 },
+  },
+
+  // Schweden (4-4-2)
+  n_swe: {
+    0:  { name: "Robin Olsson", number: 1 },
+    1:  { name: "Ludwig Augustin", number: 3 },
+    2:  { name: "Victor Lindelo", number: 17 },
+    3:  { name: "Isak Hein", number: 5 },
+    4:  { name: "Emil Kraft", number: 2 },
+    5:  { name: "Dejan Kulusev", number: 10 },
+    6:  { name: "Albin Ekdol", number: 8 },
+    7:  { name: "Mattias Svanber", number: 16 },
+    8:  { name: "Anthony Elango", number: 11 },
+    9:  { name: "Alexander Isok", number: 9 },
+    10: { name: "Viktor Gyoker", number: 20 },
+  },
+
+  // Tunesien (4-4-2)
+  n_tun: {
+    0:  { name: "Aymen Dahman", number: 1 },
+    1:  { name: "Ali Maalol", number: 12 },
+    2:  { name: "Yassine Meria", number: 3 },
+    3:  { name: "Montassar Talby", number: 4 },
+    4:  { name: "Wajdi Kechrid", number: 2 },
+    5:  { name: "Ellyes Skhir", number: 7 },
+    6:  { name: "Aissa Laidon", number: 14 },
+    7:  { name: "Hamza Rafi", number: 8 },
+    8:  { name: "Naim Slit", number: 10 },
+    9:  { name: "Youssef Msakn", number: 13 },
+    10: { name: "Seif Jaziri", number: 19 },
+  },
+
+  // Algerien (4-3-3)
+  n_alg: {
+    0:  { name: "Alex Oukidja", number: 1 },
+    1:  { name: "Ramy Bensebain", number: 4 },
+    2:  { name: "Aissa Mand", number: 6 },
+    3:  { name: "Ahmed Toubo", number: 5 },
+    4:  { name: "Youcef Atol", number: 2 },
+    5:  { name: "Nabil Bentalb", number: 8 },
+    6:  { name: "Ismael Bennacar", number: 13 },
+    7:  { name: "Ramiz Zerrouk", number: 17 },
+    8:  { name: "Riyad Mahroz", number: 7 },
+    9:  { name: "Baghdad Bouned", number: 9 },
+    10: { name: "Said Benrahm", number: 10 },
+  },
+
+  // Iran (4-4-2)
+  n_irn: {
+    0:  { name: "Alireza Beiranv", number: 1 },
+    1:  { name: "Ehsan Hajsaf", number: 3 },
+    2:  { name: "Majid Hossein", number: 5 },
+    3:  { name: "Shojae Khalil", number: 6 },
+    4:  { name: "Sadegh Moharram", number: 2 },
+    5:  { name: "Alireza Jahanbak", number: 7 },
+    6:  { name: "Saeid Ezatol", number: 4 },
+    7:  { name: "Ahmad Nourol", number: 8 },
+    8:  { name: "Vahid Amir", number: 18 },
+    9:  { name: "Mehdi Tarem", number: 9 },
+    10: { name: "Sardar Azmon", number: 20 },
+  },
+
+  // Saudi-Arabien (4-4-2)
+  n_ksa: {
+    0:  { name: "Mohammed Al-Owai", number: 21 },
+    1:  { name: "Yasser Al-Shahran", number: 13 },
+    2:  { name: "Ali Al-Bulaih", number: 4 },
+    3:  { name: "Hassan Tambakt", number: 3 },
+    4:  { name: "Saud Abdulham", number: 2 },
+    5:  { name: "Salem Al-Dawsar", number: 10 },
+    6:  { name: "Mohamed Kann", number: 8 },
+    7:  { name: "Nasser Al-Dawsar", number: 14 },
+    8:  { name: "Sami Al-Naj", number: 17 },
+    9:  { name: "Firas Al-Buraik", number: 9 },
+    10: { name: "Saleh Al-Shehr", number: 11 },
+  },
 };
 
 export const NATION_STARS = {
