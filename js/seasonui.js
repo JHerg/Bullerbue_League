@@ -5,12 +5,12 @@
 //   deps.runMatch(homeDef, awayDef, opts) -> Promise<{home, away}>  (Endstand)
 //   deps.showMenu()                       -> zurück ins Startmenü
 
-import { TEAMS, teamById } from "./teams.js?v=b7";
-import * as L from "./league.js?v=b7";
-import * as C from "./cup.js?v=b7";
-import * as W from "./wm.js?v=b7";
-import { saveSeason, loadSeason } from "./storage.js?v=b7";
-import * as achievements from "./achievements.js?v=b7";
+import { TEAMS, teamById } from "./teams.js?v=b8";
+import * as L from "./league.js?v=b8";
+import * as C from "./cup.js?v=b8";
+import * as W from "./wm.js?v=b8";
+import { saveSeason, loadSeason } from "./storage.js?v=b8";
+import * as achievements from "./achievements.js?v=b8";
 
 let deps = null;
 let state = null;
@@ -20,7 +20,20 @@ const hubEl = () => document.getElementById("hub");
 const contentEl = () => document.getElementById("hub-content");
 const buttonsEl = () => document.getElementById("hub-buttons");
 
-export function init(d) { deps = d; }
+export function init(d) {
+  deps = d;
+  const c = contentEl();
+  if (c) c.addEventListener("click", _onSpecClick);
+}
+
+// Klick auf ein Zuschauer-Spiel (im Hub-Inhalt, via Event-Delegation).
+function _onSpecClick(e) {
+  const el = e.target.closest("[data-spec]");
+  if (!el || !state || !state.spectator) return;
+  const kind = el.getAttribute("data-spec");
+  if (kind === "grp") _watchSpecGroup(+el.dataset.g, +el.dataset.mi);
+  else if (kind === "ko") _watchSpecKo(+el.dataset.ti);
+}
 export function hasSave(type) { return !!loadSeason(type); }
 
 export function startLeague(userTeam, o) {
@@ -37,12 +50,17 @@ export function startCup(userTeam, o) {
   _openHub();
 }
 
-export function startWM(userTeam, o) {
+export function startWM(userTeam, o, spectator = false) {
   opts = o;
-  state = W.createWM(TEAMS.map((t) => t.id), userTeam);
+  // Zuschauer: kein eigenes Team (userTeam = null), du schaust nur zu.
+  state = W.createWM(TEAMS.map((t) => t.id), spectator ? null : userTeam, spectator);
   saveSeason(state);
   _openHub();
 }
+
+// „Schöner Fussball"-Profil für Zuschauer-Spiele (viel Passspiel, kein
+// Dauer-Pressing) – beide Teams spielen damit flüssig.
+const SPEC_DIFF = { speed: 0.9, reaction: 0.3, passAccuracy: 0.8, shootRange: 240, decisiveness: 0.6, press: 0.6 };
 
 export function resume(type, o) {
   opts = o;
@@ -250,8 +268,122 @@ function _bracketHtml(rounds = state.rounds, names = C.ROUND_NAMES, userTeam = s
 
 // ============================ WM (Gruppen + K.o.) ============================
 function _renderWM() {
+  if (state.spectator) { _renderWMSpectator(); return; }
   if (state.phase === "groups") _renderWMGroups();
   else _renderWMko();
+}
+
+// ---------------------- WM als Zuschauer (schöner Fussball) ----------------------
+// Kein eigenes Team: du wählst pro Spieltag/K.o.-Runde ein Spiel zum Anschauen,
+// der Rest wird simuliert. Beide Mannschaften spielen mit dem SPEC_DIFF-Profil.
+function _renderWMSpectator() {
+  if (state.phase === "groups") _renderSpecGroups();
+  else _renderSpecKo();
+}
+
+function _watchMatch(homeId, awayId, knockout) {
+  return deps.runMatch(teamById(homeId), teamById(awayId),
+    { ...opts, knockout, autoPlay: true, spectate: true, difficulty: SPEC_DIFF });
+}
+
+function _renderSpecGroups() {
+  const round = state.groupRound;
+  let html = `<h2>WM 2026 🌍 – Zuschauer</h2>`;
+  html += `<div class="hub-sub">Gruppenphase · Spieltag ${round + 1} / 3 · Wähle ein Spiel zum Anschauen 👁</div>`;
+
+  let boxes = "";
+  for (let g = 0; g < 12; g++) {
+    const fxs = W.groupFixtures(state, g, round);
+    const items = fxs.map((f, mi) =>
+      `<button class="spec-fx" data-spec="grp" data-g="${g}" data-mi="${mi}">` +
+      `<span class="sf-t">${short(f.home)} – ${short(f.away)}</span><span class="sf-go">👁</span></button>`).join("");
+    boxes += `<div class="spec-grp"><div class="spec-grp-h">Gruppe ${W.GROUP_LETTERS[g]}</div>${items}</div>`;
+  }
+  html += `<div class="spec-list">${boxes}</div>`;
+  html += _allGroupsHtml();
+  html += _scorersTable(W.computeScorers(state));
+  contentEl().innerHTML = html;
+
+  _setButtons([
+    _btn("⏩ Spieltag simulieren", "secondary", _simWMGroup),
+    _btn("Menü", "ghost", _toMenu),
+  ]);
+}
+
+function _renderSpecKo() {
+  const ko = state.ko;
+  let html = `<h2>WM 2026 🌍 – Zuschauer</h2>`;
+  if (ko.champion) {
+    html += `<div class="hub-sub">Turnier beendet</div>`;
+    html += `<div class="fixture">🏆 Weltmeister: ${name(ko.champion)}</div>`;
+  } else {
+    html += `<div class="hub-sub">${W.koRoundName(state)} · Wähle ein Spiel zum Anschauen 👁</div>`;
+    const roundTies = ko.rounds[ko.currentRound];
+    const items = roundTies.map((t, ti) => {
+      if (t.winner !== null) {
+        const hl = t.winner === t.home ? "<b>" : "", hr = t.winner === t.home ? "</b>" : "";
+        const al = t.winner === t.away ? "<b>" : "", ar = t.winner === t.away ? "</b>" : "";
+        return `<div class="spec-fx done"><span class="sf-t">${hl}${short(t.home)}${hr} – ${al}${short(t.away)}${ar}</span>` +
+          `<span class="sf-go">${t.hs}:${t.as}</span></div>`;
+      }
+      return `<button class="spec-fx" data-spec="ko" data-ti="${ti}">` +
+        `<span class="sf-t">${short(t.home)} – ${short(t.away)}</span><span class="sf-go">👁</span></button>`;
+    }).join("");
+    html += `<div class="spec-list"><div class="spec-grp">${items}</div></div>`;
+  }
+  html += _bracketHtml(ko.rounds, W.WM_ROUND_NAMES, null);
+  html += _scorersTable(W.computeScorers(state));
+  contentEl().innerHTML = html;
+
+  if (ko.champion) {
+    _setButtons([_btn("Zum Menü", "ghost", _toMenu)]);
+  } else {
+    _setButtons([
+      _btn("⏩ Runde simulieren", "secondary", _simSpecKoRound),
+      _btn("Menü", "ghost", _toMenu),
+    ]);
+  }
+}
+
+async function _watchSpecGroup(g, mi) {
+  const round = state.groupRound;
+  const fx = W.groupFixtures(state, g, round)[mi];
+  if (!fx) return;
+  const r = await _watchMatch(fx.home, fx.away, false);
+  const watched = {
+    home: fx.home, away: fx.away, hs: r.home, as: r.away,
+    homeScorers: r.homeScorers, awayScorers: r.awayScorers,
+  };
+  const results = [watched, ...W.simulateGroupRound(state, round, fx)];
+  W.recordGroupRound(state, round, results);
+  state.groupRound++;
+  if (W.groupsComplete(state)) W.buildKnockout(state);
+  saveSeason(state);
+  _openHub();
+}
+
+async function _watchSpecKo(ti) {
+  const ko = state.ko;
+  const tie = ko.rounds[ko.currentRound][ti];
+  if (!tie || tie.winner !== null) return;
+  const r = await _watchMatch(tie.home, tie.away, true);
+  const winner = r.winner === "home" ? tie.home : tie.away;
+  C.setTieResult(tie, r.home, r.away, winner, r.decidedBy || "regulär",
+    r.homeScorers, r.awayScorers);
+  C.simulateRest(ko, tie);
+  C.advance(ko);
+  if (ko.champion) state.champion = ko.champion;
+  saveSeason(state);
+  _openHub();
+}
+
+function _simSpecKoRound() {
+  const ko = state.ko;
+  C.simulateRest(ko);
+  C.advance(ko);
+  if (ko.champion) state.champion = ko.champion;
+  saveSeason(state);
+  _render();
 }
 
 function _renderWMGroups() {

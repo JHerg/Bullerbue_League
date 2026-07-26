@@ -2,11 +2,11 @@
 // kontextabhängige Nutzer-Aktion (Leertaste), Aus-Erkennung
 // (Einwurf/Ecke/Abstoß), Tore, Spieluhr und Halbzeit mit Seitenwechsel.
 
-import { WORLD, FIELD, MARGIN, GOAL, HALL, BALL, KICK, PLAYER, USER, PX_PER_M, DIFFICULTY_TEAMMATE } from "./config.js?v=b7";
-import { Team } from "./team.js?v=b7";
-import { Ball } from "./ball.js?v=b7";
-import { computeAI } from "./ai.js?v=b7";
-import { ensureContrast } from "./teams.js?v=b7";
+import { WORLD, FIELD, MARGIN, GOAL, HALL, BALL, KICK, PLAYER, USER, PX_PER_M, DIFFICULTY_TEAMMATE } from "./config.js?v=b8";
+import { Team } from "./team.js?v=b8";
+import { Ball } from "./ball.js?v=b8";
+import { computeAI } from "./ai.js?v=b8";
+import { ensureContrast } from "./teams.js?v=b8";
 
 const EDGE = 8; // wie weit innerhalb der Linie der Ball bei Standards liegt
 
@@ -15,7 +15,7 @@ export class Match {
     const {
       mode, difficulty, userPlayerIndex = 9, minutesPerHalf = 2, knockout = false,
       indoor = false, homeSquad = null, awaySquad = null, durationSec = 0,
-      teammateDifficulty = null, fun = {}, autoPlay = false,
+      teammateDifficulty = null, fun = {}, autoPlay = false, spectate = false,
     } = opts;
     // Eigenes Mitspieler-Profil: skaliert (nach GS) oder festes Standard-Profil.
     const teamProfile = teammateDifficulty || DIFFICULTY_TEAMMATE;
@@ -25,6 +25,9 @@ export class Match {
     // Auto-Play (Zuschauen/Simulieren): auch das eigene Team spielt per KI;
     // umschaltbar zur Laufzeit (Eingreifen / zurück in die Simulation).
     this.autoPlay = !!autoPlay;
+    // Zuschauer-Modus (WM als Zuschauer): kein eigenes Team, reine Beobachtung.
+    // Unterdrückt die "Du liegst hinten"-Frage und den Elfer-"Selbst schießen".
+    this.spectate = !!spectate;
 
     this.indoor = indoor;
     // Spielbereich + Tor-Geometrie (Halle = kleineres Feld mit eigenen Toren).

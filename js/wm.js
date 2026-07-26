@@ -7,8 +7,8 @@
 // Die Gruppen werden – wie bei der echten Auslosung – nach Lostöpfen
 // (Stärke) gebildet, mit fester Mischung, damit die Auslosung stabil bleibt.
 
-import { simulateMatch } from "./sim.js?v=b7";
-import * as C from "./cup.js?v=b7";
+import { simulateMatch } from "./sim.js?v=b8";
+import * as C from "./cup.js?v=b8";
 
 export const GROUP_LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
 export const WM_ROUND_NAMES = ["Sechzehntelfinale", "Achtelfinale", "Viertelfinale", "Halbfinale", "Finale"];
@@ -37,12 +37,14 @@ const OFFICIAL_GROUPS = [
 ];
 
 // Neue WM anlegen: echte WM26-Gruppen (12 × 4), Nutzerteam ist frei wählbar.
-export function createWM(allTeamIds, userTeam) {
+// spectator = true: kein eigenes Team, du schaust pro Runde ein Spiel an.
+export function createWM(allTeamIds, userTeam, spectator = false) {
   const groups = OFFICIAL_GROUPS.map((g) => g.slice());
 
   return {
     type: "wm",
     userTeam,
+    spectator: !!spectator,
     groups,
     groupResults: {},   // round (0..2) -> [{ home, away, hs, as, homeScorers, awayScorers }]
     groupRound: 0,

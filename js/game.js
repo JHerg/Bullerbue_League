@@ -1,22 +1,22 @@
 // Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { DIFFICULTY, DIFFICULTY_TEAMMATE, WORLD } from "./config.js?v=b7";
-import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast, setCompetition, getCompetition, scaleOpponent, scaleTeammates } from "./teams.js?v=b7";
-import { penaltyShootout } from "./sim.js?v=b7";
-import { Input } from "./input.js?v=b7";
-import { Camera } from "./camera.js?v=b7";
-import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=b7";
-import { Match } from "./match.js?v=b7";
-import { render as render25 } from "./render2d5.js?v=b7";
-import * as season from "./seasonui.js?v=b7";
-import * as shootout1v1 from "./shootout1v1.js?v=b7";
-import * as commentary from "./commentary.js?v=b7";
-import * as tournament from "./tournamentui.js?v=b7";
-import * as sound from "./sound.js?v=b7";
-import * as achievements from "./achievements.js?v=b7";
-import * as startpage from "./startpage.js?v=b7";
-import * as editor from "./editor.js?v=b7";
+import { DIFFICULTY, DIFFICULTY_TEAMMATE, WORLD } from "./config.js?v=b8";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast, setCompetition, getCompetition, scaleOpponent, scaleTeammates } from "./teams.js?v=b8";
+import { penaltyShootout } from "./sim.js?v=b8";
+import { Input } from "./input.js?v=b8";
+import { Camera } from "./camera.js?v=b8";
+import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=b8";
+import { Match } from "./match.js?v=b8";
+import { render as render25 } from "./render2d5.js?v=b8";
+import * as season from "./seasonui.js?v=b8";
+import * as shootout1v1 from "./shootout1v1.js?v=b8";
+import * as commentary from "./commentary.js?v=b8";
+import * as tournament from "./tournamentui.js?v=b8";
+import * as sound from "./sound.js?v=b8";
+import * as achievements from "./achievements.js?v=b8";
+import * as startpage from "./startpage.js?v=b8";
+import * as editor from "./editor.js?v=b8";
 
 // Startet das spielbare 1vs1-Elfmeterschießen mit Canvas/Input-Anbindung.
 function run1v1(homeDef, awayDef, difficulty) {
@@ -75,6 +75,8 @@ const lblHome = document.getElementById("lbl-home");
 const lblAway = document.getElementById("lbl-away");
 const btnStart = document.getElementById("btn-start");
 const btnResume = document.getElementById("btn-resume");
+const lblSpectate = document.getElementById("lbl-spectate");
+const chkSpectate = document.getElementById("chk-spectate");
 const menuEl = document.getElementById("menu");
 const scoreboardEl = document.getElementById("scoreboard");
 const hubEl = document.getElementById("hub");
@@ -130,9 +132,15 @@ function updateTypeUI() {
   lblPlayer.classList.toggle("hidden", hideOpts || selMode.value !== "single");
 
   const isWMgroups = type === "liga" && getCompetition() === "wm";
+  // Zuschauer-Modus nur bei der WM anbieten (du schaust dir Spiele an,
+  // der Rest wird simuliert – kein eigenes Team nötig).
+  if (lblSpectate) lblSpectate.classList.toggle("hidden", !isWMgroups);
+  const spectating = isWMgroups && chkSpectate && chkSpectate.checked;
+  lblHome.classList.toggle("hidden", isHalle || spectating);
   btnStart.textContent = isElfer ? "Elfmeterschießen"
     : isHalle ? "Hallenturnier starten"
     : isAnstoss ? "Anpfiff!"
+    : spectating ? "WM anschauen 👁"
     : isWMgroups ? "WM starten" : "Saison starten";
 
   const saveType = isWMgroups ? "wm" : type;
@@ -142,6 +150,7 @@ function updateTypeUI() {
   btnResume.classList.toggle("hidden", !canResume);
 }
 selType.addEventListener("change", updateTypeUI);
+chkSpectate?.addEventListener("change", updateTypeUI);
 updateTypeUI();
 
 // --------------------------------------------------------------------------
@@ -408,7 +417,7 @@ btnStart.addEventListener("click", () => {
     menuEl.classList.add("hidden");
     if (type === "liga") {
       // Im WM-Modus ist "Liga" die Gruppenphase (12×4) mit anschließendem K.o.
-      if (getCompetition() === "wm") season.startWM(selHome.value, opts);
+      if (getCompetition() === "wm") season.startWM(selHome.value, opts, !!chkSpectate?.checked);
       else season.startLeague(selHome.value, opts);
     } else season.startCup(selHome.value, opts);
   }
@@ -593,7 +602,20 @@ function startPenalties() {
   const awayDef = { short: a.short, name: a.name, colors: a.colors, id: a.id };
   const diff = match.oppDifficulty;
   const auto = match.autoPlay;
+  const spectate = match.spectate;
   match = null; // Haupt-Spielschleife pausieren, das 1vs1 rendert selbst
+
+  // Reiner Zuschauer (WM): Elfmeterschießen wird immer simuliert.
+  if (spectate) {
+    const pen = penaltyShootout(h.id, a.id);
+    resolveRunMatch({
+      home: score.home, away: score.away,
+      winner: pen.winner === h.id ? "home" : "away", decidedBy: "i.E.",
+      penalties: { home: pen.hp, away: pen.ap },
+      ...scorers,
+    });
+    return;
+  }
 
   // Beim Zuschauen (Auto-Play): fragen, ob du selbst schießen willst.
   if (auto) {
@@ -815,7 +837,8 @@ function loop(now) {
       updatePowerBar();
 
       // Beim Zuschauen automatisch fragen, sobald du in Rückstand gerätst.
-      if (match.autoPlay && !asking && !match.finished) {
+      // Im reinen Zuschauer-Modus (WM) gibt es kein eigenes Team -> nicht fragen.
+      if (match.autoPlay && !match.spectate && !asking && !match.finished) {
         const behind = match.score.home < match.score.away;
         if (behind && !behindAsked) {
           behindAsked = true;

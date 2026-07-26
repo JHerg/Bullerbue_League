@@ -807,6 +807,50 @@ table.standings tr.cl td:first-child { color: #4caf50; }
 .wg-note { font-size: 11px; opacity: .65; margin-top: 3px; }
 
 /* --------------------------------------------------------------------------
+   WM als Zuschauer: Spielauswahl (pro Spieltag / K.o.-Runde) im Hub
+   -------------------------------------------------------------------------- */
+.spec-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  margin: 6px 0 10px;
+}
+.spec-grp {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 6px 7px;
+}
+.spec-grp-h { font-weight: 800; font-size: 11px; opacity: .85; margin-bottom: 5px; }
+.spec-fx {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 6px;
+  margin: 4px 0;
+  padding: 7px 9px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background .12s, transform .06s;
+}
+.spec-fx:hover { background: rgba(76, 175, 80, 0.32); }
+.spec-fx:active { transform: scale(0.97); }
+.spec-fx .sf-t { flex: 1; text-align: left; }
+.spec-fx .sf-go { opacity: .85; font-weight: 800; }
+.spec-fx.done {
+  cursor: default;
+  background: rgba(255, 255, 255, 0.05);
+  opacity: .8;
+}
+.spec-fx.done:hover { background: rgba(255, 255, 255, 0.05); }
+
+/* --------------------------------------------------------------------------
    Fun-Modus: eingerückte Unter-Optionen im Menü
    -------------------------------------------------------------------------- */
 #fun-opts {
