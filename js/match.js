@@ -2,11 +2,11 @@
 // kontextabhängige Nutzer-Aktion (Leertaste), Aus-Erkennung
 // (Einwurf/Ecke/Abstoß), Tore, Spieluhr und Halbzeit mit Seitenwechsel.
 
-import { WORLD, FIELD, MARGIN, GOAL, HALL, BALL, KICK, PLAYER, USER, PX_PER_M, DIFFICULTY_TEAMMATE } from "./config.js?v=b5";
-import { Team } from "./team.js?v=b5";
-import { Ball } from "./ball.js?v=b5";
-import { computeAI } from "./ai.js?v=b5";
-import { ensureContrast } from "./teams.js?v=b5";
+import { WORLD, FIELD, MARGIN, GOAL, HALL, BALL, KICK, PLAYER, USER, PX_PER_M, DIFFICULTY_TEAMMATE } from "./config.js?v=b6";
+import { Team } from "./team.js?v=b6";
+import { Ball } from "./ball.js?v=b6";
+import { computeAI } from "./ai.js?v=b6";
+import { ensureContrast } from "./teams.js?v=b6";
 
 const EDGE = 8; // wie weit innerhalb der Linie der Ball bei Standards liegt
 
@@ -15,13 +15,16 @@ export class Match {
     const {
       mode, difficulty, userPlayerIndex = 9, minutesPerHalf = 2, knockout = false,
       indoor = false, homeSquad = null, awaySquad = null, durationSec = 0,
-      teammateDifficulty = null, fun = {},
+      teammateDifficulty = null, fun = {}, autoPlay = false,
     } = opts;
     // Eigenes Mitspieler-Profil: skaliert (nach GS) oder festes Standard-Profil.
     const teamProfile = teammateDifficulty || DIFFICULTY_TEAMMATE;
     // Fun-Modus: verrückte Regeln (siehe game.js). Turbo skaliert das Tempo aller.
     this.fun = fun || {};
     this.speedMult = this.fun.turbo ? 1.5 : 1;
+    // Auto-Play (Zuschauen/Simulieren): auch das eigene Team spielt per KI;
+    // umschaltbar zur Laufzeit (Eingreifen / zurück in die Simulation).
+    this.autoPlay = !!autoPlay;
 
     this.indoor = indoor;
     // Spielbereich + Tor-Geometrie (Halle = kleineres Feld mit eigenen Toren).
@@ -181,7 +184,7 @@ export class Match {
     if (this.fun.keeperChase) this._updateKeeperChase();
 
     for (const p of this.allPlayers) {
-      if (p === this.userPlayer) this._updateUser(dt, p, input);
+      if (!this.autoPlay && p === this.userPlayer) this._updateUser(dt, p, input);
       else this._updateAI(dt, p);
     }
 
@@ -648,7 +651,7 @@ export class Match {
     };
   }
 
-  get cameraTarget() { return this.userPlayer; }
+  get cameraTarget() { return this.autoPlay ? this.ball : this.userPlayer; }
 }
 
 

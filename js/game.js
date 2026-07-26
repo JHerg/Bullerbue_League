@@ -1,21 +1,22 @@
 // Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { DIFFICULTY, DIFFICULTY_TEAMMATE, WORLD } from "./config.js?v=b5";
-import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast, setCompetition, getCompetition, scaleOpponent, scaleTeammates } from "./teams.js?v=b5";
-import { Input } from "./input.js?v=b5";
-import { Camera } from "./camera.js?v=b5";
-import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=b5";
-import { Match } from "./match.js?v=b5";
-import { render as render25 } from "./render2d5.js?v=b5";
-import * as season from "./seasonui.js?v=b5";
-import * as shootout1v1 from "./shootout1v1.js?v=b5";
-import * as commentary from "./commentary.js?v=b5";
-import * as tournament from "./tournamentui.js?v=b5";
-import * as sound from "./sound.js?v=b5";
-import * as achievements from "./achievements.js?v=b5";
-import * as startpage from "./startpage.js?v=b5";
-import * as editor from "./editor.js?v=b5";
+import { DIFFICULTY, DIFFICULTY_TEAMMATE, WORLD } from "./config.js?v=b6";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast, setCompetition, getCompetition, scaleOpponent, scaleTeammates } from "./teams.js?v=b6";
+import { penaltyShootout } from "./sim.js?v=b6";
+import { Input } from "./input.js?v=b6";
+import { Camera } from "./camera.js?v=b6";
+import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=b6";
+import { Match } from "./match.js?v=b6";
+import { render as render25 } from "./render2d5.js?v=b6";
+import * as season from "./seasonui.js?v=b6";
+import * as shootout1v1 from "./shootout1v1.js?v=b6";
+import * as commentary from "./commentary.js?v=b6";
+import * as tournament from "./tournamentui.js?v=b6";
+import * as sound from "./sound.js?v=b6";
+import * as achievements from "./achievements.js?v=b6";
+import * as startpage from "./startpage.js?v=b6";
+import * as editor from "./editor.js?v=b6";
 
 // Startet das spielbare 1vs1-Elfmeterschießen mit Canvas/Input-Anbindung.
 function run1v1(homeDef, awayDef, difficulty) {
@@ -183,6 +184,23 @@ const ingameBtn = document.getElementById("ingame-btn");
 const ingameMenu = document.getElementById("ingame-menu");
 let paused = false;
 
+// Zuschauen/Eingreifen: schaltet zwischen Auto-Play (KI spielt dein Team) und
+// selbst spielen um. So kannst du beim Simulieren eingreifen (v. a. wenn du
+// hinten liegst) und beim Spielen zurück in die Simulation.
+const autoplayBtn = document.getElementById("autoplay-btn");
+function updateAutoplayBtn() {
+  if (!autoplayBtn || !match) return;
+  const watching = match.autoPlay;
+  autoplayBtn.textContent = watching ? "🎮 Eingreifen" : "⏩ Zuschauen";
+  const behind = watching && match.score.home < match.score.away;
+  autoplayBtn.classList.toggle("behind", behind);
+}
+autoplayBtn?.addEventListener("click", () => {
+  if (!match) return;
+  match.autoPlay = !match.autoPlay;
+  updateAutoplayBtn();
+});
+
 function openIngameMenu() {
   if (!match) return;
   paused = true;
@@ -200,7 +218,7 @@ function abortMatch() {
   matchResolve = null;
   resultShown = false;
   penaltiesStarted = false;
-  ingameBtn?.classList.add("hidden");
+  ingameBtn?.classList.add("hidden"); autoplayBtn?.classList.add("hidden");
   scoreboardEl.classList.add("hidden");
   resultEl.classList.add("hidden");
   hubEl.classList.add("hidden");
@@ -419,6 +437,7 @@ function runMatch(homeDef, awayDef, opts) {
       document.getElementById("sb-away").textContent = awayDef.short;
       closeIngameMenu();                       // sicher: nicht pausiert starten
       ingameBtn?.classList.remove("hidden");   // Pausen-/Menü-Knopf einblenden
+      autoplayBtn?.classList.remove("hidden"); updateAutoplayBtn();  // Zuschauen/Eingreifen-Knopf
     };
 
     // Hallenspiele ohne Zeremonie; sonst Mannschaftseinlauf zeigen.
@@ -503,7 +522,7 @@ function runIndoorMatch(homeDef, awayDef, { difficulty, knockout, mode = "team",
 function resolveRunMatch(score) {
   match = null;
   closeIngameMenu();
-  ingameBtn?.classList.add("hidden");
+  ingameBtn?.classList.add("hidden"); autoplayBtn?.classList.add("hidden");
   scoreboardEl.classList.add("hidden");
   resultEl.classList.add("hidden");
   // Erfolge aus dem gespielten Spiel ableiten (home = immer das Nutzerteam).
@@ -521,7 +540,7 @@ function resolveRunMatch(score) {
 function showMenu() {
   match = null;
   closeIngameMenu();
-  ingameBtn?.classList.add("hidden");
+  ingameBtn?.classList.add("hidden"); autoplayBtn?.classList.add("hidden");
   scoreboardEl.classList.add("hidden");
   resultEl.classList.add("hidden");
   hubEl.classList.add("hidden");
@@ -539,7 +558,22 @@ function startPenalties() {
   const homeDef = { short: h.short, name: h.name, colors: h.colors, id: h.id };
   const awayDef = { short: a.short, name: a.name, colors: a.colors, id: a.id };
   const diff = match.oppDifficulty;
+  const auto = match.autoPlay;
   match = null; // Haupt-Spielschleife pausieren, das 1vs1 rendert selbst
+
+  // Beim Zuschauen (Auto-Play) wird das Elfmeterschießen simuliert; willst du
+  // selbst schießen, wechsle vorher mit "Eingreifen" ins Spielen.
+  if (auto) {
+    const pen = penaltyShootout(h.id, a.id);
+    resolveRunMatch({
+      home: score.home, away: score.away,
+      winner: pen.winner === h.id ? "home" : "away", decidedBy: "i.E.",
+      penalties: { home: pen.hp, away: pen.ap },
+      ...scorers,
+    });
+    return;
+  }
+
   run1v1(homeDef, awayDef, diff).then((pen) => {
     resolveRunMatch({
       home: score.home, away: score.away,
@@ -625,6 +659,7 @@ function updateHUD() {
   sbClock.textContent = match.finished
     ? "Ende"
     : `${match.periodLabel} ${fmtTime(match.clock)}`;
+  updateAutoplayBtn();
   if (match.message) {
     msgEl.textContent = match.message;
     msgEl.classList.add("show");
@@ -725,7 +760,9 @@ function loop(now) {
     // Im Pausenmenü wird die Simulation eingefroren (kein Update), aber das
     // letzte Bild weiter gezeichnet.
     if (!paused) {
-      match.update(dt, input);
+      // Beim Zuschauen (Auto-Play) läuft die Zeit schneller (Vorspulen).
+      const steps = match.autoPlay ? 3 : 1;
+      for (let s = 0; s < steps && !match.finished; s++) match.update(dt, input);
       commentary.update(match, now);
       soundWatch(match);
       updateHUD();

@@ -5,12 +5,12 @@
 //   deps.runMatch(homeDef, awayDef, opts) -> Promise<{home, away}>  (Endstand)
 //   deps.showMenu()                       -> zurück ins Startmenü
 
-import { TEAMS, teamById } from "./teams.js?v=b5";
-import * as L from "./league.js?v=b5";
-import * as C from "./cup.js?v=b5";
-import * as W from "./wm.js?v=b5";
-import { saveSeason, loadSeason } from "./storage.js?v=b5";
-import * as achievements from "./achievements.js?v=b5";
+import { TEAMS, teamById } from "./teams.js?v=b6";
+import * as L from "./league.js?v=b6";
+import * as C from "./cup.js?v=b6";
+import * as W from "./wm.js?v=b6";
+import { saveSeason, loadSeason } from "./storage.js?v=b6";
+import * as achievements from "./achievements.js?v=b6";
 
 let deps = null;
 let state = null;
@@ -73,8 +73,8 @@ function short(id) { return teamById(id).short; }
 
 // ---- Gespieltes Nutzer-Match: Nutzerteam ist immer das gesteuerte (home) ----
 // Liefert das volle Ergebnis-Objekt { home, away, winner, decidedBy, penalties }.
-function _playUserMatch(oppId, knockout = false) {
-  return deps.runMatch(teamById(state.userTeam), teamById(oppId), { ...opts, knockout });
+function _playUserMatch(oppId, knockout = false, autoPlay = false) {
+  return deps.runMatch(teamById(state.userTeam), teamById(oppId), { ...opts, knockout, autoPlay });
 }
 
 // ============================ LIGA ============================
@@ -102,7 +102,8 @@ function _renderLeague() {
     _setButtons([_btn("Zum Menü", "ghost", _toMenu)]);
   } else {
     _setButtons([
-      _btn("Spielen", "", _playLeague),
+      _btn("Spielen", "", () => _playLeague(false)),
+      _btn("👁 Zuschauen", "secondary", () => _playLeague(true)),
       _btn("Simulieren", "secondary", _simLeague),
       _btn("Menü", "ghost", _toMenu),
     ]);
@@ -123,12 +124,12 @@ function _scorersTable(scorers) {
     `<table class="standings"><tr><th>#</th><th class="team">Spieler</th><th>Team</th><th>Tore</th></tr>${rows}</table>`;
 }
 
-async function _playLeague() {
+async function _playLeague(auto) {
   const round = state.currentRound;
   const fx = L.userFixture(state, round);
   const opp = fx.home === state.userTeam ? fx.away : fx.home;
 
-  const r = await _playUserMatch(opp, false);
+  const r = await _playUserMatch(opp, false, auto);
   const userIsHome = fx.home === state.userTeam;
   // Torschützen: r.homeScorers gehört dem Nutzerteam, r.awayScorers dem Gegner.
   const results = [{
@@ -186,7 +187,8 @@ function _renderCup() {
     _setButtons([_btn("Zum Menü", "ghost", _toMenu)]);
   } else if (C.userTie(state)) {
     _setButtons([
-      _btn("Spielen", "", _playCup),
+      _btn("Spielen", "", () => _playCup(false)),
+      _btn("👁 Zuschauen", "secondary", () => _playCup(true)),
       _btn("Simulieren", "secondary", _simCup),
       _btn("Menü", "ghost", _toMenu),
     ]);
@@ -198,12 +200,12 @@ function _renderCup() {
   }
 }
 
-async function _playCup() {
+async function _playCup(auto) {
   const tie = C.userTie(state);
   const opp = tie.home === state.userTeam ? tie.away : tie.home;
 
   // K.o.-Spiel: Verlängerung & spielbares Elfmeterschießen liefern den Sieger.
-  const r = await _playUserMatch(opp, true);
+  const r = await _playUserMatch(opp, true, auto);
   const userIsHome = tie.home === state.userTeam;
   const hs = userIsHome ? r.home : r.away;
   const as = userIsHome ? r.away : r.home;
@@ -267,7 +269,8 @@ function _renderWMGroups() {
   contentEl().innerHTML = html;
 
   _setButtons([
-    _btn("Spielen", "", _playWMGroup),
+    _btn("Spielen", "", () => _playWMGroup(false)),
+    _btn("👁 Zuschauen", "secondary", () => _playWMGroup(true)),
     _btn("Simulieren", "secondary", _simWMGroup),
     _btn("Menü", "ghost", _toMenu),
   ]);
@@ -293,7 +296,8 @@ function _renderWMko() {
     _setButtons([_btn("Zum Menü", "ghost", _toMenu)]);
   } else if (C.userTie(ko)) {
     _setButtons([
-      _btn("Spielen", "", _playWMko),
+      _btn("Spielen", "", () => _playWMko(false)),
+      _btn("👁 Zuschauen", "secondary", () => _playWMko(true)),
       _btn("Simulieren", "secondary", _simWMko),
       _btn("Menü", "ghost", _toMenu),
     ]);
@@ -305,12 +309,12 @@ function _renderWMko() {
   }
 }
 
-async function _playWMGroup() {
+async function _playWMGroup(auto) {
   const round = state.groupRound;
   const fx = W.userGroupFixture(state, round);
   const opp = fx.home === state.userTeam ? fx.away : fx.home;
 
-  const r = await _playUserMatch(opp, false);
+  const r = await _playUserMatch(opp, false, auto);
   const userIsHome = fx.home === state.userTeam;
   const userResult = {
     home: fx.home, away: fx.away,
@@ -336,12 +340,12 @@ function _simWMGroup() {
   _render();
 }
 
-async function _playWMko() {
+async function _playWMko(auto) {
   const ko = state.ko;
   const tie = C.userTie(ko);
   const opp = tie.home === state.userTeam ? tie.away : tie.home;
 
-  const r = await _playUserMatch(opp, true);
+  const r = await _playUserMatch(opp, true, auto);
   const userIsHome = tie.home === state.userTeam;
   const hs = userIsHome ? r.home : r.away;
   const as = userIsHome ? r.away : r.home;

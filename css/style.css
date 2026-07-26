@@ -858,3 +858,27 @@ table.standings tr.cl td:first-child { color: #4caf50; }
 }
 #ed-buttons button.secondary { background: rgba(255,255,255,0.2); color: #fff; }
 #btn-editor { background: rgba(255,255,255,0.2); color: #fff; }
+
+/* --------------------------------------------------------------------------
+   Zuschauen/Eingreifen-Knopf (Auto-Play umschalten) – oben rechts
+   -------------------------------------------------------------------------- */
+#autoplay-btn {
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  z-index: 45;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: none;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+#autoplay-btn:active { transform: translateY(1px); }
+#autoplay-btn.behind {
+  background: #e53935;
+  animation: apPulse 0.8s ease-in-out infinite;
+}
+@keyframes apPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
