@@ -1,20 +1,21 @@
 // Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { DIFFICULTY, DIFFICULTY_TEAMMATE, WORLD } from "./config.js?v=b4";
-import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast, setCompetition, getCompetition, scaleOpponent, scaleTeammates } from "./teams.js?v=b4";
-import { Input } from "./input.js?v=b4";
-import { Camera } from "./camera.js?v=b4";
-import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=b4";
-import { Match } from "./match.js?v=b4";
-import { render as render25 } from "./render2d5.js?v=b4";
-import * as season from "./seasonui.js?v=b4";
-import * as shootout1v1 from "./shootout1v1.js?v=b4";
-import * as commentary from "./commentary.js?v=b4";
-import * as tournament from "./tournamentui.js?v=b4";
-import * as sound from "./sound.js?v=b4";
-import * as achievements from "./achievements.js?v=b4";
-import * as startpage from "./startpage.js?v=b4";
+import { DIFFICULTY, DIFFICULTY_TEAMMATE, WORLD } from "./config.js?v=b5";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast, setCompetition, getCompetition, scaleOpponent, scaleTeammates } from "./teams.js?v=b5";
+import { Input } from "./input.js?v=b5";
+import { Camera } from "./camera.js?v=b5";
+import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=b5";
+import { Match } from "./match.js?v=b5";
+import { render as render25 } from "./render2d5.js?v=b5";
+import * as season from "./seasonui.js?v=b5";
+import * as shootout1v1 from "./shootout1v1.js?v=b5";
+import * as commentary from "./commentary.js?v=b5";
+import * as tournament from "./tournamentui.js?v=b5";
+import * as sound from "./sound.js?v=b5";
+import * as achievements from "./achievements.js?v=b5";
+import * as startpage from "./startpage.js?v=b5";
+import * as editor from "./editor.js?v=b5";
 
 // Startet das spielbare 1vs1-Elfmeterschießen mit Canvas/Input-Anbindung.
 function run1v1(homeDef, awayDef, difficulty) {
@@ -231,6 +232,11 @@ document.getElementById("ig-switch")?.addEventListener("click", navToChoose);
 document.getElementById("ig-home")?.addEventListener("click", navToStart);
 document.getElementById("btn-switch")?.addEventListener("click", navToChoose);
 document.getElementById("btn-home")?.addEventListener("click", navToStart);
+
+// Team-Editor: eigenes Team erstellen; nach dem Speichern die Auswahllisten
+// auffrischen, damit "Mein Team" (in der Bullileague) sofort wählbar ist.
+editor.init({ onSaved: () => { populateTeamSelects(); updateTypeUI(); } });
+document.getElementById("btn-editor")?.addEventListener("click", () => editor.open());
 
 function getMatchOptions() {
   const playerIdx = parseInt(selPlayer.value, 10);

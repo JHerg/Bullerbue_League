@@ -122,6 +122,35 @@
     </div>
   </div>
 
+  <!-- Team-Editor: eigenes Team erstellen -->
+  <div id="editor" class="hidden">
+    <div id="editor-card">
+      <h2>✏️ Mein Team</h2>
+      <div class="ed-top">
+        <label>Teamname <input id="ed-name" type="text" maxlength="22" /></label>
+        <label>Kürzel <input id="ed-short" type="text" maxlength="4" /></label>
+      </div>
+      <div class="ed-top">
+        <label>Trikot <input id="ed-jersey" type="color" /></label>
+        <label>Kontur <input id="ed-trim" type="color" /></label>
+        <label>Formation
+          <select id="ed-formation">
+            <option value="4-3-3">4-3-3</option>
+            <option value="4-2-3-1">4-2-3-1</option>
+            <option value="4-4-2">4-4-2</option>
+          </select>
+        </label>
+      </div>
+      <div id="ed-rows"></div>
+      <div class="ed-hint">Spielt in der Bullileague · ⚡ = schnell, 🧱 = stark</div>
+      <div id="ed-buttons">
+        <button id="ed-save">Speichern</button>
+        <button id="ed-cancel" class="secondary">Abbrechen</button>
+        <button id="ed-delete" class="secondary hidden">Löschen</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Startmenü -->
   <div id="menu">
     <div id="menu-card">
@@ -197,13 +226,14 @@
       <button id="btn-start">Anpfiff!</button>
       <button id="btn-resume" class="hidden">Saison fortsetzen</button>
       <button id="btn-ach" class="secondary">🏆 Trophäen</button>
+      <button id="btn-editor" class="secondary">✏️ Mein Team erstellen</button>
       <div id="menu-nav">
         <button id="btn-switch" class="secondary">🔁 Wettbewerb wechseln</button>
         <button id="btn-home" class="secondary">🏠 Startseite</button>
       </div>
-      <a class="proto-link" href="prototyp.html?v=b4">🧪 2.5D-Ansicht (mit Zuschauern) testen</a>
+      <a class="proto-link" href="prototyp.html?v=b5">🧪 2.5D-Ansicht (mit Zuschauern) testen</a>
       <p class="hint">PC: WASD/Pfeile = laufen · <b>Leertaste = Schuss</b> (halten = härter) · <b>F = Pass / Grätsche / Spielerwechsel</b><br>Als Torwart: <b>Leertaste = Hechten/Springen</b> &nbsp;·&nbsp; Tablet: Joystick + Buttons „SCHUSS" und „PASS"</p>
-      <p class="version">Build 2026-05-30-b4 · Fun-Modus: Konfetti-Tor + Quatsch-Sounds</p>
+      <p class="version">Build 2026-05-30-b5 · Team-Editor: eigenes Team erstellen</p>
     </div>
   </div>
 
@@ -219,6 +249,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/game.js?v=b4"></script>
+  <script type="module" src="js/game.js?v=b5"></script>
 </body>
 </html>

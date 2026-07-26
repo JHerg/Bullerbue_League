@@ -5,8 +5,8 @@
 // 1 = gegnerisches Tor / y: 0 = oben, 1 = unten) und werden im Spiel auf
 // Welt-Koordinaten und Angriffsrichtung umgerechnet.
 
-import { MARGIN, FIELD } from "./config.js?v=b4";
-import { NATION_TEAMS, NATION_RATINGS, NAME_POOLS, NATION_STARS, NATION_OVERRIDES } from "./nations.js?v=b4";
+import { MARGIN, FIELD } from "./config.js?v=b5";
+import { NATION_TEAMS, NATION_RATINGS, NAME_POOLS, NATION_STARS, NATION_OVERRIDES } from "./nations.js?v=b5";
 
 // ---------------------------------------------------------------------------
 // Formations-Vorlagen
@@ -95,15 +95,41 @@ export let TEAMS = BL_TEAMS;
 export let RATINGS = BL_RATINGS;
 let competition = "bundesliga";
 
+// ---------------------------------------------------------------------------
+// Eigenes Team (Editor): wird im localStorage gespeichert und – wenn vorhanden –
+// in der Bullileague (Bundesliga) mitgeführt. id = "my".
+// ---------------------------------------------------------------------------
+const MY_KEY = "bullerbue_myteam_v1";
+let MY = _loadMy();
+function _loadMy() {
+  try { return JSON.parse(localStorage.getItem(MY_KEY)) || null; } catch (e) { return null; }
+}
+export function getMyTeam() { return MY; }
+export function saveMyTeam(def) {
+  MY = def;
+  try { localStorage.setItem(MY_KEY, JSON.stringify(def)); } catch (e) { /* ignore */ }
+  setCompetition(competition); // aktive Team-Liste auffrischen
+}
+export function deleteMyTeam() {
+  MY = null;
+  try { localStorage.removeItem(MY_KEY); } catch (e) { /* ignore */ }
+  setCompetition(competition);
+}
+
 export function setCompetition(which) {
   competition = which === "wm" ? "wm" : "bundesliga";
   if (competition === "wm") { TEAMS = NATION_TEAMS; RATINGS = NATION_RATINGS; }
   else { TEAMS = BL_TEAMS; RATINGS = BL_RATINGS; }
+  // Eigenes Team nur in der Bullileague (Bundesliga) ins Aufgebot nehmen.
+  if (MY && competition === "bundesliga") {
+    TEAMS = [...TEAMS, { id: "my", name: MY.name, short: MY.short, colors: MY.colors, formation: MY.formation }];
+  }
   return competition;
 }
 export function getCompetition() { return competition; }
 
 export function ratingOf(id) {
+  if (id === "my" && MY) return MY.rating ?? 78;
   return RATINGS[id] ?? 74;
 }
 
@@ -475,6 +501,24 @@ const SQUAD_OVERRIDES = {
 // Baut die 11er-Aufstellung für ein Team: Namen + Rollen + Welt-Positionen.
 // attackRight = true  -> Team greift nach rechts an (eigenes Tor links).
 export function buildSquad(team, attackRight) {
+  // Eigenes Team: feste Spieler aus dem Editor (kein Zufallsname).
+  if (team.id === "my" && MY) {
+    const slots = FORMATIONS[team.formation] || FORMATIONS["4-3-3"];
+    return slots.map((slot, i) => {
+      const pl = (MY.players && MY.players[i]) || {};
+      const fx = attackRight ? slot.x : 1 - slot.x;
+      return {
+        name: pl.name || `Spieler ${i + 1}`,
+        role: slot.role,
+        number: pl.number ?? (i + 1),
+        build: pl.build,
+        speed: pl.speed,
+        homeX: MARGIN + fx * FIELD.width,
+        homeY: MARGIN + slot.y * FIELD.height,
+      };
+    });
+  }
+
   const formation = FORMATIONS[team.formation];
   const seed = hash(team.id);
   const isWM = competition === "wm";
