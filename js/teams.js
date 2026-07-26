@@ -5,8 +5,8 @@
 // 1 = gegnerisches Tor / y: 0 = oben, 1 = unten) und werden im Spiel auf
 // Welt-Koordinaten und Angriffsrichtung umgerechnet.
 
-import { MARGIN, FIELD } from "./config.js?v=a7";
-import { NATION_TEAMS, NATION_RATINGS, NAME_POOLS, NATION_STARS, NATION_OVERRIDES } from "./nations.js?v=a7";
+import { MARGIN, FIELD } from "./config.js?v=a8";
+import { NATION_TEAMS, NATION_RATINGS, NAME_POOLS, NATION_STARS, NATION_OVERRIDES } from "./nations.js?v=a8";
 
 // ---------------------------------------------------------------------------
 // Formations-Vorlagen
@@ -109,6 +109,27 @@ export function ratingOf(id) {
 
 export function teamById(id) {
   return TEAMS.find((t) => t.id === id);
+}
+
+// Gegner-Schwierigkeit an die Gesamtstärke (GS) koppeln: Der Nutzer steuert
+// immer das Heimteam (userId). Ein schwächeres Gegnerteam (oppId) spielt
+// leichter, ein stärkeres härter – so fühlt sich z. B. Curaçao klar schwächer
+// an als Frankreich, auch wenn man live spielt. `reaction` ist invertiert
+// (höher = träger), wird also gegenläufig skaliert.
+export function scaleDifficultyByRating(base, userId, oppId) {
+  if (!base) return base;
+  const gap = ratingOf(oppId) - ratingOf(userId);        // + = Gegner stärker
+  const s = Math.max(0.72, Math.min(1.18, 1 + gap * 0.012));
+  const cl = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  return {
+    ...base,
+    speed:        cl(base.speed * s, 0.55, 1.08),
+    reaction:     cl(base.reaction * (2 - s), 0.10, 0.85),   // schwächer = träger
+    passAccuracy: cl(base.passAccuracy * s, 0.28, 0.96),
+    shootRange:   cl(base.shootRange * (0.85 + 0.15 * s), 140, 300),
+    decisiveness: cl(base.decisiveness * s, 0.15, 0.92),
+    press:        cl(base.press * s, 0.30, 1.12),
+  };
 }
 
 // Trikot-Kollision vermeiden: Liefert für das Auswärtsteam ggf. ein
