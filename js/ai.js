@@ -7,7 +7,7 @@
 //
 // ctx = { ball, difficulty, isChaser, isPossessor, teammates, opponents, dt }
 
-import { MARGIN, FIELD, GOAL, KICK } from "./config.js?v=b9";
+import { MARGIN, FIELD, GOAL, KICK } from "./config.js?v=b10";
 
 const FIELD_CX = MARGIN + FIELD.width / 2;
 const FIELD_CY = MARGIN + FIELD.height / 2;
@@ -96,9 +96,22 @@ export function computeAI(player, ctx) {
       return { dir: { x: 0, y: 0 }, kick: { dirX: aim.x, dirY: aim.y, power: KICK.shootPower } };
     }
 
-    // Unter Druck: nach vorn passen, wenn ein Mitspieler frei steht.
+    // Passentscheidung. Standard: unter Druck oder je nach Entschlossenheit
+    // (auch mal seitwärts). Bei "directness" (schöner Fussball / Zuschauer):
+    // nur unter echtem Druck abspielen ODER zielstrebig nach VORNE kombinieren,
+    // sonst Richtung Tor dribbeln – kein steriles Hin-und-Her.
     const mate = bestPassOption(player, ctx);
-    if (mate && (pressure < 36 || Math.random() < difficulty.decisiveness * difficulty.decisiveness)) {
+    let doPass = false;
+    if (mate) {
+      if (difficulty.directness) {
+        const forward = team.attackRight ? 1 : -1;
+        const mateProgress = (mate.x - player.x) * forward;      // wie viel weiter vorn
+        doPass = pressure < 40 || (mateProgress > 55 && Math.random() < difficulty.decisiveness * 0.10);
+      } else {
+        doPass = pressure < 36 || Math.random() < difficulty.decisiveness * difficulty.decisiveness;
+      }
+    }
+    if (mate && doPass) {
       const dx = mate.x - player.x;
       const dy = mate.y - player.y;
       const aim = aimWithNoise(dx, dy, difficulty.passAccuracy);

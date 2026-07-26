@@ -5,12 +5,12 @@
 //   deps.runMatch(homeDef, awayDef, opts) -> Promise<{home, away}>  (Endstand)
 //   deps.showMenu()                       -> zurück ins Startmenü
 
-import { TEAMS, teamById } from "./teams.js?v=b9";
-import * as L from "./league.js?v=b9";
-import * as C from "./cup.js?v=b9";
-import * as W from "./wm.js?v=b9";
-import { saveSeason, loadSeason } from "./storage.js?v=b9";
-import * as achievements from "./achievements.js?v=b9";
+import { TEAMS, teamById } from "./teams.js?v=b10";
+import * as L from "./league.js?v=b10";
+import * as C from "./cup.js?v=b10";
+import * as W from "./wm.js?v=b10";
+import { saveSeason, loadSeason } from "./storage.js?v=b10";
+import * as achievements from "./achievements.js?v=b10";
 
 let deps = null;
 let state = null;
@@ -58,9 +58,10 @@ export function startWM(userTeam, o, spectator = false) {
   _openHub();
 }
 
-// „Schöner Fussball"-Profil für Zuschauer-Spiele (viel Passspiel, kein
-// Dauer-Pressing) – beide Teams spielen damit flüssig.
-const SPEC_DIFF = { speed: 0.9, reaction: 0.3, passAccuracy: 0.8, shootRange: 240, decisiveness: 0.6, press: 0.6 };
+// „Schöner Fussball"-Profil für Zuschauer-Spiele: zielstrebig nach vorne
+// (directness), saubere Pässe, klare Abschlüsse – kein steriles Hin-und-Her.
+// Beide Teams spielen damit flüssig (nach GS skaliert).
+const SPEC_DIFF = { speed: 0.95, reaction: 0.28, passAccuracy: 0.86, shootRange: 260, decisiveness: 0.6, press: 0.62, directness: 1 };
 
 export function resume(type, o) {
   opts = o;

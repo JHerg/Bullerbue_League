@@ -1,22 +1,22 @@
 // Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { DIFFICULTY, DIFFICULTY_TEAMMATE, WORLD } from "./config.js?v=b9";
-import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast, setCompetition, getCompetition, scaleOpponent, scaleTeammates } from "./teams.js?v=b9";
-import { penaltyShootout } from "./sim.js?v=b9";
-import { Input } from "./input.js?v=b9";
-import { Camera } from "./camera.js?v=b9";
-import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=b9";
-import { Match } from "./match.js?v=b9";
-import { render as render25 } from "./render2d5.js?v=b9";
-import * as season from "./seasonui.js?v=b9";
-import * as shootout1v1 from "./shootout1v1.js?v=b9";
-import * as commentary from "./commentary.js?v=b9";
-import * as tournament from "./tournamentui.js?v=b9";
-import * as sound from "./sound.js?v=b9";
-import * as achievements from "./achievements.js?v=b9";
-import * as startpage from "./startpage.js?v=b9";
-import * as editor from "./editor.js?v=b9";
+import { DIFFICULTY, DIFFICULTY_TEAMMATE, WORLD } from "./config.js?v=b10";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast, setCompetition, getCompetition, scaleOpponent, scaleTeammates } from "./teams.js?v=b10";
+import { penaltyShootout } from "./sim.js?v=b10";
+import { Input } from "./input.js?v=b10";
+import { Camera } from "./camera.js?v=b10";
+import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=b10";
+import { Match } from "./match.js?v=b10";
+import { render as render25 } from "./render2d5.js?v=b10";
+import * as season from "./seasonui.js?v=b10";
+import * as shootout1v1 from "./shootout1v1.js?v=b10";
+import * as commentary from "./commentary.js?v=b10";
+import * as tournament from "./tournamentui.js?v=b10";
+import * as sound from "./sound.js?v=b10";
+import * as achievements from "./achievements.js?v=b10";
+import * as startpage from "./startpage.js?v=b10";
+import * as editor from "./editor.js?v=b10";
 
 // Startet das spielbare 1vs1-Elfmeterschießen mit Canvas/Input-Anbindung.
 function run1v1(homeDef, awayDef, difficulty) {
@@ -474,7 +474,11 @@ function runMatch(homeDef, awayDef, opts) {
     const scaledOpts = {
       ...opts,
       difficulty: scaleOpponent(opts.difficulty, awayDef.id),
-      teammateDifficulty: scaleTeammates(DIFFICULTY_TEAMMATE, homeDef.id),
+      // Zuschauer: BEIDE Teams spielen dasselbe „schöner Fussball"-Profil
+      // (nach eigener GS skaliert), sonst das feste Mitspieler-Profil.
+      teammateDifficulty: opts.spectate
+        ? scaleOpponent(opts.difficulty, homeDef.id)
+        : scaleTeammates(DIFFICULTY_TEAMMATE, homeDef.id),
     };
 
     // Eigentlicher Anpfiff (nach der Einlauf-Zeremonie).

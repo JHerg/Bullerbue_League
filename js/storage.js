@@ -3,7 +3,7 @@
 // damit sich z. B. ein Bundesliga-Pokal und ein WM-Pokal nicht überschreiben
 // (sie nutzen andere Team-IDs und würden sonst beim Fortsetzen abstürzen).
 
-import { getCompetition } from "./teams.js?v=b9";
+import { getCompetition } from "./teams.js?v=b10";
 
 const KEY = "bullerbue_season_v1";
 

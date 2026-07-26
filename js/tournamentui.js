@@ -6,11 +6,11 @@
 // deps: { runIndoorMatch(homeDef, awayDef, {difficulty, knockout}) -> Promise<result>,
 //         showMenu() }
 
-import { allPlayers, teamById as teamDef } from "./teams.js?v=b9";
-import { DIFFICULTY } from "./config.js?v=b9";
-import * as T from "./tournament.js?v=b9";
-import { saveSeason, loadSeason } from "./storage.js?v=b9";
-import * as achievements from "./achievements.js?v=b9";
+import { allPlayers, teamById as teamDef } from "./teams.js?v=b10";
+import { DIFFICULTY } from "./config.js?v=b10";
+import * as T from "./tournament.js?v=b10";
+import { saveSeason, loadSeason } from "./storage.js?v=b10";
+import * as achievements from "./achievements.js?v=b10";
 
 let deps = null;
 let state = null;
