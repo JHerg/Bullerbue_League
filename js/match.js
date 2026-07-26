@@ -2,11 +2,11 @@
 // kontextabhängige Nutzer-Aktion (Leertaste), Aus-Erkennung
 // (Einwurf/Ecke/Abstoß), Tore, Spieluhr und Halbzeit mit Seitenwechsel.
 
-import { WORLD, FIELD, MARGIN, GOAL, HALL, BALL, KICK, PLAYER, USER, PX_PER_M, DIFFICULTY_TEAMMATE } from "./config.js?v=b1";
-import { Team } from "./team.js?v=b1";
-import { Ball } from "./ball.js?v=b1";
-import { computeAI } from "./ai.js?v=b1";
-import { ensureContrast } from "./teams.js?v=b1";
+import { WORLD, FIELD, MARGIN, GOAL, HALL, BALL, KICK, PLAYER, USER, PX_PER_M, DIFFICULTY_TEAMMATE } from "./config.js?v=b2";
+import { Team } from "./team.js?v=b2";
+import { Ball } from "./ball.js?v=b2";
+import { computeAI } from "./ai.js?v=b2";
+import { ensureContrast } from "./teams.js?v=b2";
 
 const EDGE = 8; // wie weit innerhalb der Linie der Ball bei Standards liegt
 
@@ -49,6 +49,7 @@ export class Match {
     if (indoor) this.ball.friction = 1.5; // Halle: Ball rollt weniger weit (mehr Kontrolle)
     if (this.fun.bigBall) this.ball.radius = BALL.radius * 2.1;  // Fun: Riesenball
     if (this.fun.iceBall) this.ball.friction = 0.18;            // Fun: Eis – rutscht weit
+    if (this.fun.miniOpp) for (const pl of this.away.players) pl.radius = PLAYER.radius * 0.6; // Fun: Mini-Gegner
     this._chasingKeeper = null;  // Fun: Torwart, der den Eindringling verfolgt
     this._armedKeeper = null;    // vorgemerkter Torwart (Nutzer ist im Strafraum)
 
@@ -187,6 +188,14 @@ export class Match {
     this.ball.updatePossession(dt, this.allPlayers);
     this.ball.update(dt);
 
+    // Fun: Ball-Magnet – der freie Ball driftet zum gesteuerten Spieler.
+    if (this.fun.magnet && !this.ball.owner && this.userPlayer) {
+      const dx = this.userPlayer.x - this.ball.x, dy = this.userPlayer.y - this.ball.y;
+      const d = Math.hypot(dx, dy) || 1;
+      this.ball.vx += (dx / d) * 320 * dt;
+      this.ball.vy += (dy / d) * 320 * dt;
+    }
+
     if (this._checkGoal()) return;
     this._checkBounds();
   }
@@ -244,6 +253,7 @@ export class Match {
   _updateUser(dt, p, input) {
     const dir = input.getDirection();
     p.update(dt, dir, this.speedMult);
+    if (this.fun.sticky) p.controlRadius = p.baseControlRadius * 2.2; // Fun: Klebe-Ball
 
     const ball = this.ball;
     const distBall = Math.hypot(ball.x - p.x, ball.y - p.y);
@@ -268,7 +278,7 @@ export class Match {
 
     if (shoot && atBall) {
       const g = this._goalsForTeam(p.team);
-      const power = KICK.shootPower * (0.6 + 0.4 * shoot.charge);
+      const power = KICK.shootPower * (0.6 + 0.4 * shoot.charge) * (this.fun.rocket ? 1.9 : 1); // Fun: Raketen-Schuss
       const distGoal = Math.hypot(g.oppGoalX - p.x, g.goalY - p.y);
       if (distGoal < USER.shootRange * 1.8) {
         ball.kick(g.oppGoalX - p.x, g.goalY - p.y, power, p.team, p);

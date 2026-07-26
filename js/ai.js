@@ -7,7 +7,7 @@
 //
 // ctx = { ball, difficulty, isChaser, isPossessor, teammates, opponents, dt }
 
-import { MARGIN, FIELD, GOAL, KICK } from "./config.js?v=b1";
+import { MARGIN, FIELD, GOAL, KICK } from "./config.js?v=b2";
 
 const FIELD_CX = MARGIN + FIELD.width / 2;
 const FIELD_CY = MARGIN + FIELD.height / 2;
