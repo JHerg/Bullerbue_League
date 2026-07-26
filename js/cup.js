@@ -1,8 +1,8 @@
 // Pokal-Modus: K.o.-Baum mit 16 Teams (Achtel-, Viertel-, Halbfinale, Finale).
 // Reine Datenlogik ohne DOM.
 
-import { simulateKnockout } from "./sim.js?v=b8";
-import { ratingOf } from "./teams.js?v=b8";
+import { simulateKnockout } from "./sim.js?v=b9";
+import { ratingOf } from "./teams.js?v=b9";
 
 export const ROUND_NAMES = ["Achtelfinale", "Viertelfinale", "Halbfinale", "Finale"];
 

@@ -1,22 +1,22 @@
 // Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { DIFFICULTY, DIFFICULTY_TEAMMATE, WORLD } from "./config.js?v=b8";
-import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast, setCompetition, getCompetition, scaleOpponent, scaleTeammates } from "./teams.js?v=b8";
-import { penaltyShootout } from "./sim.js?v=b8";
-import { Input } from "./input.js?v=b8";
-import { Camera } from "./camera.js?v=b8";
-import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=b8";
-import { Match } from "./match.js?v=b8";
-import { render as render25 } from "./render2d5.js?v=b8";
-import * as season from "./seasonui.js?v=b8";
-import * as shootout1v1 from "./shootout1v1.js?v=b8";
-import * as commentary from "./commentary.js?v=b8";
-import * as tournament from "./tournamentui.js?v=b8";
-import * as sound from "./sound.js?v=b8";
-import * as achievements from "./achievements.js?v=b8";
-import * as startpage from "./startpage.js?v=b8";
-import * as editor from "./editor.js?v=b8";
+import { DIFFICULTY, DIFFICULTY_TEAMMATE, WORLD } from "./config.js?v=b9";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast, setCompetition, getCompetition, scaleOpponent, scaleTeammates } from "./teams.js?v=b9";
+import { penaltyShootout } from "./sim.js?v=b9";
+import { Input } from "./input.js?v=b9";
+import { Camera } from "./camera.js?v=b9";
+import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=b9";
+import { Match } from "./match.js?v=b9";
+import { render as render25 } from "./render2d5.js?v=b9";
+import * as season from "./seasonui.js?v=b9";
+import * as shootout1v1 from "./shootout1v1.js?v=b9";
+import * as commentary from "./commentary.js?v=b9";
+import * as tournament from "./tournamentui.js?v=b9";
+import * as sound from "./sound.js?v=b9";
+import * as achievements from "./achievements.js?v=b9";
+import * as startpage from "./startpage.js?v=b9";
+import * as editor from "./editor.js?v=b9";
 
 // Startet das spielbare 1vs1-Elfmeterschießen mit Canvas/Input-Anbindung.
 function run1v1(homeDef, awayDef, difficulty) {
@@ -203,6 +203,12 @@ let behindAsked = false;        // schon gefragt, seit man hinten liegt?
 
 function updateAutoplayBtn() {
   if (!autoplayBtn || !match) return;
+  // Reiner Zuschauer (WM): kein Eingreifen, kein Vorspulen -> Knöpfe aus.
+  if (match.spectate) {
+    autoplayBtn.classList.add("hidden");
+    speedBtn?.classList.add("hidden");
+    return;
+  }
   const watching = match.autoPlay;
   autoplayBtn.textContent = watching ? "🎮 Eingreifen" : "⏩ Zuschauen";
   const behind = watching && match.score.home < match.score.away;
@@ -213,7 +219,7 @@ function updateAutoplayBtn() {
   }
 }
 autoplayBtn?.addEventListener("click", () => {
-  if (!match) return;
+  if (!match || match.spectate) return;   // Zuschauer darf nicht eingreifen
   match.autoPlay = !match.autoPlay;
   if (!match.autoPlay) behindAsked = false;
   updateAutoplayBtn();
@@ -480,7 +486,12 @@ function runMatch(homeDef, awayDef, opts) {
       closeIngameMenu();                       // sicher: nicht pausiert starten
       ingameBtn?.classList.remove("hidden");   // Pausen-/Menü-Knopf einblenden
       behindAsked = false;
-      autoplayBtn?.classList.remove("hidden"); updateAutoplayBtn();  // Zuschauen/Eingreifen-Knopf
+      // Zuschauen/Eingreifen-Knopf – im reinen Zuschauer-Modus ausgeblendet.
+      if (scaledOpts.spectate) {
+        autoplayBtn?.classList.add("hidden"); speedBtn?.classList.add("hidden");
+      } else {
+        autoplayBtn?.classList.remove("hidden"); updateAutoplayBtn();
+      }
     };
 
     // Hallenspiele ohne Zeremonie; sonst Mannschaftseinlauf zeigen.
@@ -829,7 +840,8 @@ function loop(now) {
     // letzte Bild weiter gezeichnet.
     if (!paused) {
       // Beim Zuschauen (Auto-Play) läuft die Zeit schneller (Vorspulen).
-      const steps = match.autoPlay ? watchSpeed : 1;
+      // Reiner Zuschauer-Modus (WM): bewusst LANGSAM in Echtzeit (1×).
+      const steps = (match.autoPlay && !match.spectate) ? watchSpeed : 1;
       for (let s = 0; s < steps && !match.finished; s++) match.update(dt, input);
       commentary.update(match, now);
       soundWatch(match);

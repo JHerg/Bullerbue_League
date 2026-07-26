@@ -2,7 +2,7 @@
 // mit Namen/Nummern und optional ⚡schnell / 🧱stark). Wird via teams.js im
 // localStorage gespeichert und spielt in der Bullileague mit (id "my").
 
-import { FORMATIONS, getMyTeam, saveMyTeam, deleteMyTeam } from "./teams.js?v=b8";
+import { FORMATIONS, getMyTeam, saveMyTeam, deleteMyTeam } from "./teams.js?v=b9";
 
 const $ = (id) => document.getElementById(id);
 let onSaved = null;
