@@ -2,11 +2,11 @@
 // kontextabhängige Nutzer-Aktion (Leertaste), Aus-Erkennung
 // (Einwurf/Ecke/Abstoß), Tore, Spieluhr und Halbzeit mit Seitenwechsel.
 
-import { WORLD, FIELD, MARGIN, GOAL, HALL, BALL, KICK, PLAYER, USER, PX_PER_M, DIFFICULTY_TEAMMATE } from "./config.js?v=b2";
-import { Team } from "./team.js?v=b2";
-import { Ball } from "./ball.js?v=b2";
-import { computeAI } from "./ai.js?v=b2";
-import { ensureContrast } from "./teams.js?v=b2";
+import { WORLD, FIELD, MARGIN, GOAL, HALL, BALL, KICK, PLAYER, USER, PX_PER_M, DIFFICULTY_TEAMMATE } from "./config.js?v=b3";
+import { Team } from "./team.js?v=b3";
+import { Ball } from "./ball.js?v=b3";
+import { computeAI } from "./ai.js?v=b3";
+import { ensureContrast } from "./teams.js?v=b3";
 
 const EDGE = 8; // wie weit innerhalb der Linie der Ball bei Standards liegt
 
@@ -50,6 +50,8 @@ export class Match {
     if (this.fun.bigBall) this.ball.radius = BALL.radius * 2.1;  // Fun: Riesenball
     if (this.fun.iceBall) this.ball.friction = 0.18;            // Fun: Eis – rutscht weit
     if (this.fun.miniOpp) for (const pl of this.away.players) pl.radius = PLAYER.radius * 0.6; // Fun: Mini-Gegner
+    if (this.fun.bigTeam) for (const pl of this.home.players) pl.radius = PLAYER.radius * 1.7; // Fun: Riesen-Team
+    if (this.fun.rainbow) this.ball.rainbow = true;             // Fun: Regenbogen-Ball
     this._chasingKeeper = null;  // Fun: Torwart, der den Eindringling verfolgt
     this._armedKeeper = null;    // vorgemerkter Torwart (Nutzer ist im Strafraum)
 

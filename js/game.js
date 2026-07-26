@@ -1,20 +1,20 @@
 // Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { DIFFICULTY, DIFFICULTY_TEAMMATE, WORLD } from "./config.js?v=b2";
-import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast, setCompetition, getCompetition, scaleOpponent, scaleTeammates } from "./teams.js?v=b2";
-import { Input } from "./input.js?v=b2";
-import { Camera } from "./camera.js?v=b2";
-import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=b2";
-import { Match } from "./match.js?v=b2";
-import { render as render25 } from "./render2d5.js?v=b2";
-import * as season from "./seasonui.js?v=b2";
-import * as shootout1v1 from "./shootout1v1.js?v=b2";
-import * as commentary from "./commentary.js?v=b2";
-import * as tournament from "./tournamentui.js?v=b2";
-import * as sound from "./sound.js?v=b2";
-import * as achievements from "./achievements.js?v=b2";
-import * as startpage from "./startpage.js?v=b2";
+import { DIFFICULTY, DIFFICULTY_TEAMMATE, WORLD } from "./config.js?v=b3";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast, setCompetition, getCompetition, scaleOpponent, scaleTeammates } from "./teams.js?v=b3";
+import { Input } from "./input.js?v=b3";
+import { Camera } from "./camera.js?v=b3";
+import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=b3";
+import { Match } from "./match.js?v=b3";
+import { render as render25 } from "./render2d5.js?v=b3";
+import * as season from "./seasonui.js?v=b3";
+import * as shootout1v1 from "./shootout1v1.js?v=b3";
+import * as commentary from "./commentary.js?v=b3";
+import * as tournament from "./tournamentui.js?v=b3";
+import * as sound from "./sound.js?v=b3";
+import * as achievements from "./achievements.js?v=b3";
+import * as startpage from "./startpage.js?v=b3";
 
 // Startet das spielbare 1vs1-Elfmeterschießen mit Canvas/Input-Anbindung.
 function run1v1(homeDef, awayDef, difficulty) {
@@ -255,10 +255,26 @@ const funMagnet = document.getElementById("fun-magnet");
 const funRocket = document.getElementById("fun-rocket");
 const funSticky = document.getElementById("fun-sticky");
 const funMini = document.getElementById("fun-mini");
+const funBigTeam = document.getElementById("fun-bigteam");
+const funRainbow = document.getElementById("fun-rainbow");
+const funRandom = document.getElementById("fun-random");
 chkFun?.addEventListener("change", () => funOpts?.classList.toggle("hidden", !chkFun.checked));
+
+const FUN_KEYS = ["keeperChase", "turbo", "bigBall", "iceBall", "drunkKeeper",
+  "magnet", "rocket", "sticky", "miniOpp", "bigTeam", "rainbow"];
+
+// Zufalls-Mix: pro Spiel eine zufällige Auswahl der Effekte (mind. eine).
+function randomFun() {
+  const cfg = {};
+  let any = false;
+  for (const k of FUN_KEYS) if (Math.random() < 0.33) { cfg[k] = true; any = true; }
+  if (!any) cfg[FUN_KEYS[Math.floor(Math.random() * FUN_KEYS.length)]] = true;
+  return cfg;
+}
 
 function getFunConfig() {
   if (!chkFun || !chkFun.checked) return {};
+  if (funRandom?.checked) return randomFun();
   return {
     keeperChase: !!funKeeper?.checked,
     turbo:       !!funTurbo?.checked,
@@ -269,6 +285,8 @@ function getFunConfig() {
     rocket:      !!funRocket?.checked,
     sticky:      !!funSticky?.checked,
     miniOpp:     !!funMini?.checked,
+    bigTeam:     !!funBigTeam?.checked,
+    rainbow:     !!funRainbow?.checked,
   };
 }
 

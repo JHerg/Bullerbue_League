@@ -5,8 +5,8 @@
 // 1 = gegnerisches Tor / y: 0 = oben, 1 = unten) und werden im Spiel auf
 // Welt-Koordinaten und Angriffsrichtung umgerechnet.
 
-import { MARGIN, FIELD } from "./config.js?v=b2";
-import { NATION_TEAMS, NATION_RATINGS, NAME_POOLS, NATION_STARS, NATION_OVERRIDES } from "./nations.js?v=b2";
+import { MARGIN, FIELD } from "./config.js?v=b3";
+import { NATION_TEAMS, NATION_RATINGS, NAME_POOLS, NATION_STARS, NATION_OVERRIDES } from "./nations.js?v=b3";
 
 // ---------------------------------------------------------------------------
 // Formations-Vorlagen

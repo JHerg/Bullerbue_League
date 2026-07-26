@@ -1,7 +1,7 @@
 // Der Ball: rollt mit Reibung, prallt an den Banden ab, wird vom ballführenden
 // Spieler "geführt" (Dribbling) und kann geschossen/gepasst werden.
 
-import { BALL, WORLD } from "./config.js?v=b2";
+import { BALL, WORLD } from "./config.js?v=b3";
 
 export class Ball {
   constructor(x, y) {
@@ -83,13 +83,28 @@ export class Ball {
   }
 
   draw(ctx) {
+    // Fun: Regenbogen-Ball – bunte Schweif-Spur + wechselnde Ballfarbe.
+    if (this.rainbow) {
+      this.trail = this.trail || [];
+      this.trail.push({ x: this.x, y: this.y });
+      if (this.trail.length > 14) this.trail.shift();
+      this._hue = ((this._hue || 0) + 8) % 360;
+      for (let i = 0; i < this.trail.length; i++) {
+        const t = this.trail[i], a = (i + 1) / this.trail.length;
+        ctx.beginPath();
+        ctx.fillStyle = `hsla(${(this._hue + i * 18) % 360}, 90%, 55%, ${a * 0.55})`;
+        ctx.arc(t.x, t.y, this.radius * (0.4 + a * 0.7), 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
     ctx.beginPath();
     ctx.fillStyle = "rgba(0,0,0,0.25)";
     ctx.ellipse(this.x, this.y + this.radius * 0.7, this.radius, this.radius * 0.5, 0, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.beginPath();
-    ctx.fillStyle = "#fff";
+    ctx.fillStyle = this.rainbow ? `hsl(${this._hue || 0}, 90%, 60%)` : "#fff";
     ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
     ctx.fill();
     ctx.lineWidth = 1;
