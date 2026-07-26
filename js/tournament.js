@@ -2,7 +2,7 @@
 // (jeder gegen jeden), Top 2 je Gruppe -> Achtelfinale (K.o., bei Remis Elfmeter).
 // Reine Datenlogik ohne DOM (headless testbar).
 
-import { TEAMS, allPlayers } from "./teams.js?v=b3";
+import { TEAMS, allPlayers } from "./teams.js?v=b4";
 
 const HALL_ADJ = ["Wilde", "Flinke", "Eiserne", "Goldene", "Schnelle", "Coole", "Starke",
   "Bunte", "Kühne", "Freche", "Heiße", "Blaue", "Rote", "Grüne", "Dunkle", "Wirbel"];

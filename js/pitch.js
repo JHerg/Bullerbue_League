@@ -2,7 +2,7 @@
 // Mittelkreis, Strafräume, Torräume, Elfmeterpunkte und Tore.
 // Alles in Welt-Koordinaten; die Kamera-Translation passiert im Game-Loop.
 
-import { FIELD, MARGIN, WORLD, COLORS, PX_PER_M, GOAL, HALL } from "./config.js?v=b3";
+import { FIELD, MARGIN, WORLD, COLORS, PX_PER_M, GOAL, HALL } from "./config.js?v=b4";
 
 // Komplette Hallen-Darstellung (kleines Feld, Parkett, Banden, Tore) ohne
 // Zuschauer. Ersetzt drawPitch im Hallenmodus.

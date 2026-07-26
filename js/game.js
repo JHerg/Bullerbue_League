@@ -1,20 +1,20 @@
 // Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { DIFFICULTY, DIFFICULTY_TEAMMATE, WORLD } from "./config.js?v=b3";
-import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast, setCompetition, getCompetition, scaleOpponent, scaleTeammates } from "./teams.js?v=b3";
-import { Input } from "./input.js?v=b3";
-import { Camera } from "./camera.js?v=b3";
-import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=b3";
-import { Match } from "./match.js?v=b3";
-import { render as render25 } from "./render2d5.js?v=b3";
-import * as season from "./seasonui.js?v=b3";
-import * as shootout1v1 from "./shootout1v1.js?v=b3";
-import * as commentary from "./commentary.js?v=b3";
-import * as tournament from "./tournamentui.js?v=b3";
-import * as sound from "./sound.js?v=b3";
-import * as achievements from "./achievements.js?v=b3";
-import * as startpage from "./startpage.js?v=b3";
+import { DIFFICULTY, DIFFICULTY_TEAMMATE, WORLD } from "./config.js?v=b4";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast, setCompetition, getCompetition, scaleOpponent, scaleTeammates } from "./teams.js?v=b4";
+import { Input } from "./input.js?v=b4";
+import { Camera } from "./camera.js?v=b4";
+import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=b4";
+import { Match } from "./match.js?v=b4";
+import { render as render25 } from "./render2d5.js?v=b4";
+import * as season from "./seasonui.js?v=b4";
+import * as shootout1v1 from "./shootout1v1.js?v=b4";
+import * as commentary from "./commentary.js?v=b4";
+import * as tournament from "./tournamentui.js?v=b4";
+import * as sound from "./sound.js?v=b4";
+import * as achievements from "./achievements.js?v=b4";
+import * as startpage from "./startpage.js?v=b4";
 
 // Startet das spielbare 1vs1-Elfmeterschießen mit Canvas/Input-Anbindung.
 function run1v1(homeDef, awayDef, difficulty) {
@@ -257,11 +257,13 @@ const funSticky = document.getElementById("fun-sticky");
 const funMini = document.getElementById("fun-mini");
 const funBigTeam = document.getElementById("fun-bigteam");
 const funRainbow = document.getElementById("fun-rainbow");
+const funConfetti = document.getElementById("fun-confetti");
+const funSounds = document.getElementById("fun-sounds");
 const funRandom = document.getElementById("fun-random");
 chkFun?.addEventListener("change", () => funOpts?.classList.toggle("hidden", !chkFun.checked));
 
 const FUN_KEYS = ["keeperChase", "turbo", "bigBall", "iceBall", "drunkKeeper",
-  "magnet", "rocket", "sticky", "miniOpp", "bigTeam", "rainbow"];
+  "magnet", "rocket", "sticky", "miniOpp", "bigTeam", "rainbow", "confetti", "funSounds"];
 
 // Zufalls-Mix: pro Spiel eine zufällige Auswahl der Effekte (mind. eine).
 function randomFun() {
@@ -287,6 +289,8 @@ function getFunConfig() {
     miniOpp:     !!funMini?.checked,
     bigTeam:     !!funBigTeam?.checked,
     rainbow:     !!funRainbow?.checked,
+    confetti:    !!funConfetti?.checked,
+    funSounds:   !!funSounds?.checked,
   };
 }
 
@@ -637,7 +641,12 @@ function soundWatch(m) {
   if (!sndState.started) { sndState.started = true; sndState.goals = m.goals.length; sndState.msg = m.message; sound.play("whistleStart"); }
 
   // Tor
-  if (m.goals.length > sndState.goals) { sndState.goals = m.goals.length; sound.play("goal"); }
+  if (m.goals.length > sndState.goals) {
+    sndState.goals = m.goals.length;
+    sound.play("goal");
+    if (m.fun && m.fun.funSounds) sound.play("party");   // Fun: Jubel-Fanfare
+    if (m.fun && m.fun.confetti) spawnConfetti();          // Fun: Konfetti-Regen
+  }
 
   // Status-Meldungen (Halbzeit/Verlängerung/Elfmeter/Schluss)
   if (m.message !== sndState.msg) {
@@ -651,7 +660,8 @@ function soundWatch(m) {
   const owner = m.ball.owner;
   if (sndState.owner && !owner) {
     const sp = Math.hypot(m.ball.vx, m.ball.vy);
-    if (sp > 430) sound.play("shot"); else if (sp > 120) sound.play("kick");
+    if (m.fun && m.fun.funSounds) sound.play("boing");    // Fun: Quatsch-Schuss
+    else if (sp > 430) sound.play("shot"); else if (sp > 120) sound.play("kick");
   }
   sndState.owner = owner;
 
@@ -664,6 +674,41 @@ function soundWatch(m) {
     sndState._lastDx = dx;
   }
   sndState.ballX = m.ball.x;
+}
+
+// --- Konfetti (Fun: Tor-Party) – Bildschirm-Partikel ---
+let confetti = [];
+const CONFETTI_COLORS = ["#e53935", "#ffca28", "#43a047", "#1e88e5", "#8e24aa", "#ffffff", "#ff6f00"];
+function spawnConfetti() {
+  for (let i = 0; i < 90; i++) {
+    confetti.push({
+      x: viewW * (0.15 + Math.random() * 0.7),
+      y: viewH * (0.15 + Math.random() * 0.2),
+      vx: (Math.random() - 0.5) * 240,
+      vy: -80 - Math.random() * 260,
+      g: 380 + Math.random() * 220,
+      rot: Math.random() * Math.PI, vr: (Math.random() - 0.5) * 12,
+      size: 5 + Math.random() * 6,
+      color: CONFETTI_COLORS[(Math.random() * CONFETTI_COLORS.length) | 0],
+      life: 1.6 + Math.random() * 1.2,
+    });
+  }
+}
+function drawConfetti(ctx, dt) {
+  if (!confetti.length) return;
+  for (const c of confetti) {
+    c.vy += c.g * dt;
+    c.x += c.vx * dt; c.y += c.vy * dt;
+    c.rot += c.vr * dt; c.life -= dt;
+    ctx.save();
+    ctx.translate(c.x, c.y); ctx.rotate(c.rot);
+    ctx.globalAlpha = Math.max(0, Math.min(1, c.life));
+    ctx.fillStyle = c.color;
+    ctx.fillRect(-c.size / 2, -c.size / 2, c.size, c.size * 0.6);
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
+  confetti = confetti.filter((c) => c.life > 0 && c.y < viewH + 40);
 }
 
 function loop(now) {
@@ -721,6 +766,7 @@ function loop(now) {
       }
       ctx.restore();
     }
+    drawConfetti(ctx, dt);   // Fun: Konfetti über dem Spielfeld (Bildschirm-Ebene)
   }
 
   requestAnimationFrame(loop);

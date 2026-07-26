@@ -106,6 +106,16 @@ export function play(kind) {
       crowdCheer(false);
       break;
     }
+    case "party": {  // Fun: Jubel-Fanfare beim Tor
+      const mel = [523, 659, 784, 1047];
+      mel.forEach((f, i) => tone({ freq: f, type: "square", dur: 0.16, gain: 0.22, delay: i * 0.12 }));
+      crowdCheer(true);
+      break;
+    }
+    case "boing":    // Fun: Quatsch-Schuss
+      tone({ freq: 720, type: "sine", dur: 0.22, gain: 0.34, slideTo: 150 });
+      tone({ freq: 300, type: "triangle", dur: 0.14, gain: 0.2, slideTo: 110, delay: 0.05 });
+      break;
     default: break;
   }
 }
