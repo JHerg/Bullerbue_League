@@ -648,6 +648,218 @@ export const NATION_OVERRIDES = {
     9:  { name: "Firas Al-Buraik", number: 9 },
     10: { name: "Saleh Al-Shehr", number: 11 },
   },
+
+  // --- Etappe 6: restliche Nationen (inkl. der neuen Qualifikanten) ---
+
+  // Kolumbien (4-2-3-1)
+  n_col: {
+    0:  { name: "Camilo Vargo", number: 1 },
+    1:  { name: "Johan Mojic", number: 17 },
+    2:  { name: "Yerry Mino", number: 13 },
+    3:  { name: "Davinson Sanche", number: 23 },
+    4:  { name: "Daniel Munos", number: 4 },
+    5:  { name: "Richard Rio", number: 21 },
+    6:  { name: "Jefferson Lerm", number: 16 },
+    7:  { name: "Luis Dias", number: 7 },
+    8:  { name: "James Rodrigo", number: 10 },
+    9:  { name: "Jhon Aria", number: 11 },
+    10: { name: "Rafael Borr", number: 19 },
+  },
+
+  // Elfenbeinküste (4-3-3)
+  n_civ: {
+    0:  { name: "Yahia Fofan", number: 1 },
+    1:  { name: "Ghislain Konon", number: 3 },
+    2:  { name: "Evan Ndick", number: 4 },
+    3:  { name: "Willy Bol", number: 22 },
+    4:  { name: "Serge Aurie", number: 2 },
+    5:  { name: "Franck Kessi", number: 6 },
+    6:  { name: "Ibrahim Sangar", number: 5 },
+    7:  { name: "Seko Fofon", number: 8 },
+    8:  { name: "Nicolas Pep", number: 19 },
+    9:  { name: "Sebastien Hallar", number: 9 },
+    10: { name: "Simon Adingr", number: 11 },
+  },
+
+  // Katar (4-2-3-1)
+  n_qat: {
+    0:  { name: "Meshaal Barsam", number: 22 },
+    1:  { name: "Homam Ahmad", number: 3 },
+    2:  { name: "Boualem Khouki", number: 15 },
+    3:  { name: "Tarek Salmen", number: 16 },
+    4:  { name: "Pedro Miguol", number: 2 },
+    5:  { name: "Karim Boudia", number: 17 },
+    6:  { name: "Assim Madib", number: 12 },
+    7:  { name: "Akram Afif", number: 11 },
+    8:  { name: "Hassan Al-Haydo", number: 10 },
+    9:  { name: "Ismaeel Mohammed", number: 14 },
+    10: { name: "Almoez Alo", number: 19 },
+  },
+
+  // Neuseeland (4-4-2)
+  n_nzl: {
+    0:  { name: "Oliver Sale", number: 1 },
+    1:  { name: "Liberato Cacac", number: 3 },
+    2:  { name: "Michael Boxal", number: 5 },
+    3:  { name: "Tommy Smithe", number: 4 },
+    4:  { name: "Dane Inghom", number: 2 },
+    5:  { name: "Marco Rojo", number: 7 },
+    6:  { name: "Joe Belle", number: 6 },
+    7:  { name: "Matthew Garbet", number: 8 },
+    8:  { name: "Clayton Lewes", number: 14 },
+    9:  { name: "Chris Woode", number: 9 },
+    10: { name: "Ben Wayne", number: 20 },
+  },
+
+  // DR Kongo (4-3-3)
+  n_cod: {
+    0:  { name: "Lionel Mpas", number: 1 },
+    1:  { name: "Arthur Masuak", number: 13 },
+    2:  { name: "Chancel Mbemb", number: 5 },
+    3:  { name: "Gedeon Kalul", number: 4 },
+    4:  { name: "Rocky Bushir", number: 2 },
+    5:  { name: "Samuel Moutous", number: 6 },
+    6:  { name: "Charles Pikel", number: 8 },
+    7:  { name: "Edo Kayemb", number: 15 },
+    8:  { name: "Yoane Wiss", number: 11 },
+    9:  { name: "Cedric Bakamb", number: 9 },
+    10: { name: "Silas Katomp", number: 7 },
+  },
+
+  // Bosnien-Herzegowina (4-2-3-1)
+  n_bih: {
+    0:  { name: "Nikola Vasil", number: 1 },
+    1:  { name: "Sead Kolasin", number: 23 },
+    2:  { name: "Nikola Katik", number: 5 },
+    3:  { name: "Dennis Hadzik", number: 6 },
+    4:  { name: "Amar Dedik", number: 2 },
+    5:  { name: "Gojko Cimir", number: 14 },
+    6:  { name: "Benjamin Tahir", number: 20 },
+    7:  { name: "Edin Visc", number: 7 },
+    8:  { name: "Miralem Pjanik", number: 8 },
+    9:  { name: "Amar Rahman", number: 17 },
+    10: { name: "Ermedin Demir", number: 9 },
+  },
+
+  // Südafrika (4-3-3)
+  n_rsa: {
+    0:  { name: "Ronwen Willems", number: 1 },
+    1:  { name: "Aubrey Modib", number: 3 },
+    2:  { name: "Mothobi Mval", number: 5 },
+    3:  { name: "Siyanda Xul", number: 4 },
+    4:  { name: "Khuliso Mudo", number: 2 },
+    5:  { name: "Teboho Mokon", number: 8 },
+    6:  { name: "Sphephelo Sithol", number: 6 },
+    7:  { name: "Themba Zwan", number: 10 },
+    8:  { name: "Percy Tao", number: 11 },
+    9:  { name: "Lyle Fostar", number: 9 },
+    10: { name: "Relebohile Mofok", number: 7 },
+  },
+
+  // Usbekistan (4-3-3)
+  n_uzb: {
+    0:  { name: "Utkir Yusup", number: 1 },
+    1:  { name: "Abdukodir Khusan", number: 4 },
+    2:  { name: "Rustam Ashurm", number: 5 },
+    3:  { name: "Farrukh Sayf", number: 3 },
+    4:  { name: "Sherzod Nasrul", number: 2 },
+    5:  { name: "Jaloliddin Mashar", number: 7 },
+    6:  { name: "Odiljon Hamrob", number: 6 },
+    7:  { name: "Abbos Fayzul", number: 10 },
+    8:  { name: "Oston Urun", number: 11 },
+    9:  { name: "Eldor Shomur", number: 9 },
+    10: { name: "Jasurbek Jalol", number: 8 },
+  },
+
+  // Kap Verde (4-3-3)
+  n_cpv: {
+    0:  { name: "Vozin", number: 1 },
+    1:  { name: "Diney Borg", number: 3 },
+    2:  { name: "Roberto Lop", number: 5 },
+    3:  { name: "Steven Fort", number: 4 },
+    4:  { name: "Kenny Roch", number: 2 },
+    5:  { name: "Jamiro Monteir", number: 8 },
+    6:  { name: "Kevin Pin", number: 6 },
+    7:  { name: "Deroy Duart", number: 10 },
+    8:  { name: "Gilson Benchim", number: 11 },
+    9:  { name: "Bebo", number: 9 },
+    10: { name: "Willy Semed", number: 19 },
+  },
+
+  // Irak (4-2-3-1)
+  n_irq: {
+    0:  { name: "Jalal Hassen", number: 1 },
+    1:  { name: "Hussein Alo", number: 3 },
+    2:  { name: "Rebin Sulak", number: 5 },
+    3:  { name: "Merchas Dosk", number: 4 },
+    4:  { name: "Mustafa Nadim", number: 2 },
+    5:  { name: "Amir Al-Ammar", number: 6 },
+    6:  { name: "Ibrahim Bayes", number: 8 },
+    7:  { name: "Bashar Reson", number: 7 },
+    8:  { name: "Zidane Iqbol", number: 17 },
+    9:  { name: "Ali Jasem", number: 14 },
+    10: { name: "Aymen Hussen", number: 9 },
+  },
+
+  // Panama (4-4-2)
+  n_pan: {
+    0:  { name: "Orlando Mosquer", number: 1 },
+    1:  { name: "Eric Davies", number: 15 },
+    2:  { name: "Fidel Escob", number: 4 },
+    3:  { name: "Roderick Mill", number: 5 },
+    4:  { name: "Cesar Blackmon", number: 13 },
+    5:  { name: "Cristian Martin", number: 10 },
+    6:  { name: "Anibal Godo", number: 20 },
+    7:  { name: "Adalberto Carrasq", number: 6 },
+    8:  { name: "Ismael Dias", number: 11 },
+    9:  { name: "Cecilio Waterm", number: 9 },
+    10: { name: "Jose Fajard", number: 17 },
+  },
+
+  // Jordanien (4-3-3)
+  n_jor: {
+    0:  { name: "Yazeed Abulail", number: 1 },
+    1:  { name: "Ihsan Haddod", number: 3 },
+    2:  { name: "Yazan Al-Arob", number: 5 },
+    3:  { name: "Abdallah Nasb", number: 4 },
+    4:  { name: "Salem Al-Ajal", number: 2 },
+    5:  { name: "Nizar Al-Rashd", number: 6 },
+    6:  { name: "Noor Al-Rawab", number: 8 },
+    7:  { name: "Mahmoud Al-Mard", number: 14 },
+    8:  { name: "Musa Al-Taamar", number: 7 },
+    9:  { name: "Yazan Al-Naim", number: 9 },
+    10: { name: "Ali Olwon", number: 11 },
+  },
+
+  // Haiti (4-4-2)
+  n_hai: {
+    0:  { name: "Johny Placid", number: 1 },
+    1:  { name: "Ricardo Adé", number: 3 },
+    2:  { name: "Andrew Jean-Bapt", number: 5 },
+    3:  { name: "Jean-Kevin Duvern", number: 4 },
+    4:  { name: "Carlens Arc", number: 2 },
+    5:  { name: "Steeven Sab", number: 7 },
+    6:  { name: "Danley Jean-Jac", number: 8 },
+    7:  { name: "Leverton Pier", number: 6 },
+    8:  { name: "Duckens Nazo", number: 10 },
+    9:  { name: "Frantzdy Pierro", number: 9 },
+    10: { name: "Don Deedson", number: 19 },
+  },
+
+  // Curaçao (4-3-3)
+  n_cuw: {
+    0:  { name: "Eloy Rome", number: 1 },
+    1:  { name: "Shurandy Samb", number: 3 },
+    2:  { name: "Cuco Martin", number: 5 },
+    3:  { name: "Jurien Garri", number: 4 },
+    4:  { name: "Bradley Marts", number: 2 },
+    5:  { name: "Leandro Bacun", number: 6 },
+    6:  { name: "Juninho Bacun", number: 8 },
+    7:  { name: "Livano Comenenc", number: 15 },
+    8:  { name: "Gervane Kastan", number: 11 },
+    9:  { name: "Kenji Gorr", number: 9 },
+    10: { name: "Sontje Hansn", number: 7 },
+  },
 };
 
 export const NATION_STARS = {

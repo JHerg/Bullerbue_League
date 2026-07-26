@@ -1,20 +1,20 @@
 // Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { DIFFICULTY, WORLD } from "./config.js?v=a6";
-import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast, setCompetition, getCompetition } from "./teams.js?v=a6";
-import { Input } from "./input.js?v=a6";
-import { Camera } from "./camera.js?v=a6";
-import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=a6";
-import { Match } from "./match.js?v=a6";
-import { render as render25 } from "./render2d5.js?v=a6";
-import * as season from "./seasonui.js?v=a6";
-import * as shootout1v1 from "./shootout1v1.js?v=a6";
-import * as commentary from "./commentary.js?v=a6";
-import * as tournament from "./tournamentui.js?v=a6";
-import * as sound from "./sound.js?v=a6";
-import * as achievements from "./achievements.js?v=a6";
-import * as startpage from "./startpage.js?v=a6";
+import { DIFFICULTY, WORLD } from "./config.js?v=a7";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast, setCompetition, getCompetition } from "./teams.js?v=a7";
+import { Input } from "./input.js?v=a7";
+import { Camera } from "./camera.js?v=a7";
+import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=a7";
+import { Match } from "./match.js?v=a7";
+import { render as render25 } from "./render2d5.js?v=a7";
+import * as season from "./seasonui.js?v=a7";
+import * as shootout1v1 from "./shootout1v1.js?v=a7";
+import * as commentary from "./commentary.js?v=a7";
+import * as tournament from "./tournamentui.js?v=a7";
+import * as sound from "./sound.js?v=a7";
+import * as achievements from "./achievements.js?v=a7";
+import * as startpage from "./startpage.js?v=a7";
 
 // Startet das spielbare 1vs1-Elfmeterschießen mit Canvas/Input-Anbindung.
 function run1v1(homeDef, awayDef, difficulty) {
