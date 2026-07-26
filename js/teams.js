@@ -5,8 +5,8 @@
 // 1 = gegnerisches Tor / y: 0 = oben, 1 = unten) und werden im Spiel auf
 // Welt-Koordinaten und Angriffsrichtung umgerechnet.
 
-import { MARGIN, FIELD } from "./config.js?v=a8";
-import { NATION_TEAMS, NATION_RATINGS, NAME_POOLS, NATION_STARS, NATION_OVERRIDES } from "./nations.js?v=a8";
+import { MARGIN, FIELD } from "./config.js?v=a9";
+import { NATION_TEAMS, NATION_RATINGS, NAME_POOLS, NATION_STARS, NATION_OVERRIDES } from "./nations.js?v=a9";
 
 // ---------------------------------------------------------------------------
 // Formations-Vorlagen
@@ -111,25 +111,35 @@ export function teamById(id) {
   return TEAMS.find((t) => t.id === id);
 }
 
-// Gegner-Schwierigkeit an die Gesamtstärke (GS) koppeln: Der Nutzer steuert
-// immer das Heimteam (userId). Ein schwächeres Gegnerteam (oppId) spielt
-// leichter, ein stärkeres härter – so fühlt sich z. B. Curaçao klar schwächer
-// an als Frankreich, auch wenn man live spielt. `reaction` ist invertiert
-// (höher = träger), wird also gegenläufig skaliert.
-export function scaleDifficultyByRating(base, userId, oppId) {
+// Ein KI-Profil an die Gesamtstärke (GS) koppeln. `teamRating` ist die GS des
+// Teams, dessen KI skaliert wird; `ref` ist die Grundlinie (Menü-Schwierigkeit
+// gilt für ein Team dieser Stärke). Stärkere Teams werden schneller/präziser,
+// schwächere langsamer/träger. `reaction` ist invertiert (höher = träger).
+const GS_BASELINE = 78;
+function _scaleProfile(base, teamRating, ref, k, lo, hi) {
   if (!base) return base;
-  const gap = ratingOf(oppId) - ratingOf(userId);        // + = Gegner stärker
-  const s = Math.max(0.72, Math.min(1.18, 1 + gap * 0.012));
-  const cl = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const s = Math.max(lo, Math.min(hi, 1 + (teamRating - ref) * k));
+  const cl = (v, a, b) => Math.max(a, Math.min(b, v));
   return {
     ...base,
-    speed:        cl(base.speed * s, 0.55, 1.08),
+    speed:        cl(base.speed * s, 0.55, 1.10),
     reaction:     cl(base.reaction * (2 - s), 0.10, 0.85),   // schwächer = träger
-    passAccuracy: cl(base.passAccuracy * s, 0.28, 0.96),
+    passAccuracy: cl(base.passAccuracy * s, 0.28, 0.97),
     shootRange:   cl(base.shootRange * (0.85 + 0.15 * s), 140, 300),
-    decisiveness: cl(base.decisiveness * s, 0.15, 0.92),
-    press:        cl(base.press * s, 0.30, 1.12),
+    decisiveness: cl(base.decisiveness * s, 0.15, 0.94),
+    press:        cl(base.press * s, 0.30, 1.15),
   };
+}
+
+// Gegner-Team: reagiert deutlich auf die GS (starkes Team = schwerer).
+export function scaleOpponent(base, oppId) {
+  return _scaleProfile(base, ratingOf(oppId), GS_BASELINE, 0.012, 0.72, 1.18);
+}
+
+// Eigenes Team (Mitspieler-KI): milder – ein schwaches Team spielt zwar
+// schlechter, bleibt aber steuerbar/gewinnbar.
+export function scaleTeammates(base, userId) {
+  return _scaleProfile(base, ratingOf(userId), GS_BASELINE, 0.009, 0.82, 1.12);
 }
 
 // Trikot-Kollision vermeiden: Liefert für das Auswärtsteam ggf. ein

@@ -2,7 +2,7 @@
 // Kein Login mehr – einfach auf Spielen drücken.
 // Ruft onChoose("wm" | "bundesliga") auf, sobald der Wettbewerb gewählt ist.
 
-import * as achievements from "./achievements.js?v=a8";
+import * as achievements from "./achievements.js?v=a9";
 
 const $ = (id) => document.getElementById(id);
 

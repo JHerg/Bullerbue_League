@@ -2,11 +2,11 @@
 // kontextabhängige Nutzer-Aktion (Leertaste), Aus-Erkennung
 // (Einwurf/Ecke/Abstoß), Tore, Spieluhr und Halbzeit mit Seitenwechsel.
 
-import { WORLD, FIELD, MARGIN, GOAL, HALL, BALL, KICK, PLAYER, USER, DIFFICULTY_TEAMMATE } from "./config.js?v=a8";
-import { Team } from "./team.js?v=a8";
-import { Ball } from "./ball.js?v=a8";
-import { computeAI } from "./ai.js?v=a8";
-import { ensureContrast } from "./teams.js?v=a8";
+import { WORLD, FIELD, MARGIN, GOAL, HALL, BALL, KICK, PLAYER, USER, DIFFICULTY_TEAMMATE } from "./config.js?v=a9";
+import { Team } from "./team.js?v=a9";
+import { Ball } from "./ball.js?v=a9";
+import { computeAI } from "./ai.js?v=a9";
+import { ensureContrast } from "./teams.js?v=a9";
 
 const EDGE = 8; // wie weit innerhalb der Linie der Ball bei Standards liegt
 
@@ -15,7 +15,10 @@ export class Match {
     const {
       mode, difficulty, userPlayerIndex = 9, minutesPerHalf = 2, knockout = false,
       indoor = false, homeSquad = null, awaySquad = null, durationSec = 0,
+      teammateDifficulty = null,
     } = opts;
+    // Eigenes Mitspieler-Profil: skaliert (nach GS) oder festes Standard-Profil.
+    const teamProfile = teammateDifficulty || DIFFICULTY_TEAMMATE;
 
     this.indoor = indoor;
     // Spielbereich + Tor-Geometrie (Halle = kleineres Feld mit eigenen Toren).
@@ -31,12 +34,12 @@ export class Match {
 
     // Eigene Mitspieler: festes Profil. Gegner: gewählte Schwierigkeit.
     // Nutzerteam (home) markiert seinen Torwart per keeperIndex; KI nutzt Auto-Torwart.
-    this.home = new Team(homeDef, true, DIFFICULTY_TEAMMATE, { indoor, squad: homeSquad, area: this.area, keeperIndex: homeDef.keeperIndex });
+    this.home = new Team(homeDef, true, teamProfile, { indoor, squad: homeSquad, area: this.area, keeperIndex: homeDef.keeperIndex });
     this.away = new Team(awayDef, false, difficulty, { indoor, squad: awaySquad, area: this.area, keeperName: awayDef.keeperName });
     // Trikot-Kollision vermeiden: Auswärtsteam ggf. auf Ausweichtrikot setzen.
     this.away.colors = ensureContrast(this.home.colors, this.away.colors);
     this.mode = mode;
-    this.teamDifficulty = DIFFICULTY_TEAMMATE; // KI der eigenen Mitspieler
+    this.teamDifficulty = teamProfile;         // KI der eigenen Mitspieler
     this.oppDifficulty = difficulty;           // KI des Gegners
 
     this.ball = new Ball(WORLD.width / 2, WORLD.height / 2);
