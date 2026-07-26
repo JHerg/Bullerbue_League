@@ -1,22 +1,22 @@
 // Bootstrap: Startmenü -> Match. Verbindet Eingabe, Kamera, Spielfeld und
 // das Match-Objekt und kümmert sich um Rendering und HUD.
 
-import { DIFFICULTY, DIFFICULTY_TEAMMATE, WORLD } from "./config.js?v=b6";
-import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast, setCompetition, getCompetition, scaleOpponent, scaleTeammates } from "./teams.js?v=b6";
-import { penaltyShootout } from "./sim.js?v=b6";
-import { Input } from "./input.js?v=b6";
-import { Camera } from "./camera.js?v=b6";
-import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=b6";
-import { Match } from "./match.js?v=b6";
-import { render as render25 } from "./render2d5.js?v=b6";
-import * as season from "./seasonui.js?v=b6";
-import * as shootout1v1 from "./shootout1v1.js?v=b6";
-import * as commentary from "./commentary.js?v=b6";
-import * as tournament from "./tournamentui.js?v=b6";
-import * as sound from "./sound.js?v=b6";
-import * as achievements from "./achievements.js?v=b6";
-import * as startpage from "./startpage.js?v=b6";
-import * as editor from "./editor.js?v=b6";
+import { DIFFICULTY, DIFFICULTY_TEAMMATE, WORLD } from "./config.js?v=b7";
+import { TEAMS, buildSquad, teamById, ratingOf, ensureContrast, setCompetition, getCompetition, scaleOpponent, scaleTeammates } from "./teams.js?v=b7";
+import { penaltyShootout } from "./sim.js?v=b7";
+import { Input } from "./input.js?v=b7";
+import { Camera } from "./camera.js?v=b7";
+import { drawPitch, drawCrowdTopDown, drawBoards, drawIndoorPitch } from "./pitch.js?v=b7";
+import { Match } from "./match.js?v=b7";
+import { render as render25 } from "./render2d5.js?v=b7";
+import * as season from "./seasonui.js?v=b7";
+import * as shootout1v1 from "./shootout1v1.js?v=b7";
+import * as commentary from "./commentary.js?v=b7";
+import * as tournament from "./tournamentui.js?v=b7";
+import * as sound from "./sound.js?v=b7";
+import * as achievements from "./achievements.js?v=b7";
+import * as startpage from "./startpage.js?v=b7";
+import * as editor from "./editor.js?v=b7";
 
 // Startet das spielbare 1vs1-Elfmeterschießen mit Canvas/Input-Anbindung.
 function run1v1(homeDef, awayDef, difficulty) {
@@ -188,18 +188,51 @@ let paused = false;
 // selbst spielen um. So kannst du beim Simulieren eingreifen (v. a. wenn du
 // hinten liegst) und beim Spielen zurück in die Simulation.
 const autoplayBtn = document.getElementById("autoplay-btn");
+const speedBtn = document.getElementById("speed-btn");
+let watchSpeed = 3;             // Vorspul-Tempo im Zuschau-Modus (3× / 6×)
+let behindAsked = false;        // schon gefragt, seit man hinten liegt?
+
 function updateAutoplayBtn() {
   if (!autoplayBtn || !match) return;
   const watching = match.autoPlay;
   autoplayBtn.textContent = watching ? "🎮 Eingreifen" : "⏩ Zuschauen";
   const behind = watching && match.score.home < match.score.away;
   autoplayBtn.classList.toggle("behind", behind);
+  if (speedBtn) {
+    speedBtn.classList.toggle("hidden", !watching);
+    speedBtn.textContent = `⏩ ${watchSpeed}×`;
+  }
 }
 autoplayBtn?.addEventListener("click", () => {
   if (!match) return;
   match.autoPlay = !match.autoPlay;
+  if (!match.autoPlay) behindAsked = false;
   updateAutoplayBtn();
 });
+speedBtn?.addEventListener("click", () => {
+  watchSpeed = watchSpeed === 3 ? 6 : 3;
+  updateAutoplayBtn();
+});
+
+// Kleine Ja/Nein-Abfrage (pausiert die Schleife); liefert ein Promise<boolean>.
+const askEl = document.getElementById("ask");
+const askTitle = document.getElementById("ask-title");
+const askYes = document.getElementById("ask-yes");
+const askNo = document.getElementById("ask-no");
+let asking = false;
+function askChoice(title, yesLabel, noLabel) {
+  return new Promise((resolve) => {
+    if (!askEl) { resolve(false); return; }
+    asking = true;
+    askTitle.textContent = title;
+    askYes.textContent = yesLabel;
+    askNo.textContent = noLabel;
+    askEl.classList.remove("hidden");
+    const done = (v) => { asking = false; askEl.classList.add("hidden"); askYes.onclick = null; askNo.onclick = null; resolve(v); };
+    askYes.onclick = () => done(true);
+    askNo.onclick = () => done(false);
+  });
+}
 
 function openIngameMenu() {
   if (!match) return;
@@ -218,7 +251,7 @@ function abortMatch() {
   matchResolve = null;
   resultShown = false;
   penaltiesStarted = false;
-  ingameBtn?.classList.add("hidden"); autoplayBtn?.classList.add("hidden");
+  ingameBtn?.classList.add("hidden"); autoplayBtn?.classList.add("hidden"); speedBtn?.classList.add("hidden");
   scoreboardEl.classList.add("hidden");
   resultEl.classList.add("hidden");
   hubEl.classList.add("hidden");
@@ -437,6 +470,7 @@ function runMatch(homeDef, awayDef, opts) {
       document.getElementById("sb-away").textContent = awayDef.short;
       closeIngameMenu();                       // sicher: nicht pausiert starten
       ingameBtn?.classList.remove("hidden");   // Pausen-/Menü-Knopf einblenden
+      behindAsked = false;
       autoplayBtn?.classList.remove("hidden"); updateAutoplayBtn();  // Zuschauen/Eingreifen-Knopf
     };
 
@@ -522,7 +556,7 @@ function runIndoorMatch(homeDef, awayDef, { difficulty, knockout, mode = "team",
 function resolveRunMatch(score) {
   match = null;
   closeIngameMenu();
-  ingameBtn?.classList.add("hidden"); autoplayBtn?.classList.add("hidden");
+  ingameBtn?.classList.add("hidden"); autoplayBtn?.classList.add("hidden"); speedBtn?.classList.add("hidden");
   scoreboardEl.classList.add("hidden");
   resultEl.classList.add("hidden");
   // Erfolge aus dem gespielten Spiel ableiten (home = immer das Nutzerteam).
@@ -540,7 +574,7 @@ function resolveRunMatch(score) {
 function showMenu() {
   match = null;
   closeIngameMenu();
-  ingameBtn?.classList.add("hidden"); autoplayBtn?.classList.add("hidden");
+  ingameBtn?.classList.add("hidden"); autoplayBtn?.classList.add("hidden"); speedBtn?.classList.add("hidden");
   scoreboardEl.classList.add("hidden");
   resultEl.classList.add("hidden");
   hubEl.classList.add("hidden");
@@ -561,15 +595,27 @@ function startPenalties() {
   const auto = match.autoPlay;
   match = null; // Haupt-Spielschleife pausieren, das 1vs1 rendert selbst
 
-  // Beim Zuschauen (Auto-Play) wird das Elfmeterschießen simuliert; willst du
-  // selbst schießen, wechsle vorher mit "Eingreifen" ins Spielen.
+  // Beim Zuschauen (Auto-Play): fragen, ob du selbst schießen willst.
   if (auto) {
-    const pen = penaltyShootout(h.id, a.id);
-    resolveRunMatch({
-      home: score.home, away: score.away,
-      winner: pen.winner === h.id ? "home" : "away", decidedBy: "i.E.",
-      penalties: { home: pen.hp, away: pen.ap },
-      ...scorers,
+    askChoice("Elfmeterschießen!", "⚽ Selbst schießen", "⏩ Simulieren").then((shoot) => {
+      if (shoot) {
+        run1v1(homeDef, awayDef, diff).then((pen) => {
+          resolveRunMatch({
+            home: score.home, away: score.away,
+            winner: pen.winner, decidedBy: "i.E.",
+            penalties: { home: pen.home, away: pen.away },
+            ...scorers,
+          });
+        });
+      } else {
+        const pen = penaltyShootout(h.id, a.id);
+        resolveRunMatch({
+          home: score.home, away: score.away,
+          winner: pen.winner === h.id ? "home" : "away", decidedBy: "i.E.",
+          penalties: { home: pen.hp, away: pen.ap },
+          ...scorers,
+        });
+      }
     });
     return;
   }
@@ -761,12 +807,28 @@ function loop(now) {
     // letzte Bild weiter gezeichnet.
     if (!paused) {
       // Beim Zuschauen (Auto-Play) läuft die Zeit schneller (Vorspulen).
-      const steps = match.autoPlay ? 3 : 1;
+      const steps = match.autoPlay ? watchSpeed : 1;
       for (let s = 0; s < steps && !match.finished; s++) match.update(dt, input);
       commentary.update(match, now);
       soundWatch(match);
       updateHUD();
       updatePowerBar();
+
+      // Beim Zuschauen automatisch fragen, sobald du in Rückstand gerätst.
+      if (match.autoPlay && !asking && !match.finished) {
+        const behind = match.score.home < match.score.away;
+        if (behind && !behindAsked) {
+          behindAsked = true;
+          paused = true;
+          askChoice("Du liegst hinten!", "🎮 Eingreifen", "⏩ Weiter zuschauen").then((yes) => {
+            if (match && yes) match.autoPlay = false;
+            paused = false;
+            updateAutoplayBtn();
+          });
+        } else if (!behind) {
+          behindAsked = false;
+        }
+      }
 
       // Bei Spielende: entweder Elfmeterschießen starten oder Ergebnis zeigen.
       if (match.finished) {

@@ -113,6 +113,18 @@
   <!-- In-Match: Menü-Knopf + Pause-Menü -->
   <button id="ingame-btn" class="hidden">≡</button>
   <button id="autoplay-btn" class="hidden">🎮 Eingreifen</button>
+  <button id="speed-btn" class="hidden">⏩ 3×</button>
+
+  <!-- Kleine Ja/Nein-Abfrage (Zuschauen: Rückstand / Elfmeter) -->
+  <div id="ask" class="hidden">
+    <div id="ask-card">
+      <div id="ask-title"></div>
+      <div id="ask-buttons">
+        <button id="ask-yes"></button>
+        <button id="ask-no" class="secondary"></button>
+      </div>
+    </div>
+  </div>
   <div id="ingame-menu" class="hidden">
     <div id="ingame-card">
       <div id="ingame-title">Pause</div>
@@ -232,9 +244,9 @@
         <button id="btn-switch" class="secondary">🔁 Wettbewerb wechseln</button>
         <button id="btn-home" class="secondary">🏠 Startseite</button>
       </div>
-      <a class="proto-link" href="prototyp.html?v=b6">🧪 2.5D-Ansicht (mit Zuschauern) testen</a>
+      <a class="proto-link" href="prototyp.html?v=b7">🧪 2.5D-Ansicht (mit Zuschauern) testen</a>
       <p class="hint">PC: WASD/Pfeile = laufen · <b>Leertaste = Schuss</b> (halten = härter) · <b>F = Pass / Grätsche / Spielerwechsel</b><br>Als Torwart: <b>Leertaste = Hechten/Springen</b> &nbsp;·&nbsp; Tablet: Joystick + Buttons „SCHUSS" und „PASS"</p>
-      <p class="version">Build 2026-05-30-b6 · Zuschauen & Eingreifen (Auto-Play umschalten)</p>
+      <p class="version">Build 2026-05-30-b7 · Zuschauen: Tempo 3×/6×, Rückstand-Frage, Elfer-Frage</p>
     </div>
   </div>
 
@@ -250,6 +262,6 @@
     </div>
   </div>
 
-  <script type="module" src="js/game.js?v=b6"></script>
+  <script type="module" src="js/game.js?v=b7"></script>
 </body>
 </html>
