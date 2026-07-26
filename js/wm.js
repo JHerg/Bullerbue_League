@@ -7,8 +7,8 @@
 // Die Gruppen werden – wie bei der echten Auslosung – nach Lostöpfen
 // (Stärke) gebildet, mit fester Mischung, damit die Auslosung stabil bleibt.
 
-import { simulateMatch } from "./sim.js?v=a4";
-import * as C from "./cup.js?v=a4";
+import { simulateMatch } from "./sim.js?v=a5";
+import * as C from "./cup.js?v=a5";
 
 export const GROUP_LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
 export const WM_ROUND_NAMES = ["Sechzehntelfinale", "Achtelfinale", "Viertelfinale", "Halbfinale", "Finale"];

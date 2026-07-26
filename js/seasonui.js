@@ -5,12 +5,12 @@
 //   deps.runMatch(homeDef, awayDef, opts) -> Promise<{home, away}>  (Endstand)
 //   deps.showMenu()                       -> zurück ins Startmenü
 
-import { TEAMS, teamById } from "./teams.js?v=a4";
-import * as L from "./league.js?v=a4";
-import * as C from "./cup.js?v=a4";
-import * as W from "./wm.js?v=a4";
-import { saveSeason, loadSeason } from "./storage.js?v=a4";
-import * as achievements from "./achievements.js?v=a4";
+import { TEAMS, teamById } from "./teams.js?v=a5";
+import * as L from "./league.js?v=a5";
+import * as C from "./cup.js?v=a5";
+import * as W from "./wm.js?v=a5";
+import { saveSeason, loadSeason } from "./storage.js?v=a5";
+import * as achievements from "./achievements.js?v=a5";
 
 let deps = null;
 let state = null;
@@ -262,6 +262,7 @@ function _renderWMGroups() {
   if (fx) html += _fixtureHtml(fx.home, fx.away);
   html += `<h3 class="scorers-h">Gruppe ${W.GROUP_LETTERS[g]}</h3>`;
   html += _groupStandingsTable(W.computeGroupTable(state, g));
+  html += _allGroupsHtml();
   html += _scorersTable(W.computeScorers(state));
   contentEl().innerHTML = html;
 
@@ -278,7 +279,7 @@ function _renderWMko() {
   if (ko.champion) {
     html += `<div class="hub-sub">Turnier beendet · Dein Team: ${name(state.userTeam)}</div>`;
     html += `<div class="fixture">🏆 Weltmeister: ${name(ko.champion)}</div>`;
-    if (ko.champion === state.userTeam) achievements.unlock("cup_win");
+    if (ko.champion === state.userTeam) achievements.unlock("world_champ");
   } else {
     html += `<div class="hub-sub">${W.koRoundName(state)} · Dein Team: ${name(state.userTeam)}</div>`;
     const tie = C.userTie(ko);
@@ -364,6 +365,24 @@ function _simWMko() {
   if (ko.champion) state.champion = ko.champion;
   saveSeason(state);
   _render();
+}
+
+// Übersicht ALLER 12 Gruppen (kompakt): pro Gruppe die 4 Teams mit Punkten,
+// Platz 1+2 (sicher weiter) hervorgehoben, dein Team markiert.
+function _allGroupsHtml() {
+  let boxes = "";
+  for (let g = 0; g < 12; g++) {
+    const table = W.computeGroupTable(state, g);
+    const rows = table.map((r, i) => {
+      const cls = r.id === state.userTeam ? "me" : (i < 2 ? "cl" : "");
+      return `<div class="wg-row ${cls}"><span class="wg-pos">${i + 1}</span>` +
+        `<span class="wg-team">${short(r.id)}</span><span class="wg-pts">${r.pts}</span></div>`;
+    }).join("");
+    boxes += `<div class="wg-box"><div class="wg-h">Gruppe ${W.GROUP_LETTERS[g]}</div>${rows}</div>`;
+  }
+  return `<h3 class="scorers-h">Alle Gruppen</h3>` +
+    `<div class="wg-grid">${boxes}</div>` +
+    `<div class="wg-note">Grün = weiter (Platz 1–2) · dazu die 8 besten Gruppendritten</div>`;
 }
 
 // Gruppentabelle: oberste zwei Plätze (Qualifikation) hervorheben.

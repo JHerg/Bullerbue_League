@@ -17,6 +17,7 @@ export const ACHIEVEMENTS = [
   { id: "hall_win",     icon: "🏟️", name: "Hallenkönig",       desc: "Gewinne das Hallenturnier." },
   { id: "penalty_hero", icon: "🎯", name: "Elfmeter-Held",     desc: "Gewinne ein Elfmeterschießen." },
   { id: "comeback",     icon: "🔥", name: "Comeback",          desc: "Gewinne ein Spiel mit 3+ Toren Unterschied." },
+  { id: "world_champ",  icon: "🌍", name: "Weltmeister",        desc: "Gewinne die Weltmeisterschaft." },
 ];
 
 function read() {

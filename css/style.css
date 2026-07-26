@@ -779,3 +779,29 @@ table.standings tr.cl td:first-child { color: #4caf50; }
 #lineup-skip:active { transform: translateY(1px); }
 @keyframes luIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: none; } }
 @media (max-width: 380px) { .lu-players li { font-size: 11.5px; } #lineup-title { font-size: 19px; } }
+
+/* --------------------------------------------------------------------------
+   WM: Übersicht aller 12 Gruppen (kompakt) im Hub
+   -------------------------------------------------------------------------- */
+.wg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 8px;
+  margin: 6px 0 4px;
+}
+.wg-box {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 5px 7px;
+  font-size: 12px;
+}
+.wg-h { font-weight: 800; font-size: 11px; opacity: .85; margin-bottom: 3px; }
+.wg-row { display: flex; align-items: center; gap: 5px; padding: 1px 2px; border-radius: 4px; }
+.wg-pos { width: 11px; opacity: .55; text-align: right; }
+.wg-team { flex: 1; font-weight: 600; }
+.wg-pts { font-weight: 800; }
+.wg-row.cl .wg-team { color: #7cfc7c; }
+.wg-row.me { background: rgba(255, 235, 59, 0.18); }
+.wg-row.me .wg-team { color: #ffeb3b; font-weight: 800; }
+.wg-note { font-size: 11px; opacity: .65; margin-top: 3px; }
