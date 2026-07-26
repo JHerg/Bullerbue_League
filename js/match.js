@@ -2,11 +2,11 @@
 // kontextabhängige Nutzer-Aktion (Leertaste), Aus-Erkennung
 // (Einwurf/Ecke/Abstoß), Tore, Spieluhr und Halbzeit mit Seitenwechsel.
 
-import { WORLD, FIELD, MARGIN, GOAL, HALL, BALL, KICK, PLAYER, USER, DIFFICULTY_TEAMMATE } from "./config.js?v=a9";
-import { Team } from "./team.js?v=a9";
-import { Ball } from "./ball.js?v=a9";
-import { computeAI } from "./ai.js?v=a9";
-import { ensureContrast } from "./teams.js?v=a9";
+import { WORLD, FIELD, MARGIN, GOAL, HALL, BALL, KICK, PLAYER, USER, PX_PER_M, DIFFICULTY_TEAMMATE } from "./config.js?v=b1";
+import { Team } from "./team.js?v=b1";
+import { Ball } from "./ball.js?v=b1";
+import { computeAI } from "./ai.js?v=b1";
+import { ensureContrast } from "./teams.js?v=b1";
 
 const EDGE = 8; // wie weit innerhalb der Linie der Ball bei Standards liegt
 
@@ -15,10 +15,13 @@ export class Match {
     const {
       mode, difficulty, userPlayerIndex = 9, minutesPerHalf = 2, knockout = false,
       indoor = false, homeSquad = null, awaySquad = null, durationSec = 0,
-      teammateDifficulty = null,
+      teammateDifficulty = null, fun = {},
     } = opts;
     // Eigenes Mitspieler-Profil: skaliert (nach GS) oder festes Standard-Profil.
     const teamProfile = teammateDifficulty || DIFFICULTY_TEAMMATE;
+    // Fun-Modus: verrückte Regeln (siehe game.js). Turbo skaliert das Tempo aller.
+    this.fun = fun || {};
+    this.speedMult = this.fun.turbo ? 1.5 : 1;
 
     this.indoor = indoor;
     // Spielbereich + Tor-Geometrie (Halle = kleineres Feld mit eigenen Toren).
@@ -44,6 +47,10 @@ export class Match {
 
     this.ball = new Ball(WORLD.width / 2, WORLD.height / 2);
     if (indoor) this.ball.friction = 1.5; // Halle: Ball rollt weniger weit (mehr Kontrolle)
+    if (this.fun.bigBall) this.ball.radius = BALL.radius * 2.1;  // Fun: Riesenball
+    if (this.fun.iceBall) this.ball.friction = 0.18;            // Fun: Eis – rutscht weit
+    this._chasingKeeper = null;  // Fun: Torwart, der den Eindringling verfolgt
+    this._armedKeeper = null;    // vorgemerkter Torwart (Nutzer ist im Strafraum)
 
     this.allPlayers = [...this.home.players, ...this.away.players];
 
@@ -114,6 +121,7 @@ export class Match {
   // Anstoß: beide Teams in ihre eigene Hälfte, Ball auf den Mittelpunkt,
   // ein zentraler Spieler des berechtigten Teams stellt sich an den Ball.
   _kickoff(team) {
+    this._chasingKeeper = null; this._armedKeeper = null; // Fun: Verfolgung zurücksetzen
     const cx = this.centerX, cy = this.centerY;
     this._placeOwnHalf(this.home);
     this._placeOwnHalf(this.away);
@@ -167,6 +175,7 @@ export class Match {
     this.away.chaser = this._closestOutfield(this.away);
 
     this._selectUserPlayer();
+    if (this.fun.keeperChase) this._updateKeeperChase();
 
     for (const p of this.allPlayers) {
       if (p === this.userPlayer) this._updateUser(dt, p, input);
@@ -234,7 +243,7 @@ export class Match {
   // ---- Nutzer-Steuerung inkl. kontextabhängiger Leertaste ----
   _updateUser(dt, p, input) {
     const dir = input.getDirection();
-    p.update(dt, dir, 1);
+    p.update(dt, dir, this.speedMult);
 
     const ball = this.ball;
     const distBall = Math.hypot(ball.x - p.x, ball.y - p.y);
@@ -318,6 +327,15 @@ export class Match {
     if (p.team === this.home && p.isKeeper) profile = this.oppDifficulty;
     // Halle: kürzere Schussreichweite -> nicht aus jeder Lage ballern.
     if (this.indoor) profile = { ...profile, shootRange: profile.shootRange * 0.45 };
+    // Fun: Torwart-Jäger – verlässt sein Tor und rennt dem Nutzer nach, bis
+    // sein eigenes Team den Ball hat.
+    if (this.fun.keeperChase && p === this._chasingKeeper) {
+      const t = this.userPlayer;
+      const dx = t.x - p.x, dy = t.y - p.y, d = Math.hypot(dx, dy) || 1;
+      p.update(dt, { x: dx / d, y: dy / d }, profile.speed * 1.2 * this.speedMult);
+      if (this.ball.owner && this.ball.owner.team === p.team) this._chasingKeeper = null;
+      return;
+    }
     const ctx = {
       ball: this.ball,
       difficulty: profile,
@@ -330,7 +348,15 @@ export class Match {
              cx: this.centerX, cy: this.centerY, goalH: this.goalH },
     };
     const out = computeAI(p, ctx);
-    p.update(dt, out.dir, profile.speed);
+    // Fun: Wackel-Torwart – torkelt zufällig herum.
+    if (this.fun.drunkKeeper && p.isKeeper) {
+      this._wob = (this._wob || 0) + dt;
+      out.dir = {
+        x: out.dir.x + Math.sin(this._wob * 3.3 + p.homeY * 0.01) * 0.8,
+        y: out.dir.y + Math.cos(this._wob * 2.7 + p.homeX * 0.01) * 0.8,
+      };
+    }
+    p.update(dt, out.dir, profile.speed * this.speedMult);
     if (out.kick) this.ball.kick(out.kick.dirX, out.kick.dirY, out.kick.power, p.team, p);
   }
 
@@ -356,6 +382,36 @@ export class Match {
       if (score > bestScore) { bestScore = score; best = mate; }
     }
     return best;
+  }
+
+  // Fun: erkennt, ob der Nutzer-Spieler in einen gegnerischen Strafraum läuft
+  // und ihn wieder verlässt -> dann startet der dortige Torwart die Verfolgung.
+  _updateKeeperChase() {
+    if (this.indoor || !this.userPlayer) return;
+    const box = this._boxDefender(this.userPlayer);
+    if (box && box.team !== this.userPlayer.team) {
+      this._armedKeeper = box.keeper;            // Eindringling steht im Strafraum
+    } else if (this._armedKeeper) {
+      this._chasingKeeper = this._armedKeeper;   // hat den Strafraum verlassen -> los!
+      this._armedKeeper = null;
+    }
+  }
+
+  // Liefert { team, keeper } des Strafraums, in dem Spieler p steht (sonst null).
+  _boxDefender(p) {
+    const boxD = 16.5 * PX_PER_M, boxH = 40.3 * PX_PER_M;
+    if (Math.abs(p.y - this.centerY) > boxH / 2) return null;
+    const L = this.area.left, R = this.area.right;
+    let side = null;
+    if (p.x >= L && p.x <= L + boxD) side = "left";
+    else if (p.x <= R && p.x >= R - boxD) side = "right";
+    if (!side) return null;
+    // Verteidiger = Team, dessen eigenes Tor auf dieser Seite steht.
+    const defender = (side === "left")
+      ? (this.home.attackRight ? this.home : this.away)
+      : (this.home.attackRight ? this.away : this.home);
+    const keeper = defender.players.find((pl) => pl.isKeeper);
+    return keeper ? { team: defender, keeper } : null;
   }
 
   _closestOutfield(team) {

@@ -805,3 +805,18 @@ table.standings tr.cl td:first-child { color: #4caf50; }
 .wg-row.me { background: rgba(255, 235, 59, 0.18); }
 .wg-row.me .wg-team { color: #ffeb3b; font-weight: 800; }
 .wg-note { font-size: 11px; opacity: .65; margin-top: 3px; }
+
+/* --------------------------------------------------------------------------
+   Fun-Modus: eingerückte Unter-Optionen im Menü
+   -------------------------------------------------------------------------- */
+#fun-opts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: -4px 0 4px 8px;
+  padding: 8px 10px;
+  border-left: 3px solid #ffca28;
+  background: rgba(255, 202, 40, 0.08);
+  border-radius: 0 8px 8px 0;
+}
+#fun-opts label.check { font-size: 12.5px; }
